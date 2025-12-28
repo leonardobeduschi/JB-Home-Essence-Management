@@ -1,0 +1,567 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema de Gestão{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-label">Total de Vendas</div>
+                    <div class="stat-value">{{ summary.total_sales }}</div>
+                </div>
+                <i class="bi bi-cart-check" style="font-size: 3rem; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Receita Total</div>
+                        <div class="stat-value">
+                        R$ {{ "{:,.2f}".format(summary.total_revenue).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+                        </div>
+                    </div>
+                    <i class="bi bi-cash-stack" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Itens Vendidos</div>
+                        <div class="stat-value">{{ summary.total_items_sold }}</div>
+                    </div>
+                    <i class="bi bi-box-seam" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Ticket Médio</div>
+                        <div class="stat-value">R$ {{ "%.2f"|format(summary.average_sale_value) }}</div>
+                    </div>
+                    <i class="bi bi-graph-up" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Revenue Chart (Full Width) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Receita Mensal (Últimos 12 Meses)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyRevenueChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Chart (Full Width - Bar Chart) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-tags"></i> Vendas por Categoria</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Products and Top Clients -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-star"></i> Top 10 Produtos</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topProductsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-award"></i> Top 10 Clientes</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topClientsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gender Distribution and Seller Performance -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-gender-ambiguous"></i> Distribuição por Gênero</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="genderChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-person-badge"></i> Desempenho por Vendedor</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="sellerChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales & Top Products Summary -->
+<div class="row">
+    <div class="col-md-7 mb-3">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Vendas Recentes</h5>
+                <a href="{{ url_for('sales') }}" class="btn btn-sm btn-primary">Ver Todas</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Produto + Categoria</th>
+                                <th>Total</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales|reverse %}
+                            <tr>
+                                <td><span class="badge bg-primary">{{ sale.ID_VENDA }}</span></td>
+                                <td>{{ sale.CLIENTE }}</td>
+                                <td>
+                                    <strong>{{ sale.PRODUTO[:20] }}</strong><br>
+                                    <small class="text-muted">{{ sale.CATEGORIA }}</small>
+                                </td>
+                                <td><strong>R$ {{ "%.2f"|format(sale.PRECO_TOTAL|float) }}</strong></td>
+                                <td><small>{{ sale.DATA }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5 mb-3">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> Top 5 Produtos (Resumo)</h5>
+            </div>
+            <div class="card-body">
+                {% for product in top_products %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <div>
+                            <strong>{{ product.produto[:20] }}</strong><br>
+                            <small class="text-muted">{{ product.categoria }}</small>
+                        </div>
+                        <span class="text-success">R$ {{ "%.2f"|format(product.revenue) }}</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-gradient" 
+                             style="width: {{ (product.revenue / top_products[0].revenue * 100)|int }}%; background: linear-gradient(90deg, #667eea, #764ba2);">
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ product.quantity_sold }} vendidos | Margem: {{ "%.1f"|format(product.profit_margin) }}%</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Alert - CRITICAL ONLY (estoque <= 1) -->
+{% if low_stock %}
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="alert alert-danger" role="alert">
+            <h5><i class="bi bi-exclamation-triangle-fill"></i> Alerta Crítico de Estoque</h5>
+            <p class="mb-2"><strong>{{ low_stock|length }}</strong> produto(s) com estoque CRÍTICO (≤ 1 unidade):</p>
+            <ul class="mb-0">
+                {% for product in low_stock[:10] %}
+                <li>
+                    <strong>{{ product.PRODUTO }} - {{ product.CATEGORIA }}</strong> 
+                    - Estoque: <span class="badge bg-danger">{{ product.ESTOQUE }} unidade(s)</span>
+                </li>
+                {% endfor %}
+                {% if low_stock|length > 10 %}
+                <li><em>... e mais {{ low_stock|length - 10 }} produtos</em></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load Monthly Revenue Chart
+fetch('/api/analytics/monthly-revenue')
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            const data = result.data;
+            
+            console.log('Monthly Revenue Data:', data);
+            
+            const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.months,
+                    datasets: [{
+                        label: 'Receita (R$)',
+                        data: data.revenues,
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'R$ ' + context.parsed.y.toFixed(2).replace('.', ',');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            console.error('Error loading monthly revenue:', result.error);
+        }
+    })
+    .catch(error => console.error('Error loading monthly revenue:', error));
+
+// Category Bar Chart
+const categoryData = {{ summary.by_category|tojson|safe }};
+const categoryLabels = Object.keys(categoryData);
+const categoryValues = Object.values(categoryData);
+
+console.log('Category Data:', categoryData);
+
+const ctx2 = document.getElementById('categoryChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'bar',
+    data: {
+        labels: categoryLabels,
+        datasets: [{
+            label: 'Receita (R$)',
+            data: categoryValues,
+            backgroundColor: [
+                'rgba(99, 102, 241, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(236, 72, 153, 0.8)',
+                'rgba(14, 165, 233, 0.8)',
+                'rgba(234, 88, 12, 0.8)',
+                'rgba(34, 197, 94, 0.8)',
+                'rgba(239, 68, 68, 0.8)'
+            ],
+            borderColor: [
+                'rgba(99, 102, 241, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(245, 158, 11, 1)',
+                'rgba(59, 130, 246, 1)',
+                'rgba(139, 92, 246, 1)',
+                'rgba(236, 72, 153, 1)',
+                'rgba(14, 165, 233, 1)',
+                'rgba(234, 88, 12, 1)',
+                'rgba(34, 197, 94, 1)',
+                'rgba(239, 68, 68, 1)'
+            ],
+            borderWidth: 2,
+            borderRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'R$ ' + context.parsed.y.toFixed(2).replace('.', ',');
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'R$ ' + value.toLocaleString('pt-BR');
+                    }
+                }
+            },
+            x: {
+                ticks: {
+                    maxRotation: 45,
+                    minRotation: 45
+                }
+            }
+        }
+    }
+});
+
+// Top Products Chart
+fetch('/api/analytics/top-products-full?limit=10')
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            const products = result.data;
+            const labels = products.map(p => p.label);
+            const revenues = products.map(p => p.revenue);
+            
+            const ctx = document.getElementById('topProductsChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Receita (R$)',
+                        data: revenues,
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'R$ ' + context.parsed.x.toFixed(2).replace('.', ',');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => console.error('Error loading top products:', error));
+
+// Top Clients Chart
+fetch('/api/analytics/top-clients-full?limit=10')
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            const clients = result.data;
+            const labels = clients.map(c => c.name);
+            const revenues = clients.map(c => c.revenue);
+            
+            const ctx = document.getElementById('topClientsChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Gasto (R$)',
+                        data: revenues,
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'R$ ' + context.parsed.x.toFixed(2).replace('.', ',');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => console.error('Error loading top clients:', error));
+
+// Gender Distribution Chart
+fetch('/api/analytics/gender-distribution')
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            const data = result.data;
+            
+            const ctx = document.getElementById('genderChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.values,
+                        backgroundColor: [
+                            'rgba(236, 72, 153, 0.8)', // Rosa (agora é o primeiro)
+                            'rgba(59, 130, 246, 0.8)', // Azul (agora é o segundo)
+                            'rgba(139, 92, 246, 0.8)'  // Roxo (mantido igual)
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => console.error('Error loading gender distribution:', error));
+
+// Seller Distribution Chart
+fetch('/api/analytics/seller-distribution')
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            const data = result.data;
+            
+            const ctx = document.getElementById('sellerChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.values,
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': R$ ' + context.parsed.toFixed(2).replace('.', ',');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => console.error('Error loading seller distribution:', error));
+</script>
+{% endblock %}

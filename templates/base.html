@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Gestão - JB Home Essence{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #80a58d;
+            --secondary-color: #1a351f;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 8px;
+            padding: 10px 25px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table thead {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+        
+        .topbar {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 15px 30px;
+            margin-bottom: 30px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 p-0 sidebar">
+                <div class="p-4">
+                    <h4 class="mb-4"><i class="bi bi-flower1"></i> JB Home Essence</h4>
+                </div>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link {% if request.endpoint in ['products', 'add_product'] %}active{% endif %}" href="{{ url_for('products') }}">
+                        <i class="bi bi-box-seam"></i> Produtos
+                    </a>
+                    <a class="nav-link {% if request.endpoint in ['clients', 'add_client'] %}active{% endif %}" href="{{ url_for('clients') }}">
+                        <i class="bi bi-people"></i> Clientes
+                    </a>
+                    <a class="nav-link {% if request.endpoint in ['sales', 'add_sale'] %}active{% endif %}" href="{{ url_for('sales') }}">
+                        <i class="bi bi-cart-check"></i> Vendas
+                    </a>
+                    <a class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('analytics') }}">
+                        <i class="bi bi-graph-up-arrow"></i> Analytics
+                    </a>
+                    <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}">
+                        <i class="bi bi-file-earmark-text"></i> Relatórios
+                    </a>
+                    
+                    <hr style="border-color: rgba(255,255,255,0.2); margin: 20px;">
+                    
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10">
+                <!-- Top Bar -->
+                <div class="topbar">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{% block page_title %}Dashboard{% endblock %}</h5>
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                {{ user.name[0] if user else 'U' }}
+                            </div>
+                            <div>
+                                <div><strong>{{ user.name if user else 'Usuário' }}</strong></div>
+                                <small class="text-muted">{{ user.role|title if user else 'Role' }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Content -->
+                <div class="content">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

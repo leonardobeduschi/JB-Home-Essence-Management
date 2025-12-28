@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Adicionar Cliente - Sistema de Gestão{% endblock %}
+{% block page_title %}Adicionar Novo Cliente{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-person-plus"></i> Cadastro de Cliente</h5>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <form method="POST" id="clientForm">
+                    <!-- Client Type Selection -->
+                    <div class="mb-4">
+                        <label class="form-label"><i class="bi bi-diagram-3"></i> Tipo de Cliente *</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="tipo" id="tipoPessoa" value="Pessoa" checked>
+                            <label class="btn btn-outline-primary" for="tipoPessoa">
+                                <i class="bi bi-person"></i> Pessoa Física
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="tipo" id="tipoEmpresa" value="Empresa">
+                            <label class="btn btn-outline-success" for="tipoEmpresa">
+                                <i class="bi bi-building"></i> Empresa
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="bi bi-person-badge"></i> Nome/Razão Social *</label>
+                            <input type="text" name="cliente" class="form-control" required placeholder="Nome do cliente">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="bi bi-person-workspace"></i> Vendedor</label>
+                            <input type="text" name="vendedor" class="form-control" placeholder="Nome do vendedor (opcional)">
+                        </div>
+                    </div>
+
+                    <!-- Person-specific fields -->
+                    <div id="pessoaFields">
+                        <h6 class="text-primary mb-3"><i class="bi bi-person"></i> Informações da Pessoa</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Faixa Etária *</label>
+                                <select name="idade" class="form-select" id="idadeSelect">
+                                    <option value="">Selecione...</option>
+                                    <option value="<18">&lt;18</option>
+                                    <option value="18-24">18-24</option>
+                                    <option value="25-34">25-34</option>
+                                    <option value="35-44">35-44</option>
+                                    <option value="45-54">45-54</option>
+                                    <option value=">55">&gt;55</option>
+                                    <option value="65+">65+</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Gênero *</label>
+                                <select name="genero" class="form-select" id="generoSelect">
+                                    <option value="">Selecione...</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Feminino">Feminino</option>
+                                    <option value="Outro">Outro</option>
+                                    <option value="Prefiro não informar">Prefiro não informar</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Profissão</label>
+                                <input type="text" name="profissao" class="form-control" placeholder="Ex: Engenheiro">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CPF</label>
+                                <input type="text" name="cpf_cnpj" class="form-control" id="cpfInput" 
+                                       placeholder="000.000.000-00" maxlength="14">
+                                <small class="text-muted">Opcional para pessoa física</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company-specific fields -->
+                    <div id="empresaFields" style="display: none;">
+                        <h6 class="text-success mb-3"><i class="bi bi-building"></i> Informações da Empresa</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CNPJ *</label>
+                                <input type="text" name="cpf_cnpj_empresa" class="form-control" id="cnpjInput" 
+                                       placeholder="00.000.000/0000-00" maxlength="18">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Endereço *</label>
+                                <input type="text" name="endereco_empresa" class="form-control" id="enderecoEmpresa"
+                                       placeholder="Rua, número, bairro, cidade">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Common Contact Fields -->
+                    <h6 class="text-secondary mb-3 mt-3"><i class="bi bi-telephone"></i> Contato (Opcional)</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" name="telefone" class="form-control" id="telefoneInput"
+                                   placeholder="(00) 00000-0000" maxlength="15">
+                        </div>
+
+                        <div class="col-md-6 mb-3" id="enderecoPessoaDiv">
+                            <label class="form-label">Endereço</label>
+                            <input type="text" name="endereco" class="form-control" id="enderecoPessoa"
+                                   placeholder="Rua, número, bairro, cidade">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('clients') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Cadastrar Cliente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informações Importantes</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-person"></i> Pessoa Física</h6>
+                        <ul>
+                            <li>Faixa etária e gênero são <strong>obrigatórios</strong></li>
+                            <li>CPF é opcional</li>
+                            <li>Endereço e telefone são opcionais</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-building"></i> Empresa</h6>
+                        <ul>
+                            <li>CNPJ e endereço são <strong>obrigatórios</strong></li>
+                            <li>Telefone é opcional</li>
+                            <li>Campos de pessoa não se aplicam</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle fields based on client type
+function toggleFields() {
+    const isPessoa = document.getElementById('tipoPessoa').checked;
+    const pessoaFields = document.getElementById('pessoaFields');
+    const empresaFields = document.getElementById('empresaFields');
+    const enderecoPessoaDiv = document.getElementById('enderecoPessoaDiv');
+    
+    if (isPessoa) {
+        pessoaFields.style.display = 'block';
+        empresaFields.style.display = 'none';
+        enderecoPessoaDiv.style.display = 'block';
+        
+        // Make pessoa fields required
+        document.getElementById('idadeSelect').required = true;
+        document.getElementById('generoSelect').required = true;
+        
+        // Make empresa fields not required
+        document.getElementById('cnpjInput').required = false;
+        document.getElementById('enderecoEmpresa').required = false;
+    } else {
+        pessoaFields.style.display = 'none';
+        empresaFields.style.display = 'block';
+        enderecoPessoaDiv.style.display = 'none';
+        
+        // Make pessoa fields not required
+        document.getElementById('idadeSelect').required = false;
+        document.getElementById('generoSelect').required = false;
+        
+        // Make empresa fields required
+        document.getElementById('cnpjInput').required = true;
+        document.getElementById('enderecoEmpresa').required = true;
+    }
+}
+
+// Event listeners for type change
+document.getElementById('tipoPessoa').addEventListener('change', toggleFields);
+document.getElementById('tipoEmpresa').addEventListener('change', toggleFields);
+
+// CPF Mask
+document.getElementById('cpfInput').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        e.target.value = value;
+    }
+});
+
+// CNPJ Mask
+document.getElementById('cnpjInput').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 14) {
+        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+        e.target.value = value;
+    }
+});
+
+// Phone Mask
+document.getElementById('telefoneInput').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+        if (value.length <= 10) {
+            value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+        } else {
+            value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+            value = value.replace(/(\d{5})(\d)/, '$1-$2');
+        }
+        e.target.value = value;
+    }
+});
+
+// Form submission handling - CORRIGIDO
+document.getElementById('clientForm').addEventListener('submit', function(e) {
+    const isPessoa = document.getElementById('tipoPessoa').checked;
+
+    if (!isPessoa) {
+        // Para empresa: copia os valores dos campos específicos para os nomes esperados pelo backend
+        const cnpjValue = document.getElementById('cnpjInput').value.trim();
+        const enderecoValue = document.getElementById('enderecoEmpresa').value.trim();
+
+        // Remove campos antigos se existirem
+        const oldCpf = document.querySelector('input[name="cpf_cnpj"]');
+        if (oldCpf) oldCpf.remove();
+        const oldEnd = document.querySelector('input[name="endereco"]');
+        if (oldEnd) oldEnd.remove();
+
+        // Adiciona os corretos
+        const inputCnpj = document.createElement('input');
+        inputCnpj.type = 'hidden';
+        inputCnpj.name = 'cpf_cnpj';
+        inputCnpj.value = cnpjValue;
+        this.appendChild(inputCnpj);
+
+        const inputEndereco = document.createElement('input');
+        inputEndereco.type = 'hidden';
+        inputEndereco.name = 'endereco';
+        inputEndereco.value = enderecoValue;
+        this.appendChild(inputEndereco);
+    }
+    // Para pessoa física, os campos já têm os nomes corretos
+});
+
+// Initialize on page load
+toggleFields();
+</script>
+{% endblock %}

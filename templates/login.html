@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - JB Home Essence</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #80a58d 0%, #1a351f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #80a58d 0%, #1a351f 100%);
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+        
+        .login-header i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .login-body {
+            padding: 40px;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #80a58d 0%, #1a351f 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .alert {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-header">
+            <i class="bi bi-flower1"></i>
+            <h3>JB Home Essence</h3>
+            <p class="mb-0">Sistema de gestão</p>
+        </div>
+        
+        <div class="login-body">
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                </div>
+            {% endif %}
+            
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-person"></i> Usuário</label>
+                    <input type="text" name="username" class="form-control" required autofocus>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label"><i class="bi bi-lock"></i> Senha</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                
+                <button type="submit" class="btn btn-login w-100">
+                    <i class="bi bi-box-arrow-in-right"></i> Entrar
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center text-muted">
+                <small>
+                    <strong>Demo:</strong> admin/admin123 ou vendedor/vend123
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

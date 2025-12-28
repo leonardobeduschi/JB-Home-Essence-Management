@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Cliente - Sistema de Gestão{% endblock %}
+{% block page_title %}Editar Cliente{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-pencil"></i> Editar Cliente: {{ client.CLIENTE }}</h5>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <form method="POST" id="clientForm">
+                    <!-- Tipo (somente leitura - não pode mudar de pessoa para empresa) -->
+                    <div class="mb-4">
+                        <label class="form-label"><i class="bi bi-diagram-3"></i> Tipo de Cliente</label>
+                        <div class="p-3 bg-light rounded">
+                            {% if client.TIPO == 'pessoa' %}
+                                <span class="badge bg-info fs-6"><i class="bi bi-person"></i> Pessoa Física</span>
+                            {% else %}
+                                <span class="badge bg-success fs-6"><i class="bi bi-building"></i> Empresa</span>
+                            {% endif %}
+                            <input type="hidden" name="tipo" value="{{ client.TIPO }}">
+                        </div>
+                        <small class="text-muted">O tipo não pode ser alterado após o cadastro.</small>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="bi bi-person-badge"></i> Nome/Razão Social *</label>
+                            <input type="text" name="cliente" class="form-control" required value="{{ client.CLIENTE }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="bi bi-person-workspace"></i> Vendedor *</label>
+                            <input type="text" name="vendedor" class="form-control" required value="{{ client.VENDEDOR }}">
+                        </div>
+                    </div>
+
+                    {% if client.TIPO == 'pessoa' %}
+                    <!-- Pessoa Fields -->
+                    <div id="pessoaFields">
+                        <h6 class="text-primary mb-3"><i class="bi bi-person"></i> Informações da Pessoa</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Faixa Etária *</label>
+                                <select name="idade" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    {% for age_range in age_ranges %}
+                                    <option value="{{ age_range }}" {% if age_range == client.IDADE %}selected{% endif %}>
+                                        {{ age_range }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Gênero *</label>
+                                <select name="genero" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Masculino" {% if client.GENERO == 'Masculino' %}selected{% endif %}>Masculino</option>
+                                    <option value="Feminino" {% if client.GENERO == 'Feminino' %}selected{% endif %}>Feminino</option>
+                                    <option value="Outro" {% if client.GENERO == 'Outro' %}selected{% endif %}>Outro</option>
+                                    <option value="Prefiro não informar" {% if client.GENERO == 'Prefiro não informar' %}selected{% endif %}>
+                                        Prefiro não informar
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Profissão</label>
+                                <input type="text" name="profissao" class="form-control" value="{{ client.PROFISSAO or '' }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CPF</label>
+                                <input type="text" name="cpf_cnpj" class="form-control" id="cpfInput"
+                                       value="{{ client.CPF_CNPJ or '' }}" placeholder="000.000.000-00">
+                                <small class="text-muted">Opcional</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- Empresa Fields -->
+                    <div id="empresaFields">
+                        <h6 class="text-success mb-3"><i class="bi bi-building"></i> Informações da Empresa</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CNPJ *</label>
+                                <input type="text" name="cpf_cnpj" class="form-control" id="cnpjInput" required
+                                       value="{{ client.CPF_CNPJ or '' }}" placeholder="00.000.000/0000-00">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Endereço *</label>
+                                <input type="text" name="endereco" class="form-control" required
+                                       value="{{ client.ENDERECO or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Contato comum -->
+                    <h6 class="text-secondary mb-3 mt-3"><i class="bi bi-telephone"></i> Contato</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" name="telefone" class="form-control" id="telefoneInput"
+                                   value="{{ client.TELEFONE or '' }}" placeholder="(00) 00000-0000">
+                        </div>
+                        {% if client.TIPO == 'pessoa' %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Endereço</label>
+                            <input type="text" name="endereco" class="form-control"
+                                   value="{{ client.ENDERECO or '' }}">
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('clients') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Máscaras (mesmas do add_client.html)
+document.getElementById('cpfInput')?.addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length <= 11) {
+        v = v.replace(/(\d{3})(\d)/, '$1.$2');
+        v = v.replace(/(\d{3})(\d)/, '$1.$2');
+        v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        e.target.value = v;
+    }
+});
+
+document.getElementById('cnpjInput')?.addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length <= 14) {
+        v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+        v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+        v = v.replace(/(\d{4})(\d)/, '$1-$2');
+        e.target.value = v;
+    }
+});
+
+document.getElementById('telefoneInput')?.addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length <= 11) {
+        if (v.length <= 10) {
+            v = v.replace(/^(\d{2})(\d)/, '($1) $2');
+            v = v.replace(/(\d{4})(\d)/, '$1-$2');
+        } else {
+            v = v.replace(/^(\d{2})(\d)/, '($1) $2');
+            v = v.replace(/(\d{5})(\d)/, '$1-$2');
+        }
+        e.target.value = v;
+    }
+});
+</script>
+{% endblock %}

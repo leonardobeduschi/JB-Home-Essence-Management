@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - Sistema de Gestão{% endblock %}
+{% block page_title %}Relatórios e Exportações{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Report Categories -->
+    <div class="col-md-3 mb-4">
+        <div class="list-group">
+            <a href="#" class="list-group-item list-group-item-action active" data-category="sales">
+                <i class="bi bi-cart-check"></i> Relatórios de Vendas
+            </a>
+            <a href="#" class="list-group-item list-group-item-action" data-category="products">
+                <i class="bi bi-box-seam"></i> Relatórios de Produtos
+            </a>
+            <a href="#" class="list-group-item list-group-item-action" data-category="clients">
+                <i class="bi bi-people"></i> Relatórios de Clientes
+            </a>
+            <a href="#" class="list-group-item list-group-item-action" data-category="financial">
+                <i class="bi bi-cash-stack"></i> Relatórios Financeiros
+            </a>
+            <a href="#" class="list-group-item list-group-item-action" data-category="inventory">
+                <i class="bi bi-boxes"></i> Relatórios de Estoque
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    <div class="col-md-9">
+        <!-- Sales Reports -->
+        <div class="report-section" id="sales-reports">
+            <h4 class="mb-4"><i class="bi bi-cart-check"></i> Relatórios de Vendas</h4>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-calendar-range"></i> Vendas por Período</h5>
+                            <p class="card-text">Relatório detalhado de todas as vendas em um período específico.</p>
+                            <button class="btn btn-primary" onclick="generateReport('sales_period')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('sales_period')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-graph-up"></i> Análise de Performance</h5>
+                            <p class="card-text">Métricas de performance e crescimento de vendas.</p>
+                            <button class="btn btn-primary" onclick="generateReport('sales_performance')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('sales_performance')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-person-workspace"></i> Vendas por Vendedor</h5>
+                            <p class="card-text">Performance individual de cada vendedor.</p>
+                            <button class="btn btn-primary" onclick="generateReport('sales_seller')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('sales_seller')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-tag"></i> Vendas por Categoria</h5>
+                            <p class="card-text">Análise de vendas separada por categoria de produtos.</p>
+                            <button class="btn btn-primary" onclick="generateReport('sales_category')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('sales_category')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Reports -->
+        <div class="report-section" id="products-reports" style="display: none;">
+            <h4 class="mb-4"><i class="bi bi-box-seam"></i> Relatórios de Produtos</h4>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-list-check"></i> Inventário Completo</h5>
+                            <p class="card-text">Lista completa de produtos com estoque e valores.</p>
+                            <button class="btn btn-primary" onclick="generateReport('inventory_full')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('inventory_full')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-star"></i> Top Produtos</h5>
+                            <p class="card-text">Produtos mais vendidos e rentáveis.</p>
+                            <button class="btn btn-primary" onclick="generateReport('top_products')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('top_products')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Estoque Baixo</h5>
+                            <p class="card-text">Produtos que precisam de reposição urgente.</p>
+                            <button class="btn btn-primary" onclick="generateReport('low_stock')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('low_stock')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-percent"></i> Análise de Margem</h5>
+                            <p class="card-text">Produtos por margem de lucro e rentabilidade.</p>
+                            <button class="btn btn-primary" onclick="generateReport('margin_analysis')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('margin_analysis')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clients Reports -->
+        <div class="report-section" id="clients-reports" style="display: none;">
+            <h4 class="mb-4"><i class="bi bi-people"></i> Relatórios de Clientes</h4>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-award"></i> Top Clientes</h5>
+                            <p class="card-text">Clientes que mais gastaram no período.</p>
+                            <button class="btn btn-primary" onclick="generateReport('top_clients')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('top_clients')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-diagram-3"></i> Segmentação</h5>
+                            <p class="card-text">Análise de clientes por idade, gênero e perfil.</p>
+                            <button class="btn btn-primary" onclick="generateReport('client_segmentation')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('client_segmentation')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-arrow-repeat"></i> Clientes Recorrentes</h5>
+                            <p class="card-text">Taxa de retorno e fidelização de clientes.</p>
+                            <button class="btn btn-primary" onclick="generateReport('recurring_clients')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('recurring_clients')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-person-plus"></i> Novos Clientes</h5>
+                            <p class="card-text">Clientes cadastrados no período selecionado.</p>
+                            <button class="btn btn-primary" onclick="generateReport('new_clients')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('new_clients')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Reports -->
+        <div class="report-section" id="financial-reports" style="display: none;">
+            <h4 class="mb-4"><i class="bi bi-cash-stack"></i> Relatórios Financeiros</h4>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-wallet2"></i> Fluxo de Caixa</h5>
+                            <p class="card-text">Entradas e receita total por período.</p>
+                            <button class="btn btn-primary" onclick="generateReport('cashflow')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('cashflow')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-credit-card"></i> Pagamentos</h5>
+                            <p class="card-text">Distribuição de vendas por meio de pagamento.</p>
+                            <button class="btn btn-primary" onclick="generateReport('payment_methods')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('payment_methods')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-graph-up"></i> Lucro e Margem</h5>
+                            <p class="card-text">Análise de lucro bruto e margem de contribuição.</p>
+                            <button class="btn btn-primary" onclick="generateReport('profit_margin')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('profit_margin')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-calculator"></i> DRE Simplificado</h5>
+                            <p class="card-text">Demonstração de Resultado do Exercício.</p>
+                            <button class="btn btn-primary" onclick="generateReport('dre')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('dre')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Reports -->
+        <div class="report-section" id="inventory-reports" style="display: none;">
+            <h4 class="mb-4"><i class="bi bi-boxes"></i> Relatórios de Estoque</h4>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-archive"></i> Movimentação de Estoque</h5>
+                            <p class="card-text">Histórico de entradas e saídas de estoque.</p>
+                            <button class="btn btn-primary" onclick="generateReport('stock_movement')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('stock_movement')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-cash-coin"></i> Valor do Inventário</h5>
+                            <p class="card-text">Valor total do estoque atual por categoria.</p>
+                            <button class="btn btn-primary" onclick="generateReport('inventory_value')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('inventory_value')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-arrow-down-circle"></i> Produtos Sem Movimento</h5>
+                            <p class="card-text">Produtos que não venderam no período.</p>
+                            <button class="btn btn-primary" onclick="generateReport('no_movement')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('no_movement')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-speedometer"></i> Giro de Estoque</h5>
+                            <p class="card-text">Análise de velocidade de venda dos produtos.</p>
+                            <button class="btn btn-primary" onclick="generateReport('turnover')">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                            </button>
+                            <button class="btn btn-success" onclick="exportReport('turnover')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Modal -->
+<div class="modal fade" id="reportConfigModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configurar Relatório</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Período</label>
+                    <select class="form-select" id="reportPeriod">
+                        <option value="today">Hoje</option>
+                        <option value="week">Esta Semana</option>
+                        <option value="month" selected>Este Mês</option>
+                        <option value="year">Este Ano</option>
+                        <option value="custom">Personalizado</option>
+                    </select>
+                </div>
+                <div id="customDates" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label">Data Inicial</label>
+                        <input type="date" class="form-control" id="reportDateFrom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data Final</label>
+                        <input type="date" class="form-control" id="reportDateTo">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmReportGeneration()">Gerar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentReportType = null;
+
+// Category navigation
+document.querySelectorAll('.list-group-item-action').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Update active state
+        document.querySelectorAll('.list-group-item-action').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Show corresponding section
+        const category = this.getAttribute('data-category');
+        document.querySelectorAll('.report-section').forEach(section => {
+            section.style.display = 'none';
+        });
+        document.getElementById(category + '-reports').style.display = 'block';
+    });
+});
+
+// Report period selector
+document.getElementById('reportPeriod').addEventListener('change', function() {
+    const customDates = document.getElementById('customDates');
+    customDates.style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+function generateReport(reportType) {
+    currentReportType = reportType;
+    new bootstrap.Modal(document.getElementById('reportConfigModal')).show();
+}
+
+function exportReport(reportType) {
+    currentReportType = reportType;
+    new bootstrap.Modal(document.getElementById('reportConfigModal')).show();
+}
+
+function confirmReportGeneration() {
+    const period = document.getElementById('reportPeriod').value;
+    console.log(`Generating report: ${currentReportType} for period: ${period}`);
+    
+    // TODO: Implement actual report generation via API
+    alert(`Gerando relatório ${currentReportType}...`);
+    
+    bootstrap.Modal.getInstance(document.getElementById('reportConfigModal')).hide();
+}
+</script>
+{% endblock %}

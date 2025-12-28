@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Adicionar Produto - Sistema de Gestão{% endblock %}
+{% block page_title %}Adicionar Novo Produto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Cadastro de Produto</h5>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <form method="POST" id="productForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="bi bi-upc"></i> Código *</label>
+                            <input type="text" name="codigo" class="form-control" required 
+                                   placeholder="Ex: AROMA001" pattern="[A-Z0-9]+" 
+                                   title="Use apenas letras maiúsculas e números">
+                            <small class="text-muted">Código único do produto</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="bi bi-tag"></i> Categoria *</label>
+                            <input type="text" name="categoria" class="form-control" required 
+                                   placeholder="Ex: Aromas Florais" list="categoriasList">
+                            <datalist id="categoriasList">
+                                <option value="Aromas Florais">
+                                <option value="Aromas Cítricos">
+                                <option value="Aromas Amadeirados">
+                                <option value="Perfumes Femininos">
+                                <option value="Perfumes Masculinos">
+                                <option value="Velas Aromáticas">
+                                <option value="Difusores">
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-box-seam"></i> Nome do Produto *</label>
+                        <input type="text" name="produto" class="form-control" required 
+                               placeholder="Ex: Lavanda Premium">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="bi bi-currency-dollar"></i> Custo (R$) *</label>
+                            <input type="number" name="custo" class="form-control" required 
+                                   min="0.01" step="0.01" placeholder="0.00" id="custoInput">
+                            <small class="text-muted">Preço de custo unitário</small>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="bi bi-cash-stack"></i> Preço de Venda (R$) *</label>
+                            <input type="number" name="valor" class="form-control" required 
+                                   min="0.01" step="0.01" placeholder="0.00" id="valorInput">
+                            <small class="text-muted">Preço de venda unitário</small>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="bi bi-percent"></i> Margem de Lucro</label>
+                            <input type="text" class="form-control" id="margemDisplay" readonly 
+                                   style="background-color: #e9ecef;">
+                            <small class="text-muted">Calculada automaticamente</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-box-arrow-in-down"></i> Estoque Inicial *</label>
+                        <input type="number" name="estoque" class="form-control" required 
+                               min="0" placeholder="0" value="0">
+                        <small class="text-muted">Quantidade inicial em estoque</small>
+                    </div>
+
+                    <!-- Preview Card -->
+                    <div class="card bg-light mb-3" id="previewCard" style="display: none;">
+                        <div class="card-header">
+                            <strong>Pré-visualização do Produto</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Produto:</strong> <span id="prevProduto">-</span></p>
+                                    <p class="mb-1"><strong>Código:</strong> <span id="prevCodigo">-</span></p>
+                                    <p class="mb-1"><strong>Categoria:</strong> <span id="prevCategoria">-</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Custo:</strong> R$ <span id="prevCusto">0.00</span></p>
+                                    <p class="mb-1"><strong>Preço:</strong> R$ <span id="prevValor">0.00</span></p>
+                                    <p class="mb-1"><strong>Margem:</strong> <span id="prevMargem" class="badge bg-info">0%</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('products') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Cadastrar Produto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Dicas de Cadastro</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Código:</strong> Use um padrão único (ex: AROMA001, PERF001)</li>
+                    <li><strong>Margem:</strong> Recomendamos mínimo de 30% para cobrir custos operacionais</li>
+                    <li><strong>Estoque:</strong> Configure alertas para quando atingir estoque mínimo de 10 unidades</li>
+                    <li><strong>Categoria:</strong> Categorias bem definidas facilitam relatórios e análises</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Calculate margin automatically
+function calcularMargem() {
+    const custo = parseFloat(document.getElementById('custoInput').value) || 0;
+    const valor = parseFloat(document.getElementById('valorInput').value) || 0;
+    
+    if (custo > 0 && valor > 0) {
+        const margem = ((valor - custo) / custo * 100).toFixed(1);
+        document.getElementById('margemDisplay').value = margem + '%';
+        
+        // Update preview
+        updatePreview();
+        
+        // Color code the margin
+        const margemInput = document.getElementById('margemDisplay');
+        if (margem < 20) {
+            margemInput.style.color = 'red';
+        } else if (margem < 40) {
+            margemInput.style.color = 'orange';
+        } else {
+            margemInput.style.color = 'green';
+        }
+    } else {
+        document.getElementById('margemDisplay').value = '-';
+    }
+}
+
+// Update preview card
+function updatePreview() {
+    const codigo = document.querySelector('[name="codigo"]').value;
+    const produto = document.querySelector('[name="produto"]').value;
+    const categoria = document.querySelector('[name="categoria"]').value;
+    const custo = document.getElementById('custoInput').value;
+    const valor = document.getElementById('valorInput').value;
+    
+    if (produto || codigo || categoria) {
+        document.getElementById('previewCard').style.display = 'block';
+        document.getElementById('prevProduto').textContent = produto || '-';
+        document.getElementById('prevCodigo').textContent = codigo || '-';
+        document.getElementById('prevCategoria').textContent = categoria || '-';
+        document.getElementById('prevCusto').textContent = parseFloat(custo || 0).toFixed(2);
+        document.getElementById('prevValor').textContent = parseFloat(valor || 0).toFixed(2);
+        
+        const margemText = document.getElementById('margemDisplay').value;
+        document.getElementById('prevMargem').textContent = margemText;
+        
+        const margem = parseFloat(margemText);
+        const badge = document.getElementById('prevMargem');
+        badge.className = 'badge ';
+        if (margem < 20) {
+            badge.classList.add('bg-danger');
+        } else if (margem < 40) {
+            badge.classList.add('bg-warning', 'text-dark');
+        } else {
+            badge.classList.add('bg-success');
+        }
+    }
+}
+
+// Event listeners
+document.getElementById('custoInput').addEventListener('input', calcularMargem);
+document.getElementById('valorInput').addEventListener('input', calcularMargem);
+
+// Update preview on any input change
+document.querySelectorAll('#productForm input').forEach(input => {
+    input.addEventListener('input', updatePreview);
+});
+
+// Form validation
+document.getElementById('productForm').addEventListener('submit', function(e) {
+    const custo = parseFloat(document.getElementById('custoInput').value);
+    const valor = parseFloat(document.getElementById('valorInput').value);
+    
+    if (valor <= custo) {
+        e.preventDefault();
+        alert('⚠️ O preço de venda deve ser maior que o custo!');
+        return false;
+    }
+    
+    const margem = ((valor - custo) / custo * 100);
+    if (margem < 10) {
+        if (!confirm('⚠️ Margem de lucro muito baixa (' + margem.toFixed(1) + '%). Deseja continuar?')) {
+            e.preventDefault();
+            return false;
+        }
+    }
+});
+
+// Auto-uppercase for codigo
+document.querySelector('[name="codigo"]').addEventListener('input', function(e) {
+    e.target.value = e.target.value.toUpperCase();
+});
+</script>
+{% endblock %}

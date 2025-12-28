@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}Vendas - Sistema de Gestão{% endblock %}
+{% block page_title %}Histórico de Vendas{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-cart-check"></i> Vendas Registradas</h5>
+        <a href="{{ url_for('add_sale') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nova Venda
+        </a>
+    </div>
+    <div class="card-body">
+        <!-- Filters -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <input type="text" id="searchInput" class="form-control" placeholder="🔍 Buscar...">
+            </div>
+            <div class="col-md-2">
+                <select id="paymentFilter" class="form-select">
+                    <option value="">Todos os Pagamentos</option>
+                    {% set payment_methods = sales|map(attribute='MEIO')|unique|list %}
+                    {% for method in payment_methods|sort %}
+                        <option value="{{ method }}">{{ method|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="categoryFilter" class="form-select">
+                    <option value="">Todas Categorias</option>
+                    {% set categories = sales|map(attribute='CATEGORIA')|unique|list %}
+                    {% for category in categories|sort %}
+                        <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" id="dateFromFilter" class="form-control" placeholder="Data inicial">
+            </div>
+            <div class="col-md-2">
+                <input type="date" id="dateToFilter" class="form-control" placeholder="Data final">
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()" title="Limpar Filtros">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        {% if sales %}
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body py-2">
+                        <small>Total de Vendas</small>
+                        <h4 class="mb-0" id="totalSales">{{ sales|length }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body py-2">
+                        <small>Receita Total</small>
+                        <h4 class="mb-0" id="totalRevenue">
+                        R$
+                        {{
+                            "{:,.2f}".format(sales|sum(attribute='PRECO_TOTAL'))
+                            |replace(',', 'X')
+                            |replace('.', ',')
+                            |replace('X', '.')
+                        }}
+                        </h4>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body py-2">
+                        <small>Itens Vendidos</small>
+                        <h4 class="mb-0" id="totalItems">{{ sales|sum(attribute='QUANTIDADE') }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body py-2">
+                        <small>Ticket Médio</small>
+                        <h4 class="mb-0" id="avgTicket">R$ {{ "%.2f"|format(sales|sum(attribute='PRECO_TOTAL') / sales|length) }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sales Table -->
+        <div class="table-responsive">
+            <table class="table table-hover table-sm" id="salesTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Produto</th>
+                        <th>Categoria</th>
+                        <th>Qtd</th>
+                        <th>Preço Unit.</th>
+                        <th>Total</th>
+                        <th>Pagamento</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales|reverse %}
+                    <tr data-payment="{{ sale.MEIO }}" data-category="{{ sale.CATEGORIA }}" data-date="{{ sale.DATA }}">
+                        <td><span class="badge bg-secondary">{{ sale.ID_VENDA }}</span></td>
+                        <td>{{ sale.DATA }}</td>
+                        <td>
+                            <strong>{{ sale.CLIENTE }}</strong><br>
+                            <small class="text-muted">{{ sale.ID_CLIENTE }}</small>
+                        </td>
+                        <td>
+                            {{ sale.PRODUTO }}<br>
+                            <small class="text-muted">{{ sale.CODIGO }}</small>
+                        </td>
+                        <td><span class="badge bg-info">{{ sale.CATEGORIA }}</span></td>
+                        <td><strong>{{ sale.QUANTIDADE }}</strong></td>
+                        <td>R$ {{ "%.2f"|format(sale.PRECO_UNIT) }}</td>
+                        <td><strong class="text-success">R$ {{ "%.2f"|format(sale.PRECO_TOTAL) }}</strong></td>
+                        <td>
+                            {% if sale.MEIO == 'dinheiro' %}
+                                <span class="badge bg-success"><i class="bi bi-cash"></i> Dinheiro</span>
+                            {% elif sale.MEIO == 'pix' %}
+                                <span class="badge bg-primary"><i class="bi bi-phone"></i> PIX</span>
+                            {% elif sale.MEIO == 'cartao_credito' %}
+                                <span class="badge bg-info"><i class="bi bi-credit-card"></i> Crédito</span>
+                            {% elif sale.MEIO == 'cartao_debito' %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-credit-card-2-front"></i> Débito</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ sale.MEIO }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-outline-primary" title="Ver detalhes" onclick="viewSaleDetails('{{ sale.ID_VENDA }}')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" title="Excluir venda" onclick="deleteSale('{{ sale.ID_VENDA }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted">
+                            <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+                            <p>Nenhuma venda registrada</p>
+                            <a href="{{ url_for('add_sale') }}" class="btn btn-primary">Registrar Primeira Venda</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Details Modal -->
+<div class="modal fade" id="saleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes da Venda</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="saleModalBody">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="printCurrentSale()">
+                    <i class="bi bi-printer"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentSaleId = null;
+
+// Filter functionality
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('paymentFilter').addEventListener('change', filterTable);
+document.getElementById('categoryFilter').addEventListener('change', filterTable);
+document.getElementById('dateFromFilter').addEventListener('change', filterTable);
+document.getElementById('dateToFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const searchValue = document.getElementById('searchInput').value.toLowerCase();
+    const paymentValue = document.getElementById('paymentFilter').value;
+    const categoryValue = document.getElementById('categoryFilter').value;
+    const dateFrom = document.getElementById('dateFromFilter').value;
+    const dateTo = document.getElementById('dateToFilter').value;
+    
+    const rows = document.querySelectorAll('#salesTable tbody tr');
+    let visibleCount = 0;
+    let visibleRevenue = 0;
+    let visibleItems = 0;
+    
+    rows.forEach(row => {
+        if (row.cells.length === 1) return; // Skip empty state
+        
+        const text = row.textContent.toLowerCase();
+        const payment = row.getAttribute('data-payment');
+        const category = row.getAttribute('data-category');
+        const date = row.getAttribute('data-date');
+        
+        let showRow = true;
+        
+        // Search filter
+        if (searchValue && !text.includes(searchValue)) {
+            showRow = false;
+        }
+        
+        // Payment filter
+        if (paymentValue && payment !== paymentValue) {
+            showRow = false;
+        }
+        
+        // Category filter
+        if (categoryValue && category !== categoryValue) {
+            showRow = false;
+        }
+        
+        // Date filters
+        if (dateFrom || dateTo) {
+            const saleDate = parseDate(date);
+            if (dateFrom && saleDate < new Date(dateFrom)) showRow = false;
+            if (dateTo && saleDate > new Date(dateTo)) showRow = false;
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+        
+        // Update summary
+        if (showRow) {
+            visibleCount++;
+            const total = parseFloat(row.cells[7].textContent.replace('R$ ', '').replace(',', '.'));
+            const qty = parseInt(row.cells[5].textContent);
+            visibleRevenue += total;
+            visibleItems += qty;
+        }
+    });
+    
+    // Update summary cards
+    document.getElementById('totalSales').textContent = visibleCount;
+    document.getElementById('totalRevenue').textContent = 'R$ ' + visibleRevenue.toFixed(2);
+    document.getElementById('totalItems').textContent = visibleItems;
+    document.getElementById('avgTicket').textContent = visibleCount > 0 ? 'R$ ' + (visibleRevenue / visibleCount).toFixed(2) : 'R$ 0.00';
+}
+
+function parseDate(dateStr) {
+    // Assumes DD/MM/YYYY format
+    const parts = dateStr.split('/');
+    return new Date(parts[2], parts[1] - 1, parts[0]);
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('paymentFilter').value = '';
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('dateFromFilter').value = '';
+    document.getElementById('dateToFilter').value = '';
+    filterTable();
+}
+
+function viewSaleDetails(id) {
+    fetch(`/api/sales/${id}`)
+        .then(r => {
+            if (!r.ok) throw new Error('Venda não encontrada');
+            return r.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const s = data.data;
+                const preco_unit = parseFloat(s.PRECO_UNIT);
+                const preco_total = parseFloat(s.PRECO_TOTAL);
+                
+                let html = `
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="bi bi-receipt"></i> Detalhes da Venda ${s.ID_VENDA}</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless">
+                                <tr><th>Data:</th><td>${s.DATA}</td></tr>
+                                <tr><th>Cliente:</th><td><strong>${s.CLIENTE}</strong> (${s.ID_CLIENTE})</td></tr>
+                                <tr><th>Produto:</th><td>${s.PRODUTO} <small class="text-muted">(${s.CODIGO})</small></td></tr>
+                                <tr><th>Categoria:</th><td><span class="badge bg-info">${s.CATEGORIA}</span></td></tr>
+                                <tr><th>Quantidade:</th><td><strong>${s.QUANTIDADE} unidade(s)</strong></td></tr>
+                                <tr><th>Preço Unitário:</th><td>R$ ${preco_unit.toFixed(2)}</td></tr>
+                                <tr><th>Meio de Pagamento:</th><td><strong>${s.MEIO.toUpperCase()}</strong></td></tr>
+                                <tr class="table-primary">
+                                    <th>Total da Venda:</th>
+                                    <td><h5 class="text-success mb-0">R$ ${preco_total.toFixed(2)}</h5></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('saleModalBody').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('saleModal')).show();
+            }
+        })
+        .catch(err => {
+            alert('Erro ao carregar detalhes da venda: ' + err.message);
+        });
+}
+
+function deleteSale(id) {
+    if (!confirm(`⚠️ Tem certeza que deseja EXCLUIR permanentemente a venda ${id}?\nO estoque será restaurado automaticamente!\nEsta ação não pode ser desfeita!`)) {
+        return;
+    }
+
+    fetch('/api/sales/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_venda: id })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Venda excluída com sucesso!');
+            location.reload();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    })
+    .catch(() => alert('Erro de conexão'));
+}
+
+function printCurrentSale() {
+    if (currentSaleId) {
+        printReceipt(currentSaleId);
+    }
+}
+</script>
+{% endblock %}

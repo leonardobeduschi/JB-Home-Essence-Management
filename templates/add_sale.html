@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Venda - Sistema de Gestão{% endblock %}
+{% block page_title %}Registrar Nova Venda{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-cart-plus"></i> Registro de Venda (Múltiplos Itens)</h5>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <form method="POST" id="saleForm">
+                    <!-- Step 1: Select Client -->
+                    <div class="step-section mb-4">
+                        <h6 class="text-primary"><i class="bi bi-person-check"></i> 1. Selecionar Cliente</h6>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Cliente *</label>
+                                <select class="form-select" id="clientSelect" required>
+                                    <option value="">Selecione um cliente...</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.ID_CLIENTE }}" 
+                                            data-name="{{ client.CLIENTE }}">
+                                        {{ client.ID_CLIENTE }} - {{ client.CLIENTE }}
+                                        {% if client.CPF_CNPJ %}({{ client.CPF_CNPJ }}){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Add Products to Cart -->
+                    <div class="step-section mb-4">
+                        <h6 class="text-success"><i class="bi bi-box-seam"></i> 2. Adicionar Produtos ao Carrinho</h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Produto</label>
+                                <select class="form-select" id="productSelect">
+                                    <option value="">Selecione um produto...</option>
+                                    {% for product in products %}
+                                    <option value="{{ product.CODIGO }}"
+                                            data-name="{{ product.PRODUTO }}"
+                                            data-category="{{ product.CATEGORIA }}"
+                                            data-price="{{ product.VALOR }}"
+                                            data-stock="{{ product.ESTOQUE }}"
+                                            {% if product.ESTOQUE == 0 %}disabled{% endif %}>
+                                        {{ product.CODIGO }} - {{ product.PRODUTO }} [{{ product.CATEGORIA }}]
+                                        (R$ {{ "%.2f"|format(product.VALOR) }})
+                                        - Estoque: {{ product.ESTOQUE }}
+                                        {% if product.ESTOQUE == 0 %}[ESGOTADO]{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Quantidade</label>
+                                <input type="number" class="form-control" id="quantityInput" min="1" value="1">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-success w-100" onclick="addToCart()">
+                                    <i class="bi bi-plus-circle"></i> Adicionar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cart Items -->
+                        <div class="card bg-light" id="cartSection" style="display: none;">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-cart3"></i> Itens no Carrinho</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Categoria</th>
+                                            <th>Qtd</th>
+                                            <th>Preço Unit.</th>
+                                            <th>Subtotal</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cartItems">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Payment Method -->
+                    <div class="step-section mb-4">
+                        <h6 class="text-warning"><i class="bi bi-credit-card"></i> 3. Meio de Pagamento</h6>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <select class="form-select" id="paymentSelect" required>
+                                    <option value="">Selecione o meio de pagamento...</option>
+                                    {% for method in payment_methods %}
+                                    <option value="{{ method }}">
+                                        {% if method == 'dinheiro' %}💵 Dinheiro
+                                        {% elif method == 'pix' %}📱 PIX
+                                        {% elif method == 'cartão de crédito' %}💳 Cartão de Crédito
+                                        {% elif method == 'cartão de débito' %}💳 Cartão de Débito
+                                        {% else %}{{ method|title }}
+                                        {% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden inputs for form submission -->
+                    <input type="hidden" name="cart_data" id="cartData">
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('sales') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+                            <i class="bi bi-check-circle"></i> Confirmar Venda
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="col-md-4">
+        <div class="card sticky-top" style="top: 100px;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-receipt"></i> Resumo da Venda</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Cliente:</strong>
+                    <div id="summaryClient" class="text-muted">Não selecionado</div>
+                </div>
+
+                <div class="mb-3">
+                    <strong>Itens no Carrinho:</strong>
+                    <div id="summaryItemCount" class="text-muted">0 itens</div>
+                </div>
+
+                <div class="mb-3">
+                    <strong>Meio de Pagamento:</strong>
+                    <div id="summaryPayment" class="text-muted">Não selecionado</div>
+                </div>
+
+                <hr>
+
+                <div class="text-center">
+                    <h3 class="mb-0">Total</h3>
+                    <h1 class="text-success" id="summaryTotal">R$ 0.00</h1>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Dica Rápida</h6>
+            </div>
+            <div class="card-body">
+                <small>
+                    <strong>Novo sistema de carrinho!</strong><br>
+                    Adicione múltiplos itens à venda. O estoque será atualizado automaticamente para todos os itens ao confirmar.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let cart = [];
+
+// Client selection
+document.getElementById('clientSelect').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    if (this.value) {
+        const name = selected.getAttribute('data-name');
+        document.getElementById('summaryClient').innerHTML = `<strong>${name}</strong>`;
+        document.getElementById('summaryClient').classList.remove('text-muted');
+    } else {
+        document.getElementById('summaryClient').textContent = 'Não selecionado';
+        document.getElementById('summaryClient').classList.add('text-muted');
+    }
+    updateSubmitButton();
+});
+
+// Payment method
+document.getElementById('paymentSelect').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    if (this.value) {
+        document.getElementById('summaryPayment').innerHTML = `<strong>${selected.textContent}</strong>`;
+        document.getElementById('summaryPayment').classList.remove('text-muted');
+    } else {
+        document.getElementById('summaryPayment').textContent = 'Não selecionado';
+        document.getElementById('summaryPayment').classList.add('text-muted');
+    }
+    updateSubmitButton();
+});
+
+function addToCart() {
+    const productSelect = document.getElementById('productSelect');
+    const quantityInput = document.getElementById('quantityInput');
+    
+    if (!productSelect.value) {
+        alert('Selecione um produto!');
+        return;
+    }
+    
+    const selected = productSelect.options[productSelect.selectedIndex];
+    const codigo = productSelect.value;
+    const name = selected.getAttribute('data-name');
+    const category = selected.getAttribute('data-category');
+    const price = parseFloat(selected.getAttribute('data-price'));
+    const stock = parseInt(selected.getAttribute('data-stock'));
+    const quantity = parseInt(quantityInput.value);
+    
+    // Validate quantity
+    if (quantity <= 0) {
+        alert('Quantidade deve ser maior que zero!');
+        return;
+    }
+    
+    if (quantity > stock) {
+        alert(`Estoque insuficiente! Disponível: ${stock} unidades`);
+        return;
+    }
+    
+    // Check if product already in cart
+    const existing = cart.find(item => item.codigo === codigo);
+    if (existing) {
+        const newQty = existing.quantity + quantity;
+        if (newQty > stock) {
+            alert(`Estoque insuficiente! Você já tem ${existing.quantity} no carrinho. Disponível: ${stock} unidades`);
+            return;
+        }
+        existing.quantity = newQty;
+        existing.subtotal = existing.quantity * existing.price;
+    } else {
+        cart.push({
+            codigo: codigo,
+            name: name,
+            category: category,
+            price: price,
+            quantity: quantity,
+            stock: stock,
+            subtotal: price * quantity
+        });
+    }
+    
+    // Reset selections
+    productSelect.value = '';
+    quantityInput.value = 1;
+    
+    renderCart();
+    updateSummary();
+    updateSubmitButton();
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    renderCart();
+    updateSummary();
+    updateSubmitButton();
+}
+
+function renderCart() {
+    const cartSection = document.getElementById('cartSection');
+    const cartItems = document.getElementById('cartItems');
+    
+    if (cart.length === 0) {
+        cartSection.style.display = 'none';
+        return;
+    }
+    
+    cartSection.style.display = 'block';
+    
+    let html = '';
+    cart.forEach((item, index) => {
+        html += `
+            <tr>
+                <td><strong>${item.name}</strong><br><small class="text-muted">${item.codigo}</small></td>
+                <td><span class="badge bg-info">${item.category}</span></td>
+                <td><strong>${item.quantity}</strong></td>
+                <td>R$ ${item.price.toFixed(2)}</td>
+                <td><strong>R$ ${item.subtotal.toFixed(2)}</strong></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    cartItems.innerHTML = html;
+}
+
+function updateSummary() {
+    const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
+    
+    document.getElementById('summaryItemCount').innerHTML = `<strong>${itemCount} item(s)</strong>`;
+    document.getElementById('summaryTotal').textContent = `R$ ${total.toFixed(2)}`;
+}
+
+function updateSubmitButton() {
+    const client = document.getElementById('clientSelect').value;
+    const payment = document.getElementById('paymentSelect').value;
+    const hasItems = cart.length > 0;
+    
+    document.getElementById('submitBtn').disabled = !(client && payment && hasItems);
+}
+
+// Form submission
+document.getElementById('saleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (cart.length === 0) {
+        alert('❌ Adicione pelo menos um produto ao carrinho!');
+        return;
+    }
+    
+    const client = document.getElementById('clientSelect').value;
+    const payment = document.getElementById('paymentSelect').value;
+    const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
+    
+    // Confirm sale
+    if (!confirm(`Confirmar venda de ${cart.length} produto(s) no valor total de R$ ${total.toFixed(2)}?`)) {
+        return;
+    }
+    
+    // Prepare data for submission
+    const cartData = {
+        id_cliente: client,
+        meio: payment,
+        items: cart.map(item => ({
+            codigo: item.codigo,
+            quantidade: item.quantity,
+            preco_unit: item.price
+        }))
+    };
+    
+    // Set hidden input
+    document.getElementById('cartData').value = JSON.stringify(cartData);
+    
+    // Submit form
+    this.submit();
+});
+</script>
+{% endblock %}

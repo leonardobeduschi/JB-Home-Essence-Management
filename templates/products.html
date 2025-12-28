@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos - Sistema de Gestão{% endblock %}
+{% block page_title %}Gerenciamento de Produtos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0">Lista de Produtos</h4>
+        <p class="text-muted mb-0">Total: {{ products|length }} produtos cadastrados</p>
+    </div>
+    <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Novo Produto
+    </a>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" id="searchInput" class="form-control" placeholder="🔍 Buscar por código ou nome...">
+            </div>
+            <div class="col-md-3">
+                <select id="categoryFilter" class="form-select">
+                    <option value="">Todas as Categorias</option>
+                    {% set categories = [] %}
+                    {% for product in products %}
+                        {% if product.CATEGORIA not in categories %}
+                            {% set _ = categories.append(product.CATEGORIA) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for category in categories|sort %}
+                        <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="stockFilter" class="form-select">
+                    <option value="">Todos os Estoques</option>
+                    <option value="low">Estoque Baixo (0-1 un)</option>
+                    <option value="medium">Estoque Médio (2-4 un)</option>
+                    <option value="high">Estoque Alto (5+ un)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="productsTable">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Produto</th>
+                        <th>Categoria</th>
+                        <th>Custo</th>
+                        <th>Preço Venda</th>
+                        <th>Margem</th>
+                        <th>Estoque</th>
+                        <th>Valor Total</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    {% set custo = product.CUSTO|float %}
+                    {% set valor = product.VALOR|float %}
+                    {% set estoque = product.ESTOQUE|int %}
+                    {% set margem = ((valor - custo) / custo * 100) if custo > 0 else 0 %}
+                    <tr data-category="{{ product.CATEGORIA }}" data-stock="{{ estoque }}">
+                        <td><span class="badge bg-primary">{{ product.CODIGO }}</span></td>
+                        <td><strong>{{ product.PRODUTO }}</strong></td>
+                        <td>{{ product.CATEGORIA }}</td>
+                        <td>R$ {{ "%.2f"|format(custo) }}</td>
+                        <td>R$ {{ "%.2f"|format(valor) }}</td>
+                        <td>
+                            <span class="badge {% if margem > 50 %}bg-success{% elif margem > 30 %}bg-info{% else %}bg-warning{% endif %}">
+                                {{ "%.1f"|format(margem) }}%
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if estoque <= 1 %}bg-danger
+                                {% elif estoque <= 4 %}bg-warning
+                                {% else %}bg-success{% endif %}">
+                                {{ estoque }} un
+                            </span>
+                        </td>
+                        <td>R$ {{ "%.2f"|format(valor * estoque) }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" title="Ver detalhes" onclick="viewProduct('{{ product.CODIGO }}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success me-1" title="Ajustar estoque" onclick="adjustStock('{{ product.CODIGO }}', '{{ product.PRODUTO }}')">
+                                <i class="bi bi-box-seam"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" title="Excluir produto" onclick="deleteProduct('{{ product.CODIGO }}', '{{ product.PRODUTO|escape }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- View Product Modal -->
+<div class="modal fade" id="viewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-seam"></i> Detalhes do Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="productDetails">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Adjust Stock Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-seam"></i> Ajustar Estoque</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Produto: <strong id="stockProductName"></strong></p>
+                <div class="mb-3">
+                    <label class="form-label">Quantidade</label>
+                    <input type="number" id="stockQuantity" class="form-control" placeholder="Use + para adicionar, - para remover">
+                    <small class="text-muted">Exemplo: +10 (adicionar), -5 (remover)</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Motivo</label>
+                    <input type="text" id="stockReason" class="form-control" placeholder="Ex: Entrada de mercadoria">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveStockAdjustment()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentProductCode = '';
+
+// Filtros (mantido igual)
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('categoryFilter').addEventListener('change', filterTable);
+document.getElementById('stockFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const category = document.getElementById('categoryFilter').value;
+    const stockFilter = document.getElementById('stockFilter').value;
+    const rows = document.querySelectorAll('#productsTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowCategory = row.dataset.category;
+        const stock = parseInt(row.dataset.stock);
+        
+        let show = true;
+        if (searchTerm && !text.includes(searchTerm)) show = false;
+        if (category && rowCategory !== category) show = false;
+        if (stockFilter === 'low' && stock > 1) show = false;
+        if (stockFilter === 'medium' && (stock < 2 || stock > 4)) show = false;
+        if (stockFilter === 'high' && stock < 5) show = false;
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+// CORREÇÃO: URL correta com barra
+function viewProduct(codigo) {
+    fetch(`/api/products/${codigo}`)
+        .then(r => {
+            if (!r.ok) throw new Error('Produto não encontrado');
+            return r.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const p = data.data;
+                const custo = parseFloat(p.CUSTO);
+                const valor = parseFloat(p.VALOR);
+                const estoque = parseInt(p.ESTOQUE);
+                const margem = custo > 0 ? ((valor - custo) / valor * 100).toFixed(1) : 0;
+                
+                document.getElementById('productDetails').innerHTML = `
+                    <table class="table table-sm">
+                        <tr><th>Código:</th><td><strong>${p.CODIGO}</strong></td></tr>
+                        <tr><th>Produto:</th><td>${p.PRODUTO}</td></tr>
+                        <tr><th>Categoria:</th><td>${p.CATEGORIA}</td></tr>
+                        <tr><th>Custo:</th><td>R$ ${custo.toFixed(2)}</td></tr>
+                        <tr><th>Preço de Venda:</th><td>R$ ${valor.toFixed(2)}</td></tr>
+                        <tr><th>Margem:</th><td><span class="badge bg-info">${margem}%</span></td></tr>
+                        <tr><th>Estoque:</th><td><strong>${estoque} un</strong></td></tr>
+                        <tr><th>Valor Total:</th><td>R$ ${(valor * estoque).toFixed(2)}</td></tr>
+                    </table>
+                `;
+                new bootstrap.Modal(document.getElementById('viewModal')).show();
+            }
+        })
+        .catch(err => {
+            alert('Erro ao carregar produto: ' + err.message);
+        });
+}
+
+function adjustStock(codigo, nome) {
+    currentProductCode = codigo;
+    document.getElementById('stockProductName').textContent = nome;
+    document.getElementById('stockQuantity').value = '';
+    document.getElementById('stockReason').value = '';
+    new bootstrap.Modal(document.getElementById('stockModal')).show();
+}
+
+// NOVA FUNÇÃO: realmente ajusta o estoque via API
+function saveStockAdjustment() {
+    const quantityInput = document.getElementById('stockQuantity').value.trim();
+    const reason = document.getElementById('stockReason').value.trim() || 'Ajuste manual';
+
+    if (!quantityInput || isNaN(quantityInput) || quantityInput === '0') {
+        alert('Digite uma quantidade válida (ex: +10 ou -5)');
+        return;
+    }
+
+    const quantity = parseInt(quantityInput);
+
+    fetch('/api/products/adjust-stock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            codigo: currentProductCode,
+            quantity: quantity,
+            reason: reason
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Estoque ajustado com sucesso!');
+            bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
+            location.reload(); // recarrega para atualizar a tabela
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    })
+    .catch(() => alert('Erro de conexão com o servidor'));
+}
+
+// NOVA FUNÇÃO: remover produto
+function deleteProduct(codigo, nome) {
+    if (!confirm(`Tem certeza que deseja EXCLUIR o produto "${nome}" (${codigo})?\nEsta ação não pode ser desfeita!`)) {
+        return;
+    }
+
+    fetch('/api/products/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: codigo })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Produto removido com sucesso!');
+            location.reload();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    });
+}
+</script>
+{% endblock %}

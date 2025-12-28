@@ -1,0 +1,203 @@
+ID_VENDA,ID_CLIENTE,CLIENTE,MEIO,DATA,PRODUTO,CATEGORIA,CODIGO,QUANTIDADE,PRECO_UNIT,PRECO_TOTAL
+0,0,Jeanete Beduschi,,24/02/2024,Home Spray 300ML,Capim Santo,CAS02,1,94.00,94.00
+0,0,Jeanete Beduschi,,24/02/2024,Home Spray 300ML,Bambu Garden,BAG02,1,94.00,94.00
+0,0,Jeanete Beduschi,,24/02/2024,Velas aromáticas,Jardins da França,JDF06,1,124.00,124.00
+0,0,Jeanete Beduschi,,09/10/2024,Difusor de varetas,Jardins da França,JDF03,1,166.00,166.00
+2,1,Edilson,,09/10/2024,Difusor de varetas,Havana,HAV03,1,188.00,188.00
+4,4,Dra. Zuleide,,10/10/2024,Difusor de varetas,Jardins da França,JDF03,1,166.00,166.00
+34,24,Teógenes,Amigo,28/10/2024,Velas aromáticas,Havana,HAV06,1,133.00,133.00
+31,22,Margareth (Amiga Silvana),,30/10/2024,Home Spray 300ML,Hortênsia,HOR02,1,101.00,101.00
+3,3,Roberta Voltolini,Amigo,01/11/2024,Difusor de varetas,Havana,HAV03,1,188.00,188.00
+6,6,Ademir,Amigo,18/11/2024,Home Spray 300ML,Jardins da França,JDF02,1,106.00,106.00
+7,7,Mateus MR Portas,Amigo,03/12/2024,Home Spray 300ML,Jardins da França,JDF02,1,106.00,106.00
+5,5,Odecir,Amigo,04/12/2024,Home Spray 300ML,Jardins da França,JDF02,1,106.00,106.00
+11,11,Wilma,Amigo,06/12/2024,Difusor de varetas,Capim Santo,CAS03,1,134.00,134.00
+11,11,Wilma,Amigo,06/12/2024,Sabonete líquido,Capim Santo,CAS05,1,86.00,86.00
+21,16,Maurício Magnabosco,Amigo,13/12/2024,Velas aromáticas,Jardins da França,JDF06,1,124.00,124.00
+22,16,Maurício Magnabosco,Amigo,14/12/2024,Difusor elétrico,Acessórios,ACE22,1,78.00,78.00
+22,16,Maurício Magnabosco,Amigo,14/12/2024,Essência,Bambu Garden,BAG04,1,88.00,88.00
+0,0,Jeanete Beduschi,,15/12/2024,Kit,Lavanda,,2,74.80,149.60
+0,0,Jeanete Beduschi,,15/12/2024,Sabonete em barra,Mosaico,MOS08,2,70.00,140.00
+0,0,Jeanete Beduschi,,15/12/2024,Sabonete em barra,Jardins da França,JDF08,2,34.00,68.00
+10,10,Marcelo G.,,21/12/2024,Home Spray 300ML,Capim Santo,CAS02,1,94.00,94.00
+10,10,Marcelo G.,,21/12/2024,Home Spray 300ML,Bambu Garden,BAG02,1,94.00,94.00
+12,12,Milena,,27/12/2024,Home Spray 300ML,Jardins da França,JDF02,1,113.00,113.00
+8,8,Silvana Mussi,,16/01/2025,Difusor de varetas,Garbo,GAR03,1,158.00,158.00
+14,8,Silvana Mussi,,16/01/2025,Sabonete líquido,Hortênsia,HOR05,1,92.00,92.00
+9,9,Margo,,17/01/2025,Home Spray 300ML,Hortênsia,HOR02,1,94.00,94.00
+13,9,Margo,,17/01/2025,Home Spray 300ML,Hortênsia,HOR02,1,101.00,101.00
+1,2,Edifício Apolo 11,,03/02/2025,Difusor de varetas,Havana,HAV03,1,202.00,202.00
+1,2,Edifício Apolo 11,,03/02/2025,Conj. Varetas preta,Acessórios,ACE13,1,1.25,1.25
+1,2,Edifício Apolo 11,,03/02/2025,Sabonete líquido,Havana,HAV05,1,160.00,160.00
+1,2,Edifício Apolo 11,,03/02/2025,Home Spray 300ML,Havana,HAV02,1,113.00,113.00
+19,14,Condomínio Peniche,,06/02/2025,Home Spray 300ML,Garbo,GAR02,3,94.00,282.00
+15,13,Edifício Fabimar,,07/02/2025,Home Spray 300ML,Capim Santo,CAS02,1,101.00,101.00
+16,13,Edifício Fabimar,,07/02/2025,Difusor de varetas,Capim Santo,CAS03,1,144.00,144.00
+17,13,Edifício Fabimar,,07/02/2025,Sabonete líquido,Capim Santo,CAS05,1,92.00,92.00
+18,13,Edifício Fabimar,,07/02/2025,Bandeja Prata 19x10,Acessórios,ACE18,1,75.00,75.00
+32,23,Fabiana Biston (Fabi),Amigo,07/02/2025,Home Spray 300ML,Bambu Garden,BAG02,1,101.00,101.00
+32,23,Fabiana Biston (Fabi),Amigo,07/02/2025,Difusor de varetas,Bambu Garden,BAG03,1,153.00,153.00
+29,2,Edifício Apolo 11,,18/02/2025,Essência,Havana,HAV04,1,88.00,88.00
+29,2,Edifício Apolo 11,,18/02/2025,Difusor elétrico,Acessórios,ACE22,1,78.00,78.00
+23,17,Évilyn,Amigo,19/02/2025,Home Spray 300ML,Folhas de Outono,FDO02,1,114.00,114.00
+33,25,Marcela,,20/02/2025,Home Spray 300ML,Jardins da França,JDF02,3,114.00,342.00
+31,22,Margareth (Amiga Silvana),,05/03/2025,Home Spray 300ML,Aroma do bebê,ADB02,1,101.00,101.00
+28,14,Condomínio Peniche,,10/03/2025,Home Spray 1L,Garbo,,1,262.00,262.00
+20,15,Gabriel Galarça,Amigo,12/03/2025,Difusor de varetas,Jardins da França,JDF03,1,178.00,178.00
+20,15,Gabriel Galarça,Amigo,12/03/2025,Conj. Varetas preta,Acessórios,ACE13,1,10.00,10.00
+26,20,Beto,Amigo,28/03/2025,Home Spray 300ML,Havana,HAV02,1,114.00,114.00
+24,18,Anna Paula,,04/04/2025,Home Spray 300ML,Folhas de Outono,FDO02,1,114.00,114.00
+24,18,Anna Paula,,04/04/2025,Essência,Singular,SIN04,1,95.00,95.00
+25,19,Clarita,,04/04/2025,Home Spray 300ML,Jardins da França,JDF02,1,114.00,114.00
+25,19,Clarita,,04/04/2025,Home Spray 300ML,Havana,HAV02,1,114.00,114.00
+27,14,Condomínio Peniche,,04/04/2025,Refil Home Spray,Garbo,GAR26,1,262.00,262.00
+30,21,Eduarda Schnaider (Mãe),Amostras,09/04/2025,Difusor de varetas,Capim Santo,CAS03,1,144.00,144.00
+35,26,Júlio César,Amostras,14/04/2025,Home Spray 300ML,Garbo,GAR02,1,101.00,101.00
+36,27,Juliana Takaki,Amostras,17/04/2025,Home Spray 300ML,Bambu Garden,BAG02,1,101.00,101.00
+36,27,Juliana Takaki,Amostras,17/04/2025,Home Spray 300ML,Garbo,GAR02,1,101.00,101.00
+37,28,Rose ,Amigo,22/04/2025,Água perfumada,Delicato,DEL01,1,92.00,92.00
+38,30,Edificio Residencial Chandon,Amigo,23/04/2025,Home Spray 300ML,Lavanda Inglesa,LAI02,1,101.00,101.00
+38,30,Edificio Residencial Chandon,Amigo,23/04/2025,Essência,Lavanda Inglesa,LAI04,1,88.00,88.00
+38,30,Edificio Residencial Chandon,Amigo,23/04/2025,Difusor de varetas,Lavanda Inglesa,LAI03,1,139.00,139.00
+38,30,Edificio Residencial Chandon,Amigo,23/04/2025,Sabonete líquido,Lavanda Inglesa,LAI05,1,95.00,95.00
+38,30,Edificio Residencial Chandon,Amigo,23/04/2025,Difusor elétrico,Acessórios,ACE22,1,78.00,78.00
+39,31,Marcia,,25/04/2025,Home Spray 300ML,Havana,HAV02,1,114.00,114.00
+39,31,Marcia,,25/04/2025,Difusor de varetas,Havana,HAV03,1,202.00,202.00
+39,31,Marcia,,25/04/2025,Sabonete líquido,Havana,HAV05,1,160.00,160.00
+40,32,Luciana Caires,Amigo,25/04/2025,Home Spray 300ML,Lavanda Inglesa,LAI02,1,101.00,101.00
+41,33,Ana Maria,,28/04/2025,Água perfumada,Abbraccio,ABR01,2,92.00,184.00
+42,34,Alba Academia,Amostras,06/05/2025,Home Spray 300ML,Singular,SIN02,1,114.00,114.00
+43,35,Margara,,09/05/2025,Home Spray 300ML,Havana,HAV02,1,114.00,114.00
+44,1,Edilson,,09/05/2025,Difusor de varetas,Bambu Garden,BAG03,1,150.00,150.00
+45,33,Ana Maria,,13/05/2025,Difusor de varetas,Lavanda Inglesa,LAI03,1,139.00,139.00
+45,33,Ana Maria,,13/05/2025,Difusor de varetas,Havana,HAV03,1,202.00,202.00
+46,36,Raul Ehlke,Cold call,14/05/2025,Difusor de varetas,Hortênsia,HOR03,1,145.00,145.00
+47,0,Jeanete,,20/05/2025,Sabonete líquido,Hortênsia,HOR05,1,92.00,92.00
+48,14,Condomínio Peniche,,26/05/2025,Refil Home Spray,Garbo,GAR26,1,262.00,262.00
+49,37,Marcos XM Invest,D2D,28/05/2025,Difusor de varetas,Jardins da França,JDF03,1,178.00,178.00
+49,37,Marcos XM Invest,D2D,28/05/2025,Conj. Varetas preta,Acessórios,ACE13,1,10.00,10.00
+50,38,Santina Predebon,Amigo,30/05/2025,Home Spray 300ML,Bambu Garden,BAG02,1,101.00,101.00
+50,38,Santina Predebon,Amigo,30/05/2025,Difusor de varetas,Bambu Garden,BAG03,1,153.00,153.00
+51,39,Nant Comercio,Indicação,30/05/2025,Home Spray 300ML,Garbo,GAR02,1,101.00,101.00
+51,39,Nant Comercio,Indicação,30/05/2025,Difusor de varetas,Garbo,GAR03,2,170.00,340.00
+52,40,Elias Formighieri,Amigo,04/06/2025,Home Spray 300ML,Bambu Garden,BAG02,1,101.00,101.00
+52,40,Elias Formighieri,Amigo,04/06/2025,Difusor de varetas,Bambu Garden,BAG03,1,153.00,153.00
+52,40,Elias Formighieri,Amigo,04/06/2025,Essência,Bambu Garden,BAG04,1,88.00,88.00
+53,41,Rose Gomes,Amigo,03/06/2025,Home Spray 300ML,Bambu Garden,BAG02,1,101.00,101.00
+54,0,Jeanete,,11/06/2025,Kit Carro,Monte Carlo,MCA28,1,65.00,65.00
+55,42,Ana Paula de Poli,Amigo,20/06/2025,Home Spray 300ML,Jardins da França,JDF02,1,114.00,114.00
+56,43,Silvana Cordeiro,,23/06/2025,Água perfumada,Delicato,DEL01,1,92.00,92.00
+57,44,Miguel Academia,Amostras,26/06/2025,Home Spray 300ML,Encontro,ENC02,1,101.00,101.00
+57,44,Miguel Academia,Amostras,26/06/2025,Difusor de varetas,Encontro,ENC03,1,170.00,170.00
+57,44,Miguel Academia,Amostras,26/06/2025,Conj. Varetas preta,Acessórios,ACE13,1,10.00,10.00
+58,45,Gillian Nava,Amigo,11/07/2025,Difusor de varetas,Garbo,GAR03,1,170.00,170.00
+59,46,German Pablo,Santho Aroma,16/07/2025,Difusor de varetas,Havana,HAV03,2,202.00,404.00
+59,46,German Pablo,Santho Aroma,16/07/2025,Home Spray 300ML,Havana,HAV02,1,114.00,114.00
+59,46,German Pablo,Santho Aroma,16/07/2025,Essência,Havana,HAV04,1,95.00,95.00
+59,46,German Pablo,Santho Aroma,16/07/2025,Conj. Varetas preta,Acessórios,ACE13,2,10.00,20.00
+59,46,German Pablo,Santho Aroma,16/07/2025,Difusor elétrico,Acessórios,ACE22,1,78.00,78.00
+59,46,German Pablo,Santho Aroma,16/07/2025,Sabonete em barra,Jardins da França,JDF08,1,0.00,0.00
+60,0,Jeanete,,18/07/2025,Refil Sabonete Líquido,Hortênsia,HOR07,1,39.50,39.50
+61,47,Liliane Borges de Mendonça,Amigo,21/07/2025,Home Spray 300ML,Havana,HAV02,1,114.00,114.00
+62,48,Pricyla Coelho,Amigo,21/07/2025,Home Spray 300ML,Encontro,ENC02,1,101.00,101.00
+63,49,Ótica oito6,Cold call,11/08/2025,Refil Home Spray,Garbo,GAR26,1,262.00,262.00
+64,50,Eliane (Mundial Imóveis),Indicação,19/08/2025,Difusor de varetas,Divina Vanilla,DIV03,1,142.00,142.00
+65,51,Alyne,,19/08/2025,Difusor de varetas,Garbo,GAR03,1,170.00,170.00
+65,51,Alyne,,19/08/2025,Sabonete Líquido,Garbo,GAR05,1,103.00,103.00
+66,23,Fabiana Biston (Fabi),Amigo,22/08/2025,Home Spray 300ML,Bambu Garden,BAG02,1,101.00,101.00
+67,52,Leonardo Beduschi Iunes,,25/08/2025,Kit Carro,Monte Carlo,MCA28,1,32.50,32.50
+67,53,Matheus Beduschi Iunes,,25/08/2025,Kit Carro,Monte Carlo,MCA28,1,32.50,32.50
+68,0,Jeanete,,26/08/2025,Home Spray 300ML,Aroma do bebê,ADB02,1,101.00,101.00
+69,43,Silvana Cordeiro,,04/09/2025,Água perfumada,Delicato,DEL01,1,92.00,92.00
+70,54,Adalmir da Silva,,05/09/2025,Difusor de varetas,Capim Santo,CAS03,1,144.00,144.00
+70,54,Adalmir da Silva,,05/09/2025,Sabonete Líquido,Capim Santo,CAS05,1,92.00,92.00
+71,55,Emilia Wetter,Amigo,05/09/2025,Home Spray 300ML,Garbo,GAR02,1,101.00,101.00
+72,56,Jean Claude,Amigo,05/09/2025,Home Spray 300ML,Monte Carlo,MCA02,1,114.00,114.00
+72,56,Jean Claude,Amigo,05/09/2025,Kit Carro,Monte Carlo,MCA28,1,65.00,65.00
+73,57,Marcia Pereira,,08/09/2025,Difusor de varetas,Garbo,GAR03,1,170.00,170.00
+73,57,Marcia Pereira,,08/09/2025,Conj. Varetas nude,Acessórios,ACE12,1,10.00,10.00
+74,0,Jeanete,,08/09/2025,Home Spray 300ML,Hortênsia,HOR02,1,101.00,101.00
+75,58,Ed. Santa Fé III,Amigo,19/09/2025,Home Spray 300ML,Hortênsia,HOR02,1,101.00,101.00
+75,58,Ed. Santa Fé III,Amigo,19/09/2025,Difusor de varetas,Hortênsia,HOR03,1,145.00,145.00
+75,58,Ed. Santa Fé III,Amigo,19/09/2025,Conj. Varetas Branca,Acessórios,ACE11,1,10.00,10.00
+76,59,Jorge Floriani,Amigo,19/09/2025,Essência,Monte Carlo,MCA04,1,95.00,95.00
+77,60,Sonia ,Amigo,19/09/2025,Home Spray 300ML,Garbo,GAR02,1,101.00,101.00
+77,60,Sonia ,Amigo,19/09/2025,Difusor de varetas,Garbo,GAR03,1,170.00,170.00
+77,60,Sonia ,Amigo,19/09/2025,Sabonete Líquido,Garbo,GAR05,1,103.00,103.00
+78,14,Condomínio Peniche,,26/09/2025,Refil Home Spray,Garbo,GAR26,1,274.00,274.00
+79,62,Simone Liebl,Amigo,27/09/2025,Difusor de varetas,Jardins da França,JDF03,1,188.00,188.00
+79,62,Simone Liebl,Amigo,27/09/2025,Conj. Varetas Preta,Acessórios,ACE13,1,10.00,10.00
+80,46,German Pablo,Santho Aroma,26/09/2025,Difusor de varetas,Hortênsia,HOR03,2,150.00,300.00
+80,46,German Pablo,Santho Aroma,26/09/2025,Difusor de varetas,Havana,HAV03,1,212.00,212.00
+80,46,German Pablo,Santho Aroma,26/09/2025,Kit Carro,Monte Carlo,MCA28,1,68.00,68.00
+80,46,German Pablo,Santho Aroma,26/09/2025,Essência,Bambu Garden,BAG04,1,92.00,92.00
+80,46,German Pablo,Santho Aroma,26/09/2025,Conj. Varetas Branca,Acessórios,ACE11,2,10.00,20.00
+80,46,German Pablo,Santho Aroma,26/09/2025,Conj. Varetas Preta,Acessórios,ACE13,1,10.00,10.00
+81,63,Edifício Cartagena,,29/09/2025,Home Spray 300ML,Havana,HAV02,1,120.00,120.00
+81,63,Edifício Cartagena,,29/09/2025,Essência,Havana,HAV04,1,95.00,95.00
+82,64,Jose Montilla Rubio (Fibra América),Santho Aroma,25/09/2025,Difusor de varetas,Havana,HAV03,1,212.00,212.00
+82,64,Jose Montilla Rubio (Fibra América),Santho Aroma,25/09/2025,Conj. Varetas Preta,Acessórios,ACE13,1,10.00,10.00
+83,65,Juan Maba,Santho Aroma,27/09/2025,Essência,Jardins da França,JDF04,1,95.00,95.00
+83,65,Juan Maba,Santho Aroma,27/09/2025,Essência,Garbo,GAR04,1,92.00,92.00
+84,66,Neusa De Carli,Amigo,08/10/2025,Essência,Encontro,ENC04,1,92.00,92.00
+85,67,Sidney,Amigo,13/10/2025,Home Spray 300ML,Monte Carlo,MCA02,1,120.00,120.00
+85,67,Sidney,Amigo,13/10/2025,Kit Carro,Monte Carlo,MCA28,1,68.00,68.00
+86,23,Fabiana Biston (Fabi),Amigo,14/10/2025,Home Spray 300ML,Bambu Garden,BAG02,1,106.00,106.00
+87,42,Ana Paula de Poli,Amigo,14/10/2025,Home Spray 300ML,Jardins da França,JDF02,1,120.00,120.00
+88,68,Claudete de Morais,Amigo,14/10/2025,Home Spray 300ML,Hortênsia,HOR02,1,106.00,106.00
+89,69,Gilda,Amigo,03/11/2025,Home Spray 300ML,Garbo,GAR02,1,112.00,112.00
+89,69,Gilda,Amigo,03/11/2025,Difusor de varetas,Hortênsia,HOR03,1,150.00,150.00
+90,12,Milena,Amigo,06/11/2025,Home Spray 300ML,Jardins da França,JDF02,1,120.00,120.00
+90,12,Milena,Amigo,06/11/2025,Kit Carro,Havana,HAV28,1,68.00,68.00
+91,70,Fran Almeida,Indicação,07/11/2025,Difusor de varetas,Havana,HAV03,1,212.00,212.00
+91,70,Fran Almeida,Indicação,07/11/2025,Difusor de varetas,Jardins da França,JDF03,1,188.00,188.00
+91,70,Fran Almeida,Indicação,07/11/2025,Conj. Varetas Preta,Acessórios,ACE13,2,10.00,20.00
+92,61,João Paulo (Vó e Mãe),Amigo,11/09/2025,Home Spray 300ML,Garbo,GAR02,2,112.00,224.00
+93,71,Tati,Amigo,17/11/2025,Essência,Encontro,ENC04,1,92.00,92.00
+93,71,Tati,Amigo,17/11/2025,Difusor de varetas,Encontro,ENC03,1,178.00,178.00
+93,71,Tati,Amigo,17/11/2025,Home Spray 300ML,Encontro,ENC02,1,112.00,112.00
+93,71,Tati,Amigo,17/11/2025,Sabonete Líquido,Bambu Garden,BAG05,1,96.00,96.00
+93,71,Tati,Amigo,17/11/2025,Home Spray 300ML,Bambu Garden,BAG02,1,106.00,106.00
+93,71,Tati,Amigo,17/11/2025,Difusor de varetas,Bambu Garden,BAG03,1,156.00,156.00
+93,71,Tati,Amigo,17/11/2025,Difusor elétrico,Acessórios,ACE22,2,81.00,162.00
+94,35,Margara,Amigo,21/11/2025,Difusor de varetas,Havana,HAV03,1,212.00,212.00
+94,35,Margara,Amigo,21/11/2025,Sabonete Líquido,Havana,HAV05,1,165.00,165.00
+95,8,Silvana Mussi,Amigo,24/11/2025,Refil Sabonete Líquido,Hortênsia,HOR07,1,94.00,94.00
+96,72,Jacque Schneider,Indicação,24/11/2025,Home Spray 300ML,Havana,HAV02,1,120.00,120.00
+97,14,Condomínio Peniche,,26/11/2025,Refil Home Spray,Garbo,GAR26,1,274.00,274.00
+98,73,Denise,Amigo,27/11/2025,Home Spray 300ML,Hortênsia,HOR02,1,106.00,106.00
+99,74,Marcia Krebs,Amigo,04/12/2025,Home Spray 300ML,Hortênsia,HOR02,1,106.00,106.00
+100,75,Tânia Fischer,Amigo,04/12/2025,Difusor de varetas,Divina Vanilla,DIV03,1,148.00,148.00
+100,75,Tânia Fischer,Amigo,04/12/2025,Mini Sabonetes(4),Mosaico,MOS09,1,72.00,72.00
+101,76,Splendia Tower,Cold call,05/12/2025,Difusor de varetas,Havana,HAV03,4,212.00,848.00
+101,76,Splendia Tower,,05/12/2025,Sabonete Líquido,Havana,HAV05,4,165.00,660.00
+101,76,Splendia Tower,,05/12/2025,Home Spray 300ML,Havana,HAV02,2,120.00,240.00
+101,76,Splendia Tower,,05/12/2025,Difusor de varetas (NOVO),Jardins da França,JDF31,2,246.00,492.00
+101,76,Splendia Tower,,05/12/2025,Home Spray 300ML,Jardins da França,JDF02,2,120.00,240.00
+101,76,Splendia Tower,,05/12/2025,Conj. Varetas Preta,Acessórios,ACE13,6,10.00,60.00
+102,77,André Faria,Cold call,05/12/2025,Difusor de varetas,Havana,HAV03,1,212.00,212.00
+102,77,André Faria,,05/12/2025,Sabonete Líquido,Havana,HAV05,1,165.00,165.00
+102,77,André Faria,,05/12/2025,Difusor de varetas (NOVO),Jardins da França,JDF31,1,246.00,246.00
+102,77,André Faria,,05/12/2025,Home Spray 300ML,Jardins da França,JDF02,1,120.00,120.00
+103,57,Marcia Pereira,Amigo,06/12/2025,Difusor de varetas,Garbo,GAR03,1,178.00,178.00
+103,57,Marcia Pereira,Amigo,06/12/2025,Refil difusor de varetas,Garbo,GAR10,1,189.00,189.00
+104,78,Cris by Cris (Karine),Amostras,08/12/2025,Home Spray 300ML,Jardins da França,JDF02,1,120.00,120.00
+105,79,Janaina,Santho Aroma,08/12/2025,Refil difusor de varetas,Havana,HAV10,1,210.00,210.00
+106,60,Sonia ,Amigo,11/12/2025,Difusor de varetas,Garbo,GAR03,1,178.00,178.00
+106,60,Sonia ,Amigo,11/12/2025,Tubo 3 Sabonetes,Capim Santo,CAS33,2,78.00,156.00
+107,70,Fran Almeida,Indicação,15/12/2025,Refil difusor de varetas,Havana,HAV10,1,210.00,210.00
+108,21,Eduarda Schnaider (Mãe),Amostras,18/12/2025,Home Spray 300ML,Patchouly,PAT02,1,106.00,106.00
+109,1,Edilson,,15/12/2025,Difusor de varetas,Patchouly,PAT03,1,147.00,147.00
+109,1,Edilson,,15/12/2025,difusor de varetas,Monte Carlo,MCA03,1,222.00,222.00
+109,1,Edilson,,15/12/2025,Sabonete Líquido,Jardins da França,JDF05,1,126.00,126.00
+109,1,Edilson,,15/12/2025,Sabonete Líquido,Jardins da França,JDF05,1,126.00,126.00
+109,1,Edilson,,15/12/2025,Sabonete Líquido,Jardins da França,JDF05,1,126.00,126.00
+109,1,Edilson,,15/12/2025,Tubo 3 Sabonetes,Capim Santo,CAS33,1,78.00,78.00
+110,46,German Pablo,Santho Aroma,16/12/2025,Difusor de varetas,Havana,HAV03,1,212.00,212.00
+VND001,75,Tânia Fischer,pix,22/12/2025,DIFUSOR DE VARETAS,DIVINA VANILLA,DIV03,1,148.00,148.00
+VND002,75,Tânia Fischer,pix,22/12/2025,DIFUSOR DE VARETAS,GARBO,GAR03,1,178.00,178.00
+VND003,76,Splendia Tower,boleto,22/12/2025,REFIL SABONETE LÍQUIDO,HAVANA,HAV07,2,112.00,224.00
+VND004,CLI001,Adriana,cartão de crédito,22/12/2025,DIFUSOR DE VARETAS,GARBO,GAR03,1,178.00,178.00
+VND005,CLI001,Adriana,cartão de crédito,22/12/2025,REFIL DIFUSOR DE VARETAS,GARBO,GAR10,1,189.00,189.00
+VND006,CLI001,Adriana,cartão de crédito,22/12/2025,CONJ. VARETAS NUDE,ACESSÓRIOS,ACE12,2,10.00,20.00
+VND007,52,Leonardo Beduschi Iunes,pix,28/12/2025,ESSÊNCIA,HORTÊNSIA,HOR04,1,92.00,92.00
