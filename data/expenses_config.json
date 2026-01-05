@@ -1,0 +1,35 @@
+{
+  "monthly_fixed_expenses": {
+    "imposto": {
+      "name": "Impostos",
+      "value": 76.90,
+      "description": "Impostos mensais fixos"
+    },
+    "transportadora": {
+      "name": "Transportadora",
+      "value": 200.00,
+      "description": "Frete e transporte mensal"
+    },
+    "marketing": {
+      "name": "Marketing",
+      "value": 300.00,
+      "description": "Despesas com marketing e publicidade"
+    },
+    "tim": {
+      "name": "TIM (Telefonia)",
+      "value": 65.00,
+      "description": "Conta de telefone"
+    },
+    "celesc": {
+      "name": "CELESC (Energia)",
+      "value": 110.00,
+      "description": "Conta de energia elétrica"
+    }
+  },
+  "notes": [
+    "Edite este arquivo para adicionar, remover ou alterar despesas",
+    "As despesas são distribuídas proporcionalmente sobre as vendas",
+    "Para adicionar nova despesa, copie o formato acima",
+    "Para remover, delete a seção correspondente"
+  ]
+}

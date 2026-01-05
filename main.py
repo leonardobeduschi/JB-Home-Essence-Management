@@ -11,7 +11,6 @@ from src.services.client_service import ClientService
 from src.services.sale_service import SaleService
 from src.services.analytics_service import AnalyticsService
 from src.services.visualization_service import VisualizationService
-from src.services.export_service import ExportService
 from src.ui.analytics_display import *
 
 
@@ -25,7 +24,6 @@ class PerfumeryApp:
         self.sale_service = SaleService()
         self.analytics_service = AnalyticsService()
         self.visualization_service = VisualizationService()
-        self.export_service = ExportService()
         
         self.main_menu = Menu("SISTEMA DE GESTÃO - PERFUMARIA")
         self._setup_main_menu()
@@ -35,8 +33,7 @@ class PerfumeryApp:
         self.main_menu.add_option('1', '📦 Gerenciar Produtos', self.products_menu)
         self.main_menu.add_option('2', '👥 Gerenciar Clientes', self.clients_menu)
         self.main_menu.add_option('3', '💰 Registrar Venda', self.register_sale)
-        self.main_menu.add_option('4', '📊 Relatórios e Estatísticas', self.reports_menu)
-        self.main_menu.add_option('5', '📋 Listar Dados', self.list_menu)
+        self.main_menu.add_option('4', ' Listar Dados', self.list_menu)
         self.main_menu.add_option('0', '🚪 Sair', self.main_menu.exit)
     
     # ========== PRODUCT MANAGEMENT ==========
@@ -519,7 +516,6 @@ class PerfumeryApp:
         menu.add_option('A', '🔮 Previsão de Demanda', self.demand_forecast)
         menu.add_option('B', '📅 Análise de Sazonalidade', self.seasonality_analysis)
         menu.add_option('C', '📊 Gerar Gráficos', self.generate_charts_menu)
-        menu.add_option('D', '📁 Exportar Relatórios', self.export_reports_menu)
         menu.display()
     
     def sales_trend(self):
@@ -879,88 +875,7 @@ class PerfumeryApp:
         except Exception as e:
             self.main_menu.show_error(f"Erro ao gerar gráfico: {str(e)}")
     
-    def export_reports_menu(self):
-        """Export reports submenu."""
-        menu = create_submenu("EXPORTAR RELATÓRIOS", self.main_menu)
-        menu.add_option('1', '📊 Exportar Vendas (Excel)', self.export_sales_excel)
-        menu.add_option('2', '📦 Exportar Produtos (Excel)', self.export_products_excel)
-        menu.add_option('3', '📈 Exportar Analytics Completo (Excel)', self.export_full_analytics)
-        menu.add_option('4', '💰 Exportar Relatório de Lucratividade (Excel)', self.export_profitability_excel)
-        menu.add_option('5', '👥 Exportar Análise de Clientes (Excel)', self.export_customer_analysis)
-        menu.display()
-    
-    def export_sales_excel(self):
-        """Export sales to Excel."""
-        print_section_header("EXPORTAR VENDAS")
-        
-        try:
-            sales = self.sale_service.list_all_sales()
-            filepath = self.export_service.export_sales_to_excel(sales)
-            self.main_menu.show_success(f"Relatório exportado para: {filepath}")
-        except Exception as e:
-            self.main_menu.show_error(f"Erro ao exportar: {str(e)}")
-    
-    def export_products_excel(self):
-        """Export products to Excel."""
-        print_section_header("EXPORTAR PRODUTOS")
-        
-        try:
-            products = self.product_service.list_all_products()
-            filepath = self.export_service.export_products_to_excel(products)
-            self.main_menu.show_success(f"Relatório exportado para: {filepath}")
-        except Exception as e:
-            self.main_menu.show_error(f"Erro ao exportar: {str(e)}")
-    
-    def export_full_analytics(self):
-        """Export full analytics report."""
-        print_section_header("EXPORTAR ANALYTICS COMPLETO")
-        
-        try:
-            # Gather all analytics data
-            performance = self.analytics_service.get_product_performance(50)
-            category_data = self.analytics_service.get_category_analysis()
-            payment_data = self.analytics_service.get_payment_method_analysis()
-            summary = self.sale_service.get_sales_summary()
-            
-            analytics_data = {
-                'summary': summary,
-                'top_products': performance['top_products'],
-                'categories': category_data['categories'],
-                'payment_methods': payment_data['payment_methods']
-            }
-            
-            filepath = self.export_service.export_analytics_to_excel(analytics_data)
-            self.main_menu.show_success(f"Relatório completo exportado para: {filepath}")
-        except Exception as e:
-            self.main_menu.show_error(f"Erro ao exportar: {str(e)}")
-    
-    def export_profitability_excel(self):
-        """Export profitability report."""
-        print_section_header("EXPORTAR LUCRATIVIDADE")
-        
-        try:
-            profitability = self.analytics_service.get_profitability_report()
-            performance = self.analytics_service.get_product_performance(100)
-            
-            filepath = self.export_service.export_profitability_report(
-                profitability, performance
-            )
-            self.main_menu.show_success(f"Relatório de lucratividade exportado para: {filepath}")
-        except Exception as e:
-            self.main_menu.show_error(f"Erro ao exportar: {str(e)}")
-    
-    def export_customer_analysis(self):
-        """Export customer analysis report."""
-        print_section_header("EXPORTAR ANÁLISE DE CLIENTES")
-        
-        try:
-            segments = self.analytics_service.get_customer_segmentation()
-            clv_data = self.analytics_service.get_customer_lifetime_value(50)
-            
-            filepath = self.export_service.export_customer_report(segments, clv_data)
-            self.main_menu.show_success(f"Análise de clientes exportada para: {filepath}")
-        except Exception as e:
-            self.main_menu.show_error(f"Erro ao exportar: {str(e)}")
+
     
     # ========== LIST MENU ==========
     

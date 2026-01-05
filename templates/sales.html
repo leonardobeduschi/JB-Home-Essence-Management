@@ -54,7 +54,7 @@
             <div class="col-md-3">
                 <div class="card bg-primary text-white">
                     <div class="card-body py-2">
-                        <small>Total de Vendas</small>
+                        <small>Total de Itens</small>
                         <h4 class="mb-0" id="totalSales">{{ sales|length }}</h4>
                     </div>
                 </div>
@@ -87,8 +87,8 @@
             <div class="col-md-3">
                 <div class="card bg-warning text-dark">
                     <div class="card-body py-2">
-                        <small>Ticket Médio</small>
-                        <h4 class="mb-0" id="avgTicket">R$ {{ "%.2f"|format(sales|sum(attribute='PRECO_TOTAL') / sales|length) }}</h4>
+                        <small>Vendas Únicas</small>
+                        <h4 class="mb-0" id="uniqueSales">{{ sales|map(attribute='ID_VENDA')|unique|list|length }}</h4>
                     </div>
                 </div>
             </div>
@@ -107,7 +107,7 @@
                         <th>Categoria</th>
                         <th>Qtd</th>
                         <th>Preço Unit.</th>
-                        <th>Total</th>
+                        <th>Total Item</th>
                         <th>Pagamento</th>
                         <th>Ações</th>
                     </tr>
@@ -170,7 +170,7 @@
 
 <!-- Sale Details Modal -->
 <div class="modal fade" id="saleModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Detalhes da Venda</h5>
@@ -181,9 +181,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                <button type="button" class="btn btn-primary" onclick="printCurrentSale()">
-                    <i class="bi bi-printer"></i> Imprimir
-                </button>
             </div>
         </div>
     </div>
@@ -259,9 +256,8 @@ function filterTable() {
     
     // Update summary cards
     document.getElementById('totalSales').textContent = visibleCount;
-    document.getElementById('totalRevenue').textContent = 'R$ ' + visibleRevenue.toFixed(2);
+    document.getElementById('totalRevenue').textContent = 'R$ ' + visibleRevenue.toFixed(2).replace('.', ',');
     document.getElementById('totalItems').textContent = visibleItems;
-    document.getElementById('avgTicket').textContent = visibleCount > 0 ? 'R$ ' + (visibleRevenue / visibleCount).toFixed(2) : 'R$ 0.00';
 }
 
 function parseDate(dateStr) {
@@ -280,35 +276,70 @@ function clearFilters() {
 }
 
 function viewSaleDetails(id) {
-    fetch(`/api/sales/${id}`)
+    // Get ALL items from this sale
+    fetch(`/api/sales/group/${id}`)
         .then(r => {
             if (!r.ok) throw new Error('Venda não encontrada');
             return r.json();
         })
         .then(data => {
             if (data.success) {
-                const s = data.data;
-                const preco_unit = parseFloat(s.PRECO_UNIT);
-                const preco_total = parseFloat(s.PRECO_TOTAL);
+                const items = data.data;
+                
+                if (items.length === 0) {
+                    alert('Nenhum item encontrado para esta venda.');
+                    return;
+                }
+                
+                // Calculate total
+                const total = items.reduce((sum, item) => sum + parseFloat(item.PRECO_TOTAL), 0);
                 
                 let html = `
                     <div class="card">
                         <div class="card-header bg-primary text-white">
-                            <h6 class="mb-0"><i class="bi bi-receipt"></i> Detalhes da Venda ${s.ID_VENDA}</h6>
+                            <h6 class="mb-0"><i class="bi bi-receipt"></i> Venda ${id}</h6>
                         </div>
                         <div class="card-body">
-                            <table class="table table-sm table-borderless">
-                                <tr><th>Data:</th><td>${s.DATA}</td></tr>
-                                <tr><th>Cliente:</th><td><strong>${s.CLIENTE}</strong> (${s.ID_CLIENTE})</td></tr>
-                                <tr><th>Produto:</th><td>${s.PRODUTO} <small class="text-muted">(${s.CODIGO})</small></td></tr>
-                                <tr><th>Categoria:</th><td><span class="badge bg-info">${s.CATEGORIA}</span></td></tr>
-                                <tr><th>Quantidade:</th><td><strong>${s.QUANTIDADE} unidade(s)</strong></td></tr>
-                                <tr><th>Preço Unitário:</th><td>R$ ${preco_unit.toFixed(2)}</td></tr>
-                                <tr><th>Meio de Pagamento:</th><td><strong>${s.MEIO.toUpperCase()}</strong></td></tr>
-                                <tr class="table-primary">
-                                    <th>Total da Venda:</th>
-                                    <td><h5 class="text-success mb-0">R$ ${preco_total.toFixed(2)}</h5></td>
-                                </tr>
+                            <table class="table table-sm">
+                                <tr><th>Data:</th><td>${items[0].DATA}</td></tr>
+                                <tr><th>Cliente:</th><td><strong>${items[0].CLIENTE}</strong> (${items[0].ID_CLIENTE})</td></tr>
+                                <tr><th>Pagamento:</th><td><strong>${items[0].MEIO.toUpperCase()}</strong></td></tr>
+                            </table>
+                            
+                            <h6 class="mt-3">Itens da Venda:</h6>
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th>Qtd</th>
+                                        <th>Preço Unit.</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                items.forEach(item => {
+                    html += `
+                        <tr>
+                            <td>${item.PRODUTO}<br><small class="text-muted">${item.CODIGO}</small></td>
+                            <td><span class="badge bg-info">${item.CATEGORIA}</span></td>
+                            <td><strong>${item.QUANTIDADE}</strong></td>
+                            <td>R$ ${parseFloat(item.PRECO_UNIT).toFixed(2)}</td>
+                            <td><strong>R$ ${parseFloat(item.PRECO_TOTAL).toFixed(2)}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-success">
+                                        <th colspan="4" class="text-end">TOTAL DA VENDA:</th>
+                                        <th><h5 class="mb-0">R$ ${total.toFixed(2)}</h5></th>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -343,12 +374,6 @@ function deleteSale(id) {
         }
     })
     .catch(() => alert('Erro de conexão'));
-}
-
-function printCurrentSale() {
-    if (currentSaleId) {
-        printReceipt(currentSaleId);
-    }
 }
 </script>
 {% endblock %}

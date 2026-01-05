@@ -14,6 +14,20 @@
     </a>
 </div>
 
+<!-- Info Card -->
+<div class="alert alert-info mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <i class="bi bi-info-circle"></i> 
+            <strong>Margem Líquida:</strong> Considera despesas fixas mensais (R$ {{ "%.2f"|format(total_expenses) }}) 
+            distribuídas em ~{{ monthly_sales }} vendas/mês
+        </div>
+        <div class="col-md-4 text-end">
+            <small class="text-muted">Despesa por venda: R$ {{ "%.2f"|format(total_expenses / monthly_sales if monthly_sales > 0 else 0) }}</small>
+        </div>
+    </div>
+</div>
+
 <!-- Search and Filter -->
 <div class="card mb-4">
     <div class="card-body">
@@ -70,7 +84,8 @@
                     {% set custo = product.CUSTO|float %}
                     {% set valor = product.VALOR|float %}
                     {% set estoque = product.ESTOQUE|int %}
-                    {% set margem = ((valor - custo) / custo * 100) if custo > 0 else 0 %}
+                    {% set margem_bruta = ((valor - custo) / valor * 100) if valor > 0 else 0 %}
+                    {% set margem_liquida = product.get('net_margin_pct', margem_bruta) %}
                     <tr data-category="{{ product.CATEGORIA }}" data-stock="{{ estoque }}">
                         <td><span class="badge bg-primary">{{ product.CODIGO }}</span></td>
                         <td><strong>{{ product.PRODUTO }}</strong></td>
@@ -78,9 +93,15 @@
                         <td>R$ {{ "%.2f"|format(custo) }}</td>
                         <td>R$ {{ "%.2f"|format(valor) }}</td>
                         <td>
-                            <span class="badge {% if margem > 50 %}bg-success{% elif margem > 30 %}bg-info{% else %}bg-warning{% endif %}">
-                                {{ "%.1f"|format(margem) }}%
-                            </span>
+                            <div>
+                                <span class="badge {% if margem_liquida > 30 %}bg-success{% elif margem_liquida > 15 %}bg-info{% elif margem_liquida > 0 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                      title="Margem Líquida (com despesas fixas)">
+                                    {{ "%.1f"|format(margem_liquida) }}%
+                                </span>
+                                <small class="text-muted d-block" style="font-size: 0.7rem;">
+                                    Bruta: {{ "%.1f"|format(margem_bruta) }}%
+                                </small>
+                            </div>
                         </td>
                         <td>
                             <span class="badge 
@@ -158,7 +179,7 @@
 <script>
 let currentProductCode = '';
 
-// Filtros (mantido igual)
+// Filtros
 document.getElementById('searchInput').addEventListener('input', filterTable);
 document.getElementById('categoryFilter').addEventListener('change', filterTable);
 document.getElementById('stockFilter').addEventListener('change', filterTable);
@@ -185,7 +206,6 @@ function filterTable() {
     });
 }
 
-// CORREÇÃO: URL correta com barra
 function viewProduct(codigo) {
     fetch(`/api/products/${codigo}`)
         .then(r => {
@@ -198,7 +218,8 @@ function viewProduct(codigo) {
                 const custo = parseFloat(p.CUSTO);
                 const valor = parseFloat(p.VALOR);
                 const estoque = parseInt(p.ESTOQUE);
-                const margem = custo > 0 ? ((valor - custo) / valor * 100).toFixed(1) : 0;
+                const margem_bruta = custo > 0 ? ((valor - custo) / valor * 100).toFixed(1) : 0;
+                const margem_liquida = p.net_margin_pct ? p.net_margin_pct.toFixed(1) : margem_bruta;
                 
                 document.getElementById('productDetails').innerHTML = `
                     <table class="table table-sm">
@@ -207,10 +228,23 @@ function viewProduct(codigo) {
                         <tr><th>Categoria:</th><td>${p.CATEGORIA}</td></tr>
                         <tr><th>Custo:</th><td>R$ ${custo.toFixed(2)}</td></tr>
                         <tr><th>Preço de Venda:</th><td>R$ ${valor.toFixed(2)}</td></tr>
-                        <tr><th>Margem:</th><td><span class="badge bg-info">${margem}%</span></td></tr>
+                        <tr>
+                            <th>Margem Bruta:</th>
+                            <td><span class="badge bg-secondary">${margem_bruta}%</span></td>
+                        </tr>
+                        <tr>
+                            <th>Margem Líquida:</th>
+                            <td><span class="badge bg-success">${margem_liquida}%</span></td>
+                        </tr>
                         <tr><th>Estoque:</th><td><strong>${estoque} un</strong></td></tr>
                         <tr><th>Valor Total:</th><td>R$ ${(valor * estoque).toFixed(2)}</td></tr>
                     </table>
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <strong>Margem Líquida:</strong> Considera despesas fixas distribuídas nas vendas mensais.<br>
+                            <strong>Margem Bruta:</strong> Apenas Preço - Custo.
+                        </small>
+                    </div>
                 `;
                 new bootstrap.Modal(document.getElementById('viewModal')).show();
             }
@@ -228,7 +262,6 @@ function adjustStock(codigo, nome) {
     new bootstrap.Modal(document.getElementById('stockModal')).show();
 }
 
-// NOVA FUNÇÃO: realmente ajusta o estoque via API
 function saveStockAdjustment() {
     const quantityInput = document.getElementById('stockQuantity').value.trim();
     const reason = document.getElementById('stockReason').value.trim() || 'Ajuste manual';
@@ -254,7 +287,7 @@ function saveStockAdjustment() {
         if (data.success) {
             alert('Estoque ajustado com sucesso!');
             bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
-            location.reload(); // recarrega para atualizar a tabela
+            location.reload();
         } else {
             alert('Erro: ' + data.error);
         }
@@ -262,7 +295,6 @@ function saveStockAdjustment() {
     .catch(() => alert('Erro de conexão com o servidor'));
 }
 
-// NOVA FUNÇÃO: remover produto
 function deleteProduct(codigo, nome) {
     if (!confirm(`Tem certeza que deseja EXCLUIR o produto "${nome}" (${codigo})?\nEsta ação não pode ser desfeita!`)) {
         return;

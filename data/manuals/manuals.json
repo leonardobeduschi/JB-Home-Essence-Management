@@ -1,0 +1,296 @@
+{
+  "manuals": [
+    {
+      "id": "embalagem",
+      "title": "Embalagem de Pedidos",
+      "icon": "box-seam",
+      "color": "primary",
+      "description": "Procedimentos completos para embalar pedidos com qualidade e segurança",
+      "sections": [
+        {
+          "number": "1.0",
+          "title": "Conferência do Pedido",
+          "icon": "clipboard-check",
+          "steps": [
+            {
+              "number": "1.1",
+              "text": "Todo e qualquer pedido será conferido todos os produtos do pedido"
+            },
+            {
+              "number": "1.2",
+              "text": "Caso seja difusor, sempre adicionar as varetas das cores próprias de cada fragrância",
+              "highlight": true
+            },
+            {
+              "number": "1.3",
+              "text": "Conferir o estoque e retirar do mesmo logo após a entrega"
+            }
+          ]
+        },
+        {
+          "number": "2.0",
+          "title": "Cuidados no Embalo",
+          "icon": "shield-check",
+          "steps": [
+            {
+              "number": "2.1",
+              "text": "Difusores, essências puras e sabonetes líquidos serão sempre embrulhados com plástico bolha para preservação e proteção do produto",
+              "highlight": true
+            },
+            {
+              "number": "2.2",
+              "text": "Colocar os produtos de forma segura e varetas retas"
+            }
+          ]
+        },
+        {
+          "number": "3.0",
+          "title": "Processo de Embalo",
+          "icon": "gift",
+          "steps": [
+            {
+              "number": "3.1",
+              "text": "Antes de colocar os produtos, perfumar a sacola com 3 borrifadas do tester da fragrância que foi feita a compra",
+              "highlight": true
+            },
+            {
+              "number": "3.2",
+              "text": "Distância de 10-15cm para borrifar"
+            },
+            {
+              "number": "3.3",
+              "text": "Após perfumada a sacola, esperar 1 minuto para colocar os itens"
+            },
+            {
+              "number": "3.4",
+              "text": "Itens colocados, dentro irá um cartão de visita oficial JB Home Essence"
+            },
+            {
+              "number": "3.5",
+              "text": "Após colocar todos os produtos e cartão, colocar um adesivo da JB fechando a sacola"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vendas",
+      "title": "Processo de Vendas",
+      "icon": "cart-check",
+      "color": "success",
+      "description": "Guia completo para realizar vendas com excelência no atendimento",
+      "sections": [
+        {
+          "number": "1.0",
+          "title": "Abordagem Inicial",
+          "icon": "person-raised-hand",
+          "steps": [
+            {
+              "number": "1.1",
+              "text": "Cumprimentar o cliente com cordialidade e um sorriso"
+            },
+            {
+              "number": "1.2",
+              "text": "Perguntar: 'Em que posso ajudá-lo(a) hoje?'",
+              "highlight": true
+            },
+            {
+              "number": "1.3",
+              "text": "Identificar as necessidades e preferências do cliente"
+            }
+          ]
+        },
+        {
+          "number": "2.0",
+          "title": "Apresentação dos Produtos",
+          "icon": "chat-dots",
+          "steps": [
+            {
+              "number": "2.1",
+              "text": "Apresentar as fragrâncias de acordo com o perfil do cliente"
+            },
+            {
+              "number": "2.2",
+              "text": "Permitir que o cliente teste as fragrâncias",
+              "highlight": true
+            },
+            {
+              "number": "2.3",
+              "text": "Explicar os benefícios de cada produto"
+            },
+            {
+              "number": "2.4",
+              "text": "Informar sobre promoções e combos disponíveis"
+            }
+          ]
+        },
+        {
+          "number": "3.0",
+          "title": "Finalização da Venda",
+          "icon": "check-circle",
+          "steps": [
+            {
+              "number": "3.1",
+              "text": "Confirmar os produtos escolhidos com o cliente"
+            },
+            {
+              "number": "3.2",
+              "text": "Informar o valor total e opções de pagamento",
+              "highlight": true
+            },
+            {
+              "number": "3.3",
+              "text": "Registrar a venda no sistema"
+            },
+            {
+              "number": "3.4",
+              "text": "Agradecer pela compra e convidar para retornar"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "atendimento",
+      "title": "Atendimento ao Cliente",
+      "icon": "headset",
+      "color": "info",
+      "description": "Padrões de excelência no atendimento ao cliente JB Home Essence",
+      "sections": [
+        {
+          "number": "1.0",
+          "title": "Recepção do Cliente",
+          "icon": "door-open",
+          "steps": [
+            {
+              "number": "1.1",
+              "text": "Cumprimentar o cliente assim que entrar na loja"
+            },
+            {
+              "number": "1.2",
+              "text": "Manter contato visual e postura profissional",
+              "highlight": true
+            },
+            {
+              "number": "1.3",
+              "text": "Estar disponível para dúvidas sem ser invasivo"
+            }
+          ]
+        },
+        {
+          "number": "2.0",
+          "title": "Durante o Atendimento",
+          "icon": "chat-left-heart",
+          "steps": [
+            {
+              "number": "2.1",
+              "text": "Ouvir atentamente as necessidades do cliente"
+            },
+            {
+              "number": "2.2",
+              "text": "Demonstrar conhecimento sobre os produtos",
+              "highlight": true
+            },
+            {
+              "number": "2.3",
+              "text": "Ser paciente e educado em todas as situações"
+            },
+            {
+              "number": "2.4",
+              "text": "Oferecer soluções personalizadas"
+            }
+          ]
+        },
+        {
+          "number": "3.0",
+          "title": "Pós-Atendimento",
+          "icon": "star",
+          "steps": [
+            {
+              "number": "3.1",
+              "text": "Agradecer pela visita, mesmo sem compra"
+            },
+            {
+              "number": "3.2",
+              "text": "Convidar para seguir nas redes sociais",
+              "highlight": true
+            },
+            {
+              "number": "3.3",
+              "text": "Oferecer cartão de visita"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "estoque",
+      "title": "Gestão de Estoque",
+      "icon": "box",
+      "color": "warning",
+      "description": "Procedimentos para manutenção e controle do estoque",
+      "sections": [
+        {
+          "number": "1.0",
+          "title": "Recebimento de Produtos",
+          "icon": "truck",
+          "steps": [
+            {
+              "number": "1.1",
+              "text": "Conferir a nota fiscal com os produtos recebidos"
+            },
+            {
+              "number": "1.2",
+              "text": "Verificar condições de embalagem e possíveis avarias",
+              "highlight": true
+            },
+            {
+              "number": "1.3",
+              "text": "Registrar entrada no sistema imediatamente"
+            }
+          ]
+        },
+        {
+          "number": "2.0",
+          "title": "Organização",
+          "icon": "grid-3x3",
+          "steps": [
+            {
+              "number": "2.1",
+              "text": "Organizar produtos por categoria e fragrância"
+            },
+            {
+              "number": "2.2",
+              "text": "Manter produtos mais antigos na frente (FIFO)",
+              "highlight": true
+            },
+            {
+              "number": "2.3",
+              "text": "Identificar claramente cada produto com etiquetas"
+            }
+          ]
+        },
+        {
+          "number": "3.0",
+          "title": "Controle e Inventário",
+          "icon": "clipboard-data",
+          "steps": [
+            {
+              "number": "3.1",
+              "text": "Realizar contagem semanal de estoque crítico"
+            },
+            {
+              "number": "3.2",
+              "text": "Alertar sobre produtos com estoque baixo (≤ 5 unidades)",
+              "highlight": true
+            },
+            {
+              "number": "3.3",
+              "text": "Inventário completo mensal"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -4,135 +4,254 @@
 {% block page_title %}Analytics e Inteligência de Negócio{% endblock %}
 
 {% block content %}
-<!-- Period Selector -->
+<style>
+    .analytics-tab {
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .analytics-tab:hover {
+        background-color: #f0f0f0;
+    }
+    .analytics-tab.active {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+    }
+    .analytics-section {
+        display: none;
+    }
+    .analytics-section.active {
+        display: block;
+    }
+    .chart-card {
+        height: 100%;
+        min-height: 400px;
+    }
+</style>
+
+<!-- Navigation Tabs -->
 <div class="card mb-4">
     <div class="card-body">
-        <div class="row align-items-end">
-            <div class="col-md-3">
-                <label class="form-label">Período</label>
-                <select class="form-select" id="periodSelect">
-                    <option value="7">Últimos 7 dias</option>
-                    <option value="30" selected>Últimos 30 dias</option>
-                    <option value="90">Últimos 90 dias</option>
-                    <option value="365">Último ano</option>
-                </select>
+        <div class="row">
+            <div class="col-md-4 analytics-tab active rounded p-3" onclick="showSection('vendas')">
+                <h5><i class="bi bi-cart-check"></i> Análise de Vendas</h5>
+                <small>Visão geral, tendências e métricas</small>
             </div>
-            <div class="col-md-3">
-                <button class="btn btn-primary" onclick="loadAnalytics()">
-                    <i class="bi bi-arrow-clockwise"></i> Atualizar
-                </button>
+            <div class="col-md-4 analytics-tab rounded p-3" onclick="showSection('produtos')">
+                <h5><i class="bi bi-box-seam"></i> Análise de Produtos</h5>
+                <small>Performance, categorias e margem</small>
+            </div>
+            <div class="col-md-4 analytics-tab rounded p-3" onclick="showSection('clientes')">
+                <h5><i class="bi bi-people"></i> Análise de Clientes</h5>
+                <small>Comportamento e segmentação</small>
             </div>
         </div>
     </div>
 </div>
 
-<!-- KPIs Row -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="card-body">
-                <h6 class="mb-3"><i class="bi bi-graph-up"></i> Crescimento</h6>
-                <h2 class="mb-0" id="kpiGrowth">+0%</h2>
-                <small>vs. período anterior</small>
+<!-- SEÇÃO: VENDAS -->
+<div id="section-vendas" class="analytics-section active">
+    <!-- KPIs Row -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body">
+                    <h6 class="mb-3"><i class="bi bi-cart-check"></i> Total Vendas</h6>
+                    <h2 class="mb-0" id="kpiTotalVendas">0</h2>
+                    <small>vendas realizadas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="card-body">
+                    <h6 class="mb-3"><i class="bi bi-cash-stack"></i> Receita Total</h6>
+                    <h2 class="mb-0" id="kpiReceita">R$ 0</h2>
+                    <small>em vendas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="card-body">
+                    <h6 class="mb-3"><i class="bi bi-box-seam"></i> Itens Vendidos</h6>
+                    <h2 class="mb-0" id="kpiItens">0</h2>
+                    <small>unidades</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                <div class="card-body">
+                    <h6 class="mb-3"><i class="bi bi-graph-up"></i> Ticket Médio</h6>
+                    <h2 class="mb-0" id="kpiTicket">R$ 0</h2>
+                    <small>por venda</small>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <div class="card-body">
-                <h6 class="mb-3"><i class="bi bi-people"></i> Novos Clientes</h6>
-                <h2 class="mb-0" id="kpiNewClients">0</h2>
-                <small>no período</small>
+
+    <!-- Charts Row 1 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Receita Mensal (12 meses)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyRevenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-cart3"></i> Quantidade de Vendas (12 meses)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlySalesCountChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-            <div class="card-body">
-                <h6 class="mb-3"><i class="bi bi-arrow-repeat"></i> Taxa de Retorno</h6>
-                <h2 class="mb-0" id="kpiReturnRate">0%</h2>
-                <small>clientes recorrentes</small>
+
+    <!-- Charts Row 2 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-percent"></i> Margem Bruta vs Líquida (12 meses)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyMarginChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-ticket"></i> Ticket Médio Mensal</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="avgTicketChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-            <div class="card-body">
-                <h6 class="mb-3"><i class="bi bi-trophy"></i> Categoria Top</h6>
-                <h2 class="mb-0" id="kpiTopCategory">-</h2>
-                <small>mais vendida</small>
+
+    <!-- Charts Row 3 -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Vendas por Meio de Pagamento</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="paymentChart" height="80"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row 1 - Sales Trend and Category -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Tendência de Vendas</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="salesTrendChart" height="80"></canvas>
+<!-- SEÇÃO: PRODUTOS -->
+<div id="section-produtos" class="analytics-section">
+    <!-- Charts Row 1 -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-star"></i> Top 20 Produtos - Receita (Produto + Categoria)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="productsPerformanceChart" height="120"></canvas>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Vendas por Categoria</h5>
+
+    <!-- Charts Row 2 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-percent"></i> Top 15 - Margem Bruta (%)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="productGrossMarginChart"></canvas>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="categoryPieChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-percent"></i> Top 15 - Margem Líquida (%)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="productNetMarginChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 3 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-tags"></i> Receita por Categoria</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Margem Bruta por Categoria</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryMarginChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row 2 - Top Products and Top Clients -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-star"></i> Top 10 Produtos</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="topProductsChart" height="300"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-award"></i> Top 10 Clientes</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="topClientsChart" height="300"></canvas>
+<!-- SEÇÃO: CLIENTES -->
+<div id="section-clientes" class="analytics-section">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-award"></i> Top 20 Clientes - Total Gasto</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="clientsPerformanceChart" height="120"></canvas>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Charts Row 3 - Gender and Sellers -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-gender-ambiguous"></i> Distribuição por Gênero</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="genderChart"></canvas>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-gender-ambiguous"></i> Distribuição por Gênero</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="genderChartAnalytics"></canvas>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-person-badge"></i> Desempenho por Vendedor</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="sellerChart"></canvas>
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Ticket Médio por Cliente (Top 10)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="clientTicketChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -141,142 +260,323 @@
 
 {% block extra_js %}
 <script>
-let currentPeriod = 30;
+// Global chart instances
+let charts = {};
 
-// Load all analytics
-function loadAnalytics() {
-    currentPeriod = parseInt(document.getElementById('periodSelect').value);
+// Switch between sections
+function showSection(section) {
+    document.querySelectorAll('.analytics-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.currentTarget.classList.add('active');
     
-    // Load KPIs
-    loadNewCustomers();
-    loadReturnRate();
-    loadTopCategory();
+    document.querySelectorAll('.analytics-section').forEach(sec => {
+        sec.classList.remove('active');
+    });
+    document.getElementById('section-' + section).classList.add('active');
     
-    // Load Charts
-    loadSalesTrend();
-    loadCategoryChart();
-    loadTopProducts();
-    loadTopClients();
-    loadGenderDistribution();
-    loadSellerDistribution();
+    if (section === 'vendas') loadVendasData();
+    if (section === 'produtos') loadProdutosData();
+    if (section === 'clientes') loadClientesData();
 }
 
-// Load New Customers KPI
-function loadNewCustomers() {
-    fetch(`/api/analytics/new-customers?days=${currentPeriod}`)
-        .then(response => response.json())
+// === VENDAS ===
+function loadVendasData() {
+    // KPIs
+    fetch('/api/analytics/sales-overview')
+        .then(r => r.json())
         .then(result => {
             if (result.success) {
-                document.getElementById('kpiNewClients').textContent = result.data.new_customers;
-            }
-        })
-        .catch(error => console.error('Error loading new customers:', error));
-}
-
-// Load Return Rate KPI
-function loadReturnRate() {
-    fetch('/api/analytics/return-rate')
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                document.getElementById('kpiReturnRate').textContent = result.data.return_rate + '%';
-            }
-        })
-        .catch(error => console.error('Error loading return rate:', error));
-}
-
-// Load Top Category KPI
-function loadTopCategory() {
-    fetch('/api/analytics/top-category')
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                const category = result.data.category;
-                document.getElementById('kpiTopCategory').textContent = 
-                    category.length > 15 ? category.substring(0, 15) + '...' : category;
-            }
-        })
-        .catch(error => console.error('Error loading top category:', error));
-}
-
-// Sales Trend Chart
-function loadSalesTrend() {
-    fetch(`/api/analytics/trend?days=${currentPeriod}`)
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                const dailyData = result.data.daily_data;
-                const labels = dailyData.map(d => d.date);
-                const revenues = dailyData.map(d => d.revenue);
+                const data = result.data;
+                document.getElementById('kpiTotalVendas').textContent = data.total_vendas;
+                document.getElementById('kpiReceita').textContent = `R$ ${data.total_receita.toFixed(2).replace('.', ',')}`;
+                document.getElementById('kpiItens').textContent = data.total_itens;
+                document.getElementById('kpiTicket').textContent = `R$ ${data.ticket_medio.toFixed(2).replace('.', ',')}`;
                 
-                const ctx = document.getElementById('salesTrendChart').getContext('2d');
+                // Payment Chart
+                const labels = Object.keys(data.by_payment);
+                const values = Object.values(data.by_payment);
                 
-                if (window.salesTrendChartInstance) {
-                    window.salesTrendChartInstance.destroy();
-                }
+                if (charts.paymentChart) charts.paymentChart.destroy();
                 
-                window.salesTrendChartInstance = new Chart(ctx, {
-                    type: 'line',
+                const ctx = document.getElementById('paymentChart').getContext('2d');
+                charts.paymentChart = new Chart(ctx, {
+                    type: 'bar',
                     data: {
                         labels: labels,
                         datasets: [{
                             label: 'Receita (R$)',
-                            data: revenues,
-                            borderColor: 'rgb(99, 102, 241)',
-                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 3,
-                            pointBackgroundColor: 'rgb(99, 102, 241)'
+                            data: values,
+                            backgroundColor: [
+                                'rgba(99, 102, 241, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(236, 72, 153, 0.8)'
+                            ]
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'R$ ' + context.parsed.y.toFixed(2).replace('.', ',');
-                                    }
-                                }
-                            }
-                        },
+                        plugins: { legend: { display: false } },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return 'R$ ' + value.toLocaleString('pt-BR');
-                                    }
-                                }
+                                ticks: { callback: v => `R$ ${v.toLocaleString('pt-BR')}` }
                             }
                         }
                     }
                 });
             }
-        })
-        .catch(error => console.error('Error loading sales trend:', error));
-}
-
-// Category Pie Chart
-function loadCategoryChart() {
-    fetch('/api/analytics/categories')
-        .then(response => response.json())
+        });
+    
+    // Monthly Revenue
+    fetch('/api/analytics/monthly-revenue')
+        .then(r => r.json())
         .then(result => {
             if (result.success) {
-                const categories = result.data.categories;
-                const labels = categories.map(c => c.category);
-                const revenues = categories.map(c => c.revenue);
+                if (charts.monthlyRevenue) charts.monthlyRevenue.destroy();
                 
-                const ctx = document.getElementById('categoryPieChart').getContext('2d');
+                const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
+                charts.monthlyRevenue = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: result.data.months,
+                        datasets: [{
+                            label: 'Receita (R$)',
+                            data: result.data.revenues,
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: v => `R$ ${v.toLocaleString('pt-BR')}` }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    
+    // Monthly Sales Count
+    fetch('/api/analytics/monthly-sales-count')
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                if (charts.monthlySalesCount) charts.monthlySalesCount.destroy();
                 
-                if (window.categoryChartInstance) {
-                    window.categoryChartInstance.destroy();
-                }
+                const ctx = document.getElementById('monthlySalesCountChart').getContext('2d');
+                charts.monthlySalesCount = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: result.data.months,
+                        datasets: [{
+                            label: 'Nº Vendas',
+                            data: result.data.counts,
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+        });
+    
+    // Monthly Margin
+    fetch('/api/analytics/monthly-margin')
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                if (charts.monthlyMargin) charts.monthlyMargin.destroy();
                 
-                window.categoryChartInstance = new Chart(ctx, {
+                const ctx = document.getElementById('monthlyMarginChart').getContext('2d');
+                charts.monthlyMargin = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: result.data.months,
+                        datasets: [
+                            {
+                                label: 'Margem Bruta (%)',
+                                data: result.data.gross_margins,
+                                borderColor: 'rgba(16, 185, 129, 1)',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Margem Líquida (%)',
+                                data: result.data.net_margins,
+                                borderColor: 'rgba(245, 158, 11, 1)',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+        });
+    
+    // Avg Ticket
+    fetch('/api/analytics/avg-ticket-trend')
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                if (charts.avgTicket) charts.avgTicket.destroy();
+                
+                const ctx = document.getElementById('avgTicketChart').getContext('2d');
+                charts.avgTicket = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: result.data.months,
+                        datasets: [{
+                            label: 'Ticket Médio (R$)',
+                            data: result.data.tickets,
+                            borderColor: 'rgba(139, 92, 246, 1)',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: v => `R$ ${v.toLocaleString('pt-BR')}` }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+}
+
+// === PRODUTOS ===
+function loadProdutosData() {
+    // Products with margin
+    fetch('/api/analytics/products-with-margin')
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                const products = result.data;
+                const labels = products.map(p => p.label.substring(0, 30));
+                const revenues = products.map(p => p.revenue);
+                const grossMargins = products.slice(0, 15).map(p => p.gross_margin);
+                const netMargins = products.slice(0, 15).map(p => p.net_margin);
+                const marginLabels = products.slice(0, 15).map(p => p.label.substring(0, 25));
+                
+                // Revenue Chart
+                if (charts.productsChart) charts.productsChart.destroy();
+                
+                const ctx1 = document.getElementById('productsPerformanceChart').getContext('2d');
+                charts.productsChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Receita (R$)',
+                            data: revenues,
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)'
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { callback: v => `R$ ${v.toLocaleString('pt-BR')}` }
+                            }
+                        }
+                    }
+                });
+                
+                // Gross Margin Chart
+                if (charts.grossMarginChart) charts.grossMarginChart.destroy();
+                
+                const ctx2 = document.getElementById('productGrossMarginChart').getContext('2d');
+                charts.grossMarginChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: marginLabels,
+                        datasets: [{
+                            label: 'Margem Bruta (%)',
+                            data: grossMargins,
+                            backgroundColor: grossMargins.map(m => 
+                                m > 50 ? 'rgba(16, 185, 129, 0.8)' : 
+                                m > 30 ? 'rgba(245, 158, 11, 0.8)' : 
+                                'rgba(239, 68, 68, 0.8)'
+                            )
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+                
+                // Net Margin Chart
+                if (charts.netMarginChart) charts.netMarginChart.destroy();
+                
+                const ctx3 = document.getElementById('productNetMarginChart').getContext('2d');
+                charts.netMarginChart = new Chart(ctx3, {
+                    type: 'bar',
+                    data: {
+                        labels: marginLabels,
+                        datasets: [{
+                            label: 'Margem Líquida (%)',
+                            data: netMargins,
+                            backgroundColor: netMargins.map(m => 
+                                m > 40 ? 'rgba(16, 185, 129, 0.8)' : 
+                                m > 20 ? 'rgba(245, 158, 11, 0.8)' : 
+                                'rgba(239, 68, 68, 0.8)'
+                            )
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        });
+    
+    // Categories
+    fetch('/api/analytics/categories')
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                const cats = result.data.categories;
+                const labels = cats.map(c => c.category);
+                const revenues = cats.map(c => c.revenue);
+                
+                if (charts.categoriesChart) charts.categoriesChart.destroy();
+                
+                const ctx = document.getElementById('categoriesChart').getContext('2d');
+                charts.categoriesChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
                         labels: labels,
@@ -286,175 +586,129 @@ function loadCategoryChart() {
                                 'rgba(99, 102, 241, 0.8)',
                                 'rgba(16, 185, 129, 0.8)',
                                 'rgba(245, 158, 11, 0.8)',
-                                'rgba(59, 130, 246, 0.8)',
-                                'rgba(139, 92, 246, 0.8)',
                                 'rgba(236, 72, 153, 0.8)',
-                                'rgba(14, 165, 233, 0.8)',
-                                'rgba(234, 88, 12, 0.8)'
+                                'rgba(139, 92, 246, 0.8)',
+                                'rgba(59, 130, 246, 0.8)'
                             ]
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: { font: { size: 10 } }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.label + ': R$ ' + context.parsed.toFixed(2).replace('.', ',');
-                                    }
-                                }
-                            }
-                        }
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
                     }
                 });
             }
-        })
-        .catch(error => console.error('Error loading categories:', error));
-}
-
-// Top Products Chart
-function loadTopProducts() {
-    fetch('/api/analytics/top-products-full?limit=10')
-        .then(response => response.json())
+        });
+    
+    // Category Margin
+    fetch('/api/analytics/category-margin')
+        .then(r => r.json())
         .then(result => {
             if (result.success) {
-                const products = result.data;
-                const labels = products.map(p => p.label);
-                const revenues = products.map(p => p.revenue);
+                const cats = result.data;
+                const labels = cats.map(c => c.category);
+                const margins = cats.map(c => c.gross_margin);
                 
-                const ctx = document.getElementById('topProductsChart').getContext('2d');
+                if (charts.categoryMarginChart) charts.categoryMarginChart.destroy();
                 
-                if (window.topProductsChartInstance) {
-                    window.topProductsChartInstance.destroy();
-                }
-                
-                window.topProductsChartInstance = new Chart(ctx, {
+                const ctx = document.getElementById('categoryMarginChart').getContext('2d');
+                charts.categoryMarginChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Receita (R$)',
-                            data: revenues,
-                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                            borderColor: 'rgba(16, 185, 129, 1)',
-                            borderWidth: 1
+                            label: 'Margem Bruta (%)',
+                            data: margins,
+                            backgroundColor: 'rgba(99, 102, 241, 0.8)'
                         }]
                     },
                     options: {
-                        indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'R$ ' + context.parsed.x.toFixed(2).replace('.', ',');
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return 'R$ ' + value.toLocaleString('pt-BR');
-                                    }
-                                }
-                            }
-                        }
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
                     }
                 });
             }
-        })
-        .catch(error => console.error('Error loading top products:', error));
+        });
 }
 
-// Top Clients Chart
-function loadTopClients() {
-    fetch('/api/analytics/top-clients-full?limit=10')
-        .then(response => response.json())
+// === CLIENTES ===
+function loadClientesData() {
+    fetch('/api/analytics/clients-performance')
+        .then(r => r.json())
         .then(result => {
             if (result.success) {
                 const clients = result.data;
-                const labels = clients.map(c => c.name);
-                const revenues = clients.map(c => c.revenue);
+                const labels = clients.map(c => c.cliente.substring(0, 20));
+                const revenues = clients.map(c => c.total_gasto);
+                const tickets = clients.map(c => c.ticket_medio);
                 
-                const ctx = document.getElementById('topClientsChart').getContext('2d');
+                if (charts.clientsChart) charts.clientsChart.destroy();
                 
-                if (window.topClientsChartInstance) {
-                    window.topClientsChartInstance.destroy();
-                }
-                
-                window.topClientsChartInstance = new Chart(ctx, {
+                const ctx = document.getElementById('clientsPerformanceChart').getContext('2d');
+                charts.clientsChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: labels,
                         datasets: [{
                             label: 'Total Gasto (R$)',
                             data: revenues,
-                            backgroundColor: 'rgba(99, 102, 241, 0.8)',
-                            borderColor: 'rgba(99, 102, 241, 1)',
-                            borderWidth: 1
+                            backgroundColor: 'rgba(99, 102, 241, 0.8)'
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { callback: v => `R$ ${v.toLocaleString('pt-BR')}` }
+                            }
+                        }
+                    }
+                });
+                
+                // Ticket Chart
+                if (charts.ticketChart) charts.ticketChart.destroy();
+                
+                const ctx2 = document.getElementById('clientTicketChart').getContext('2d');
+                charts.ticketChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: labels.slice(0, 10),
+                        datasets: [{
+                            label: 'Ticket Médio (R$)',
+                            data: tickets.slice(0, 10),
+                            backgroundColor: 'rgba(245, 158, 11, 0.8)'
                         }]
                     },
                     options: {
                         indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'R$ ' + context.parsed.x.toFixed(2).replace('.', ',');
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return 'R$ ' + value.toLocaleString('pt-BR');
-                                    }
-                                }
-                            }
-                        }
+                        plugins: { legend: { display: false } }
                     }
                 });
             }
-        })
-        .catch(error => console.error('Error loading top clients:', error));
-}
-
-// Gender Distribution Chart
-function loadGenderDistribution() {
+        });
+    
+    // Gender
     fetch('/api/analytics/gender-distribution')
-        .then(response => response.json())
+        .then(r => r.json())
         .then(result => {
             if (result.success) {
-                const data = result.data;
+                if (charts.genderChart) charts.genderChart.destroy();
                 
-                const ctx = document.getElementById('genderChart').getContext('2d');
-                
-                if (window.genderChartInstance) {
-                    window.genderChartInstance.destroy();
-                }
-                
-                window.genderChartInstance = new Chart(ctx, {
+                const ctx = document.getElementById('genderChartAnalytics').getContext('2d');
+                charts.genderChart = new Chart(ctx, {
                     type: 'pie',
                     data: {
-                        labels: data.labels,
+                        labels: result.data.labels,
                         datasets: [{
-                            data: data.values,
+                            data: result.data.values,
                             backgroundColor: [
                                 'rgba(59, 130, 246, 0.8)',
                                 'rgba(236, 72, 153, 0.8)',
@@ -464,76 +718,15 @@ function loadGenderDistribution() {
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
                     }
                 });
             }
-        })
-        .catch(error => console.error('Error loading gender distribution:', error));
-}
-
-// Seller Distribution Chart
-function loadSellerDistribution() {
-    fetch('/api/analytics/seller-distribution')
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                const data = result.data;
-                
-                const ctx = document.getElementById('sellerChart').getContext('2d');
-                
-                if (window.sellerChartInstance) {
-                    window.sellerChartInstance.destroy();
-                }
-                
-                window.sellerChartInstance = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            data: data.values,
-                            backgroundColor: [
-                                'rgba(16, 185, 129, 0.8)',
-                                'rgba(245, 158, 11, 0.8)',
-                                'rgba(239, 68, 68, 0.8)',
-                                'rgba(99, 102, 241, 0.8)',
-                                'rgba(139, 92, 246, 0.8)'
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.label + ': R$ ' + context.parsed.toFixed(2).replace('.', ',');
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error loading seller distribution:', error));
+        });
 }
 
 // Initial load
-document.addEventListener('DOMContentLoaded', function() {
-    loadAnalytics();
-});
-
-// Update KPI Growth (sample - you can implement actual calculation)
-document.getElementById('kpiGrowth').textContent = '+15.3%';
+document.addEventListener('DOMContentLoaded', () => loadVendasData());
 </script>
 {% endblock %}

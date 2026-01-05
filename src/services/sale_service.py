@@ -15,7 +15,7 @@ from src.utils.id_generator import IDGenerator
 SaleRecord = namedtuple('SaleRecord', [
     'ID_VENDA', 'DATA', 'CLIENTE', 'ID_CLIENTE', 'PRODUTO', 
     'CODIGO', 'CATEGORIA', 'QUANTIDADE', 'PRECO_UNIT', 
-    'PRECO_TOTAL', 'MEIO'
+    'PRECO_TOTAL', 'MEIO', 'VALOR_TOTAL_VENDA'  # ← Adicionado
 ])
 
 
@@ -34,18 +34,19 @@ class SaleService:
         self.product_repository = product_repository or ProductRepository()
         self.client_repository = client_repository or ClientRepository()
     
+    """
+Substitua o método register_sale_multi_item no seu sale_service.py por este:
+"""
+
     def register_sale_multi_item(
         self,
         id_cliente: str,
         meio: str,
         items: List[Dict],
         data: Optional[str] = None
-    ) -> List[Sale]:
+    ) -> Dict:
         """
-        Register a sale with MULTIPLE items (NEW METHOD).
-        
-        All items share the same ID_VENDA for grouping.
-        Each item is saved as a separate CSV line for individual analysis.
+        Register a sale with MULTIPLE items - FIXED for new structure.
         
         Args:
             id_cliente: Client ID
@@ -54,11 +55,15 @@ class SaleService:
             data: Sale date DD/MM/YYYY (uses today if None)
             
         Returns:
-            List of Sale instances
+            Dict with sale info
             
         Raises:
             ValueError: If validation fails
         """
+        from src.models.sale_item import SaleItem
+        from src.repositories.sale_item_repository import SaleItemRepository
+        from src.utils.id_generator import IDGenerator
+        
         try:
             # === STEP 1: Validate Client ===
             client = self.client_repository.get_by_id(id_cliente)
@@ -75,6 +80,8 @@ class SaleService:
             
             # === STEP 3: Validate all items and check stock ===
             validated_items = []
+            total_venda = 0.0
+            
             for item in items:
                 codigo = item['codigo']
                 quantidade = int(item['quantidade'])
@@ -96,6 +103,11 @@ class SaleService:
                 # Use current product price if not specified
                 if preco_unit is None:
                     preco_unit = float(product['VALOR'])
+                else:
+                    preco_unit = float(preco_unit)
+                
+                preco_total = preco_unit * quantidade
+                total_venda += preco_total
                 
                 validated_items.append({
                     'codigo': codigo,
@@ -103,59 +115,85 @@ class SaleService:
                     'categoria': product['CATEGORIA'],
                     'quantidade': quantidade,
                     'preco_unit': preco_unit,
+                    'preco_total': preco_total,
                     'current_stock': current_stock
                 })
             
-            # === STEP 4: Create Sale instances (all with same ID_VENDA) ===
-            sales = []
+            # === STEP 4: Create Sale header (NEW: only header fields) ===
+            from src.models.sale import Sale
+            
+            sale = Sale(
+                id_venda=id_venda,
+                id_cliente=client['ID_CLIENTE'],
+                cliente=client['CLIENTE'],
+                meio=meio,
+                data=data,
+                valor_total_venda=total_venda  # ← Total calculado
+            )
+            
+            # === STEP 5: Create SaleItem instances ===
+            sale_items = []
             for item in validated_items:
-                sale = Sale(
-                    id_venda=id_venda,  # SAME ID for all items
-                    id_cliente=client['ID_CLIENTE'],
-                    cliente=client['CLIENTE'],
-                    meio=meio,
-                    data=data,
+                sale_item = SaleItem(
+                    id_venda=id_venda,
                     produto=item['produto'],
                     categoria=item['categoria'],
                     codigo=item['codigo'],
                     quantidade=item['quantidade'],
-                    preco_unit=item['preco_unit']
+                    preco_unit=item['preco_unit'],
+                    preco_total=item['preco_total']
                 )
-                sales.append(sale)
+                sale_items.append(sale_item)
             
-            # === STEP 5: Save all sales ===
-            for sale in sales:
-                self.sale_repository.save(sale)
+            # === STEP 6: Save sale header ===
+            self.sale_repository.save(sale)
             
-            # === STEP 6: Update inventory for all items ===
+            # === STEP 7: Save all sale items ===
+            item_repo = SaleItemRepository()
+            try:
+                item_repo.save_many(sale_items)
+            except Exception as e:
+                # Rollback: delete sale header
+                self.sale_repository.delete(id_venda)
+                raise Exception(f"Erro ao salvar itens (venda revertida): {str(e)}")
+            
+            # === STEP 8: Update inventory for all items ===
             try:
                 for item in validated_items:
                     self.product_repository.update_stock(item['codigo'], -item['quantidade'])
             except Exception as e:
-                # Rollback: delete all sales
-                for sale in sales:
-                    self.sale_repository.delete(sale.id_venda)
+                # Rollback: delete sale header and items
+                item_repo.delete_by_sale_id(id_venda)
+                self.sale_repository.delete(id_venda)
                 raise Exception(f"Erro ao atualizar estoque (venda revertida): {str(e)}")
             
             # === SUCCESS ===
-            total_value = sum(s.preco_total for s in sales)
-            total_items = sum(s.quantidade for s in sales)
+            total_items = sum(item['quantidade'] for item in validated_items)
             
             print(f"✅ Venda registrada com sucesso!")
             print(f"  ID: {id_venda}")
             print(f"  Cliente: {client['CLIENTE']}")
-            print(f"  Produtos: {len(sales)} diferentes")
+            print(f"  Produtos: {len(sale_items)} diferentes")
             print(f"  Total de itens: {total_items} unidade(s)")
-            print(f"  Valor total: R$ {total_value:.2f}")
+            print(f"  Valor total: R$ {total_venda:.2f}")
             print(f"  Pagamento: {meio}")
             
-            return sales
+            return {
+                'id_venda': id_venda,
+                'total_items': len(sale_items),
+                'total_quantity': total_items,
+                'total_value': total_venda
+            }
             
         except ValueError as e:
             raise ValueError(f"Erro ao registrar venda: {str(e)}")
         except Exception as e:
             raise Exception(f"Erro inesperado ao registrar venda: {str(e)}")
     
+    """
+Substitua o método register_sale (legacy - single item) no seu sale_service.py:
+"""
+
     def register_sale(
         self,
         id_cliente: str,
@@ -164,75 +202,45 @@ class SaleService:
         meio: str,
         preco_unit: Optional[float] = None,
         data: Optional[str] = None
-    ) -> Sale:
+    ) -> Dict:
         """
         Register a SINGLE item sale (LEGACY method - kept for compatibility).
+        
+        Now redirects to register_sale_multi_item with single item.
+        
+        Args:
+            id_cliente: Client ID
+            codigo: Product code
+            quantidade: Quantity
+            meio: Payment method
+            preco_unit: Unit price (optional, uses product price if None)
+            data: Sale date DD/MM/YYYY (uses today if None)
+            
+        Returns:
+            Dict with sale info
         """
-        try:
-            client = self.client_repository.get_by_id(id_cliente)
-            if not client:
-                raise ValueError(f"Cliente '{id_cliente}' não encontrado")
-            
-            product = self.product_repository.get_by_codigo(codigo)
-            if not product:
-                raise ValueError(f"Produto '{codigo}' não encontrado")
-            
-            current_stock = int(product['ESTOQUE'])
-            if current_stock < quantidade:
-                raise ValueError(
-                    f"Estoque insuficiente para '{product['PRODUTO']}'. "
-                    f"Disponível: {current_stock} unidades. "
-                    f"Solicitado: {quantidade} unidades."
-                )
-            
-            if preco_unit is None:
-                preco_unit = float(product['VALOR'])
-            
-            if data is None:
-                data = datetime.now().strftime('%d/%m/%Y')
-            
-            existing_ids = [s['ID_VENDA'] for s in self.sale_repository.get_all().to_dict('records')]
-            id_venda = IDGenerator.generate_sale_id(existing_ids)
-            
-            sale = Sale(
-                id_venda=id_venda,
-                id_cliente=client['ID_CLIENTE'],
-                cliente=client['CLIENTE'],
-                meio=meio,
-                data=data,
-                produto=product['PRODUTO'],
-                categoria=product['CATEGORIA'],
-                codigo=product['CODIGO'],
-                quantidade=quantidade,
-                preco_unit=preco_unit
-            )
-            
-            self.sale_repository.save(sale)
-            
-            try:
-                self.product_repository.update_stock(codigo, -quantidade)
-            except Exception as e:
-                self.sale_repository.delete(id_venda)
-                raise Exception(f"Erro ao atualizar estoque (venda revertida): {str(e)}")
-            
-            new_stock = current_stock - quantidade
-            
-            print(f"✅ Venda registrada com sucesso!")
-            print(f"  ID: {sale.id_venda}")
-            print(f"  Cliente: {sale.cliente}")
-            print(f"  Produto: {sale.produto}")
-            print(f"  Quantidade: {sale.quantidade} unidade(s)")
-            print(f"  Preço unitário: R$ {sale.preco_unit:.2f}")
-            print(f"  Total: R$ {sale.preco_total:.2f}")
-            print(f"  Pagamento: {sale.get_payment_method_display()}")
-            print(f"  Estoque atualizado: {current_stock} → {new_stock} unidades")
-            
-            return sale
-            
-        except ValueError as e:
-            raise ValueError(f"Erro ao registrar venda: {str(e)}")
-        except Exception as e:
-            raise Exception(f"Erro inesperado ao registrar venda: {str(e)}")
+        # Get product to determine price if not specified
+        product = self.product_repository.get_by_codigo(codigo)
+        if not product:
+            raise ValueError(f"Produto '{codigo}' não encontrado")
+        
+        if preco_unit is None:
+            preco_unit = float(product['VALOR'])
+        
+        # Create single item list
+        items = [{
+            'codigo': codigo,
+            'quantidade': quantidade,
+            'preco_unit': preco_unit
+        }]
+        
+        # Call multi-item method
+        return self.register_sale_multi_item(
+            id_cliente=id_cliente,
+            meio=meio,
+            items=items,
+            data=data
+        )
     
     def get_sale(self, id_venda: str) -> Optional[dict]:
         """Retrieve sale information by ID."""
@@ -246,37 +254,66 @@ class SaleService:
         return self.sale_repository.get_by_sale_id(id_venda)
     
     def list_all_sales(self) -> List[SaleRecord]:
-        """List all sales as objects."""
-        df = self.sale_repository.get_all()
-        sales_list = df.to_dict('records')
+        """
+        List all sales as objects - FIXED for new structure.
+        
+        Returns a FLAT list where each line represents one ITEM sold.
+        This maintains compatibility with existing templates.
+        """
+        from src.repositories.sale_item_repository import SaleItemRepository
+        
+        # Get all sale headers (sales.csv)
+        sales_df = self.sale_repository.get_all()
+        
+        # Get all sale items (sales_items.csv)
+        item_repo = SaleItemRepository()
+        items_df = item_repo._read_csv()
+        
+        if items_df.empty:
+            return []
+        
+        # Convert to list
         converted_sales = []
-        for item in sales_list:
-            preco_total = item['PRECO_TOTAL']
-            if isinstance(preco_total, str):
-                preco_total = float(preco_total.replace('R$ ', '').replace(',', '.'))
-            else:
-                preco_total = float(preco_total)
+        
+        for _, item in items_df.iterrows():
+            # Find corresponding sale header
+            sale_header = sales_df[sales_df['ID_VENDA'] == item['ID_VENDA']]
             
-            quantidade = int(item['QUANTIDADE'])
-            preco_unit = float(item['PRECO_UNIT'])
-
-            produto_norm = str(item.get('PRODUTO', '')).strip().title()
-            categoria_norm = str(item.get('CATEGORIA', '')).strip().title()
+            if sale_header.empty:
+                continue  # Skip orphan items
             
-            sale = SaleRecord(
-                ID_VENDA=item['ID_VENDA'],
-                DATA=item['DATA'],
-                CLIENTE=item['CLIENTE'],
-                ID_CLIENTE=item['ID_CLIENTE'],
-                PRODUTO=produto_norm,
-                CODIGO=item['CODIGO'],
-                CATEGORIA=categoria_norm,
-                QUANTIDADE=quantidade,
-                PRECO_UNIT=preco_unit,
-                PRECO_TOTAL=preco_total,
-                MEIO=item['MEIO']
-            )
-            converted_sales.append(sale)
+            sale = sale_header.iloc[0]
+            
+            # Create SaleRecord with data from BOTH files
+            try:
+                preco_total = float(item['PRECO_TOTAL'])
+                quantidade = int(item['QUANTIDADE'])
+                preco_unit = float(item['PRECO_UNIT'])
+                valor_total_venda = float(sale['VALOR_TOTAL_VENDA'])
+                
+                produto_norm = str(item.get('PRODUTO', '')).strip().title()
+                categoria_norm = str(item.get('CATEGORIA', '')).strip().title()
+                
+                sale_record = SaleRecord(
+                    ID_VENDA=sale['ID_VENDA'],
+                    DATA=sale['DATA'],
+                    CLIENTE=sale['CLIENTE'],
+                    ID_CLIENTE=sale['ID_CLIENTE'],
+                    PRODUTO=produto_norm,
+                    CODIGO=item['CODIGO'],
+                    CATEGORIA=categoria_norm,
+                    QUANTIDADE=quantidade,
+                    PRECO_UNIT=preco_unit,
+                    PRECO_TOTAL=preco_total,  # From items
+                    MEIO=sale['MEIO'],
+                    VALOR_TOTAL_VENDA=valor_total_venda  # From header
+                )
+                converted_sales.append(sale_record)
+                
+            except (ValueError, KeyError, TypeError) as e:
+                print(f"Error processing sale item: {e}")
+                continue
+        
         return converted_sales
     
     def list_sales_by_client(self, id_cliente: str) -> List[dict]:
@@ -292,10 +329,30 @@ class SaleService:
         return self.sale_repository.get_by_payment_method(meio)
     
     def get_sales_summary(self) -> dict:
-        """Get sales summary with CORRECT average ticket (by unique ID_VENDA)."""
-        import pandas as pd
-        
+        """Get sales summary - FIXED for new structure."""
         summary = self.sale_repository.get_sales_summary()
+        
+        print("\n" + "="*60)
+        print("  RESUMO DE VENDAS")
+        print("="*60)
+        print(f"Total de vendas: {summary['total_sales']}")
+        print(f"Receita total: R$ {summary['total_revenue']:.2f}")
+        print(f"Itens vendidos: {summary['total_items_sold']}")
+        print(f"Ticket médio: R$ {summary['average_sale_value']:.2f}")
+        
+        if summary['by_payment_method']:
+            print("\nPor meio de pagamento:")
+            for meio, valor in summary['by_payment_method'].items():
+                print(f"  - {meio.title()}: R$ {valor:.2f}")
+        
+        if summary['by_category']:
+            print("\nPor categoria:")
+            for cat, valor in summary['by_category'].items():
+                print(f"  - {cat}: R$ {valor:.2f}")
+        
+        print("="*60)
+        
+        return summary
         
         # Calculate unique sales count and correct average
         df = self.sale_repository.get_all()
@@ -379,10 +436,27 @@ class SaleService:
             'estoque_suficiente': estoque >= quantidade
         }
     
+    """
+Substitua o método cancel_sale no seu sale_service.py por este:
+"""
+
     def cancel_sale(self, id_venda: str, restore_stock: bool = True) -> bool:
-        """Cancel sale and restore stock (works with multi-item sales)."""
+        """
+        Cancel sale and restore stock (works with multi-item sales) - FIXED.
+        
+        Args:
+            id_venda: Sale ID to cancel
+            restore_stock: Whether to restore inventory
+            
+        Returns:
+            True if successful
+        """
+        from src.repositories.sale_item_repository import SaleItemRepository
+        
         # Get ALL items from this sale
-        items = self.sale_repository.get_by_sale_id(id_venda)
+        item_repo = SaleItemRepository()
+        items = item_repo.get_by_sale_id(id_venda)
+        
         if not items:
             raise ValueError(f"Venda '{id_venda}' não encontrada")
         
@@ -400,7 +474,10 @@ class SaleService:
                         print(f"⚠️ Produto {codigo} não existe mais. Estoque NÃO foi restaurado.")
             
             # Delete ALL items with this ID_VENDA
-            self.sale_repository.delete_by_sale_id(id_venda)
+            item_repo.delete_by_sale_id(id_venda)
+            
+            # Delete sale header
+            self.sale_repository.delete(id_venda)
             
             print(f"✅ Venda {id_venda} cancelada com sucesso ({len(items)} item(s))")
             return True

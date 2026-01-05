@@ -38,6 +38,11 @@
             font-size: 3rem;
             margin-bottom: 15px;
         }
+
+        .login-header .site-logo {
+            height: 6rem; /* smaller for login header */
+            width: auto;
+        }
         
         .login-body {
             padding: 40px;
@@ -78,7 +83,7 @@
 <body>
     <div class="login-card">
         <div class="login-header">
-            <i class="bi bi-flower1"></i>
+            <img src="{{ url_for('static', filename='img/logo/jb-home-essence-logo-white.png') }}" alt="JB Home Essence" class="site-logo">
             <h3>JB Home Essence</h3>
             <p class="mb-0">Sistema de gestão</p>
         </div>

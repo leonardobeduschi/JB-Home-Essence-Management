@@ -88,9 +88,8 @@ from src.services.client_service import ClientService
 from src.services.sale_service import SaleService
 from src.services.analytics_service import AnalyticsService
 from src.services.visualization_service import VisualizationService
-from src.services.export_service import ExportService
 
 __all__ = [
     'ProductService', 'ClientService', 'SaleService', 
-    'AnalyticsService', 'VisualizationService', 'ExportService'
+    'AnalyticsService', 'VisualizationService'
 ]

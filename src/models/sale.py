@@ -1,9 +1,7 @@
 """
-Sale model and validation.
+Sale model and validation - FIXED for new structure.
 
-This module defines the Sale entity structure and business rules.
-Sales are transactions that link clients and products, automatically
-calculating totals and updating inventory.
+Substitua COMPLETAMENTE o arquivo src/models/sale.py por este:
 """
 
 from dataclasses import dataclass
@@ -12,19 +10,14 @@ from typing import Optional
 from enum import Enum
 
 
-# CSV Schema for sales
+# CSV Schema for sales (ONLY header fields)
 SALE_SCHEMA = [
     'ID_VENDA',
     'ID_CLIENTE',
     'CLIENTE',
     'MEIO',
     'DATA',
-    'PRODUTO',
-    'CATEGORIA',
-    'CODIGO',
-    'QUANTIDADE',
-    'PRECO_UNIT',
-    'PRECO_TOTAL'
+    'VALOR_TOTAL_VENDA'
 ]
 
 
@@ -42,199 +35,105 @@ class MeioPagamento(Enum):
 @dataclass
 class Sale:
     """
-    Sale entity representing a transaction.
+    Sale entity - APENAS o cabeçalho da venda.
+    Itens estão em SaleItem (sales_items.csv).
     
     Attributes:
-        id_venda: Unique sale ID (auto-generated, e.g., 'VND001')
-        id_cliente: Client ID reference
-        cliente: Client name (auto-filled from client)
+        id_venda: Unique sale ID
+        id_cliente: Client ID (FK)
+        cliente: Client name
         meio: Payment method
         data: Sale date (DD/MM/YYYY)
-        produto: Product name (auto-filled from product)
-        categoria: Product category (auto-filled from product)
-        codigo: Product code reference
-        quantidade: Quantity sold
-        preco_unit: Unit price at time of sale
-        preco_total: Total price (auto-calculated)
+        valor_total_venda: Total sale value (sum of all items)
     """
     id_venda: str
     id_cliente: str
     cliente: str
     meio: str
     data: str
-    produto: str
-    categoria: str
-    codigo: str
-    quantidade: int
-    preco_unit: float
-    preco_total: float = 0.0
+    valor_total_venda: float = 0.0
     
     def __post_init__(self):
-        """Validate sale data and calculate total."""
+        """Validate sale data."""
         self._validate()
-        self._calculate_total()
     
     def _validate(self) -> None:
-        """
-        Validate sale attributes.
-        
-        Raises:
-            ValueError: If any validation rule fails
-        """
+        """Validate sale attributes."""
         # Validate ID_VENDA
-        if not self.id_venda or not isinstance(self.id_venda, str):
-            raise ValueError("ID_VENDA é obrigatório e deve ser texto")
-        
-        if not self.id_venda.strip():
-            raise ValueError("ID_VENDA não pode ser vazio")
+        if not self.id_venda or not str(self.id_venda).strip():
+            raise ValueError("ID_VENDA é obrigatório")
         
         # Validate ID_CLIENTE
-        if not self.id_cliente or not isinstance(self.id_cliente, str):
-            raise ValueError("ID_CLIENTE é obrigatório e deve ser texto")
+        if not self.id_cliente or not str(self.id_cliente).strip():
+            raise ValueError("ID_CLIENTE é obrigatório")
         
-        if not self.id_cliente.strip():
-            raise ValueError("ID_CLIENTE não pode ser vazio")
+        # Validate CLIENTE
+        if not self.cliente or not str(self.cliente).strip():
+            raise ValueError("CLIENTE é obrigatório")
         
-        # Validate CLIENTE (name)
-        if not self.cliente or not isinstance(self.cliente, str):
-            raise ValueError("CLIENTE (nome) é obrigatório e deve ser texto")
+        # Validate MEIO
+        if not self.meio or not str(self.meio).strip():
+            raise ValueError("MEIO de pagamento é obrigatório")
         
-        if not self.cliente.strip():
-            raise ValueError("CLIENTE (nome) não pode ser vazio")
-        
-        # Validate MEIO (payment method)
-        if not self.meio or not isinstance(self.meio, str):
-            raise ValueError("MEIO (forma de pagamento) é obrigatório")
-        
-        meio_lower = self.meio.lower().strip()
-        valid_meios = [e.value for e in MeioPagamento]
-        if meio_lower not in valid_meios:
-            raise ValueError(
-                f"MEIO deve ser um dos seguintes: {', '.join(valid_meios)}"
-            )
-        
-        # Normalize meio
-        self.meio = meio_lower
+        valid_payment_methods = [e.value for e in MeioPagamento]
+        if self.meio.lower() not in valid_payment_methods:
+            print(f"⚠️ Aviso: Meio de pagamento '{self.meio}' não está na lista padrão")
         
         # Validate DATA
-        if not self.data or not isinstance(self.data, str):
+        if not self.data or not str(self.data).strip():
             raise ValueError("DATA é obrigatória")
         
-        # Validate date format (DD/MM/YYYY)
         try:
-            datetime.strptime(self.data.strip(), '%d/%m/%Y')
+            datetime.strptime(str(self.data).strip(), '%d/%m/%Y')
         except ValueError:
             raise ValueError("DATA deve estar no formato DD/MM/YYYY")
         
-        # Validate PRODUTO
-        if not self.produto or not isinstance(self.produto, str):
-            raise ValueError("PRODUTO é obrigatório e deve ser texto")
-        
-        if not self.produto.strip():
-            raise ValueError("PRODUTO não pode ser vazio")
-        
-        # Validate CATEGORIA
-        if not self.categoria or not isinstance(self.categoria, str):
-            raise ValueError("CATEGORIA é obrigatória e deve ser texto")
-        
-        if not self.categoria.strip():
-            raise ValueError("CATEGORIA não pode ser vazia")
-        
-        # Validate CODIGO
-        if not self.codigo or not isinstance(self.codigo, str):
-            raise ValueError("CODIGO (do produto) é obrigatório")
-        
-        if not self.codigo.strip():
-            raise ValueError("CODIGO não pode ser vazio")
-        
-        # Validate QUANTIDADE
+        # Validate VALOR_TOTAL_VENDA
         try:
-            self.quantidade = int(self.quantidade)
+            self.valor_total_venda = float(self.valor_total_venda)
         except (ValueError, TypeError):
-            raise ValueError("QUANTIDADE deve ser um número inteiro válido")
+            raise ValueError("VALOR_TOTAL_VENDA deve ser numérico")
         
-        if self.quantidade <= 0:
-            raise ValueError("QUANTIDADE deve ser maior que zero")
-        
-        # Validate PRECO_UNIT
-        try:
-            self.preco_unit = float(self.preco_unit)
-        except (ValueError, TypeError):
-            raise ValueError("PREÇO UNITÁRIO deve ser um número válido")
-        
-        if self.preco_unit <= 0:
-            raise ValueError("PREÇO UNITÁRIO deve ser maior que zero")
-    
-    def _calculate_total(self) -> None:
-        """Calculate total price (QUANTIDADE × PRECO_UNIT)."""
-        self.preco_total = self.quantidade * self.preco_unit
-    
-    def get_display_date(self) -> str:
-        """
-        Get formatted display date.
-        
-        Returns:
-            Date in DD/MM/YYYY format
-        """
-        return self.data
-    
-    def get_payment_method_display(self) -> str:
-        """
-        Get formatted payment method for display.
-        
-        Returns:
-            Capitalized payment method
-        """
-        return self.meio.title()
+        if self.valor_total_venda < 0:
+            raise ValueError("VALOR_TOTAL_VENDA não pode ser negativo")
     
     def to_dict(self) -> dict:
-        """
-        Convert Sale to dictionary for CSV serialization.
-        
-        Returns:
-            Dictionary with sale data
-        """
+        """Convert to dictionary for CSV."""
         return {
-            'ID_VENDA': self.id_venda.strip().upper(),
-            'ID_CLIENTE': self.id_cliente.strip().upper(),
-            'CLIENTE': self.cliente.strip(),
-            'MEIO': self.meio.strip().lower(),
-            'DATA': self.data.strip(),
-            'PRODUTO': self.produto.strip(),
-            'CATEGORIA': self.categoria.strip(),
-            'CODIGO': self.codigo.strip().upper(),
-            'QUANTIDADE': str(self.quantidade),
-            'PRECO_UNIT': f"{self.preco_unit:.2f}",
-            'PRECO_TOTAL': f"{self.preco_total:.2f}"
+            'ID_VENDA': str(self.id_venda).strip().upper(),
+            'ID_CLIENTE': str(self.id_cliente).strip().upper(),
+            'CLIENTE': str(self.cliente).strip(),
+            'MEIO': str(self.meio).strip().lower(),
+            'DATA': str(self.data).strip(),
+            'VALOR_TOTAL_VENDA': f"{self.valor_total_venda:.2f}"
         }
     
     @classmethod
     def from_dict(cls, data: dict) -> 'Sale':
-        """
-        Create Sale instance from dictionary.
-        
-        Args:
-            data: Dictionary with sale data
-            
-        Returns:
-            Sale instance
-        """
+        """Create from dictionary."""
         return cls(
             id_venda=data.get('ID_VENDA', ''),
             id_cliente=data.get('ID_CLIENTE', ''),
             cliente=data.get('CLIENTE', ''),
             meio=data.get('MEIO', ''),
             data=data.get('DATA', ''),
-            produto=data.get('PRODUTO', ''),
-            categoria=data.get('CATEGORIA', ''),
-            codigo=data.get('CODIGO', ''),
-            quantidade=data.get('QUANTIDADE', 0),
-            preco_unit=data.get('PRECO_UNIT', 0),
-            preco_total=data.get('PRECO_TOTAL', 0)
+            valor_total_venda=float(data.get('VALOR_TOTAL_VENDA', 0))
         )
     
+    def get_payment_method_display(self) -> str:
+        """Get formatted payment method for display."""
+        payment_display = {
+            'pix': 'PIX',
+            'cartão': 'Cartão',
+            'cartão de crédito': 'Cartão de Crédito',
+            'cartão de débito': 'Cartão de Débito',
+            'dinheiro': 'Dinheiro',
+            'transferência': 'Transferência',
+            'boleto': 'Boleto'
+        }
+        return payment_display.get(self.meio.lower(), self.meio.title())
+    
     def __repr__(self) -> str:
-        """String representation for debugging."""
-        return (f"Sale(id='{self.id_venda}', cliente='{self.cliente}', "
-                f"produto='{self.produto}', quantidade={self.quantidade}, "
-                f"total=R${self.preco_total:.2f})")
+        """String representation."""
+        return (f"Sale(id_venda='{self.id_venda}', cliente='{self.cliente}', "
+                f"valor_total=R${self.valor_total_venda:.2f}, meio='{self.meio}')")
