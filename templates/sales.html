@@ -48,14 +48,13 @@
             </div>
         </div>
 
-        <!-- Summary Cards -->
-        {% if sales %}
+        <!-- Summary Cards - CORRECTED -->
         <div class="row mb-3">
             <div class="col-md-3">
                 <div class="card bg-primary text-white">
                     <div class="card-body py-2">
                         <small>Total de Itens</small>
-                        <h4 class="mb-0" id="totalSales">{{ sales|length }}</h4>
+                        <h4 class="mb-0" id="totalSalesDisplay">...</h4>
                     </div>
                 </div>
             </div>
@@ -63,16 +62,7 @@
                 <div class="card bg-success text-white">
                     <div class="card-body py-2">
                         <small>Receita Total</small>
-                        <h4 class="mb-0" id="totalRevenue">
-                        R$
-                        {{
-                            "{:,.2f}".format(sales|sum(attribute='PRECO_TOTAL'))
-                            |replace(',', 'X')
-                            |replace('.', ',')
-                            |replace('X', '.')
-                        }}
-                        </h4>
-
+                        <h4 class="mb-0" id="totalRevenueDisplay">R$ ...</h4>
                     </div>
                 </div>
             </div>
@@ -80,7 +70,7 @@
                 <div class="card bg-info text-white">
                     <div class="card-body py-2">
                         <small>Itens Vendidos</small>
-                        <h4 class="mb-0" id="totalItems">{{ sales|sum(attribute='QUANTIDADE') }}</h4>
+                        <h4 class="mb-0" id="totalItemsDisplay">...</h4>
                     </div>
                 </div>
             </div>
@@ -88,12 +78,11 @@
                 <div class="card bg-warning text-dark">
                     <div class="card-body py-2">
                         <small>Vendas Únicas</small>
-                        <h4 class="mb-0" id="uniqueSales">{{ sales|map(attribute='ID_VENDA')|unique|list|length }}</h4>
+                        <h4 class="mb-0" id="uniqueSalesDisplay">...</h4>
                     </div>
                 </div>
             </div>
         </div>
-        {% endif %}
 
         <!-- Sales Table -->
         <div class="table-responsive">
@@ -114,7 +103,7 @@
                 </thead>
                 <tbody>
                     {% for sale in sales|reverse %}
-                    <tr data-payment="{{ sale.MEIO }}" data-category="{{ sale.CATEGORIA }}" data-date="{{ sale.DATA }}">
+                    <tr data-payment="{{ sale.MEIO }}" data-category="{{ sale.CATEGORIA }}" data-date="{{ sale.DATA }}" data-sale-id="{{ sale.ID_VENDA }}">
                         <td><span class="badge bg-secondary">{{ sale.ID_VENDA }}</span></td>
                         <td>{{ sale.DATA }}</td>
                         <td>
@@ -127,8 +116,8 @@
                         </td>
                         <td><span class="badge bg-info">{{ sale.CATEGORIA }}</span></td>
                         <td><strong>{{ sale.QUANTIDADE }}</strong></td>
-                        <td>R$ {{ "%.2f"|format(sale.PRECO_UNIT) }}</td>
-                        <td><strong class="text-success">R$ {{ "%.2f"|format(sale.PRECO_TOTAL) }}</strong></td>
+                        <td>R$ {{ sale.PRECO_UNIT|float|currency }}</td>
+                        <td><strong class="text-success">R$ {{ sale.PRECO_TOTAL|float|currency }}</strong></td>
                         <td>
                             {% if sale.MEIO == 'dinheiro' %}
                                 <span class="badge bg-success"><i class="bi bi-cash"></i> Dinheiro</span>
@@ -189,7 +178,24 @@
 
 {% block extra_js %}
 <script>
-let currentSaleId = null;
+// ===== LOAD CORRECT SUMMARY FROM API =====
+function loadSalesSummary() {
+    fetch('/api/sales/summary')
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                const data = result.data;
+                document.getElementById('totalSalesDisplay').textContent = data.total_sales;
+                document.getElementById('totalRevenueDisplay').textContent = 'R$ ' + formatCurrencyBR(data.total_revenue);
+                document.getElementById('totalItemsDisplay').textContent = data.total_items;
+                document.getElementById('uniqueSalesDisplay').textContent = data.unique_sales;
+            }
+        })
+        .catch(err => console.error('Error loading summary:', err));
+}
+
+// Load on page load
+document.addEventListener('DOMContentLoaded', loadSalesSummary);
 
 // Filter functionality
 document.getElementById('searchInput').addEventListener('keyup', filterTable);
@@ -207,8 +213,8 @@ function filterTable() {
     
     const rows = document.querySelectorAll('#salesTable tbody tr');
     let visibleCount = 0;
-    let visibleRevenue = 0;
     let visibleItems = 0;
+    const visibleSaleIds = new Set();
     
     rows.forEach(row => {
         if (row.cells.length === 1) return; // Skip empty state
@@ -217,6 +223,7 @@ function filterTable() {
         const payment = row.getAttribute('data-payment');
         const category = row.getAttribute('data-category');
         const date = row.getAttribute('data-date');
+        const saleId = row.getAttribute('data-sale-id');
         
         let showRow = true;
         
@@ -247,17 +254,16 @@ function filterTable() {
         // Update summary
         if (showRow) {
             visibleCount++;
-            const total = parseFloat(row.cells[7].textContent.replace('R$ ', '').replace(',', '.'));
             const qty = parseInt(row.cells[5].textContent);
-            visibleRevenue += total;
             visibleItems += qty;
+            visibleSaleIds.add(saleId);
         }
     });
     
-    // Update summary cards
-    document.getElementById('totalSales').textContent = visibleCount;
-    document.getElementById('totalRevenue').textContent = 'R$ ' + visibleRevenue.toFixed(2).replace('.', ',');
-    document.getElementById('totalItems').textContent = visibleItems;
+    // Update filtered summary (items only, revenue stays from API)
+    document.getElementById('totalSalesDisplay').textContent = visibleCount;
+    document.getElementById('totalItemsDisplay').textContent = visibleItems;
+    document.getElementById('uniqueSalesDisplay').textContent = visibleSaleIds.size;
 }
 
 function parseDate(dateStr) {
@@ -273,6 +279,7 @@ function clearFilters() {
     document.getElementById('dateFromFilter').value = '';
     document.getElementById('dateToFilter').value = '';
     filterTable();
+    loadSalesSummary(); // Reload full summary
 }
 
 function viewSaleDetails(id) {
@@ -291,8 +298,8 @@ function viewSaleDetails(id) {
                     return;
                 }
                 
-                // Calculate total
-                const total = items.reduce((sum, item) => sum + parseFloat(item.PRECO_TOTAL), 0);
+                // Use VALOR_TOTAL_VENDA from sale header
+                const total = parseFloat(items[0].VALOR_TOTAL_VENDA || 0);
                 
                 let html = `
                     <div class="card">
@@ -326,8 +333,8 @@ function viewSaleDetails(id) {
                             <td>${item.PRODUTO}<br><small class="text-muted">${item.CODIGO}</small></td>
                             <td><span class="badge bg-info">${item.CATEGORIA}</span></td>
                             <td><strong>${item.QUANTIDADE}</strong></td>
-                            <td>R$ ${parseFloat(item.PRECO_UNIT).toFixed(2)}</td>
-                            <td><strong>R$ ${parseFloat(item.PRECO_TOTAL).toFixed(2)}</strong></td>
+                            <td>R$ ${formatCurrencyBR(parseFloat(item.PRECO_UNIT))}</td>
+                            <td><strong>R$ ${formatCurrencyBR(parseFloat(item.PRECO_TOTAL))}</strong></td>
                         </tr>
                     `;
                 });
@@ -337,7 +344,7 @@ function viewSaleDetails(id) {
                                 <tfoot>
                                     <tr class="table-success">
                                         <th colspan="4" class="text-end">TOTAL DA VENDA:</th>
-                                        <th><h5 class="mb-0">R$ ${total.toFixed(2)}</h5></th>
+                                        <th><h5 class="mb-0">R$ ${formatCurrencyBR(total)}</h5></th>
                                     </tr>
                                 </tfoot>
                             </table>

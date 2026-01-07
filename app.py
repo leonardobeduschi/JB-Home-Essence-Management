@@ -25,6 +25,21 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
 
+# Jinja filter to format currency in Brazilian style (thousands dot, decimal comma), e.g., 25300.00 -> 25.300,00
+@app.template_filter('currency')
+def currency_filter(value):
+    try:
+        v = float(value)
+    except (ValueError, TypeError):
+        return value
+    sign = '-' if v < 0 else ''
+    v_abs = abs(v)
+    s = f"{v_abs:,.2f}"  # produces '25,300.00'
+    # Swap thousands and decimal separators to Brazilian format
+    s = s.replace(',', 'X').replace('.', ',').replace('X', '.')
+    return f"{sign}{s}"
+
+
 # Initialize services
 product_service = ProductService()
 client_service = ClientService()
@@ -190,56 +205,40 @@ def dashboard():
 @app.route('/products')
 @login_required
 def products():
-    """Products management page with REAL profit margins."""
+    """Products management page with CORRECT profit margins."""
     try:
-        from src.repositories.sale_repository import SaleRepository
-        import pandas as pd
-        from datetime import datetime
-        
         # Get all products
         products_list = product_service.list_all_products()
         
-        # Calculate monthly sales count for margin calculation
-        sale_repo = SaleRepository()
-        sales_df = sale_repo.get_all()
-        
-        # Count sales in current month
-        current_month = datetime.now().strftime('%m/%Y')
-        monthly_sales_count = 0
-        
-        if not sales_df.empty:
-            sales_df['MONTH'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y').dt.strftime('%m/%Y')
-            monthly_sales_count = len(sales_df[sales_df['MONTH'] == current_month])
-        
-        # Use minimum of 30 sales for calculation if actual is lower
-        # This prevents unrealistic margin calculations in slow months
-        estimated_monthly_sales = max(monthly_sales_count, 30)
-        
-        # Calculate real margins for each product
+        # Calculate CORRECT margins for each product
         for product in products_list:
             custo = float(product.get('CUSTO', 0))
             valor = float(product.get('VALOR', 0))
             
             if valor > 0:
-                margin_data = expense_service.calculate_real_profit_margin(
+                # USA O MÉTODO CORRETO (não depende de monthly_sales)
+                margin_data = expense_service.calculate_product_margin(
                     sale_price=valor,
                     cost_price=custo,
                     quantity=1,
-                    monthly_sales_count=estimated_monthly_sales
+                    payment_method='pix'  # Assume pix por padrão
                 )
                 
                 product['gross_margin_pct'] = margin_data['gross_margin_pct']
-                product['net_margin_pct'] = margin_data['net_margin_pct']
-                product['allocated_expense'] = margin_data['allocated_expense']
+                product['contribution_margin_pct'] = margin_data['contribution_margin_pct']
+                product['variable_costs'] = margin_data['variable_costs_total']
+                
+                # Para compatibilidade com template antigo
+                product['net_margin_pct'] = margin_data['contribution_margin_pct']
             else:
                 product['gross_margin_pct'] = 0
+                product['contribution_margin_pct'] = 0
                 product['net_margin_pct'] = 0
-                product['allocated_expense'] = 0
+                product['variable_costs'] = 0
         
         return render_template(
             'products.html', 
             products=products_list,
-            monthly_sales=estimated_monthly_sales,
             total_expenses=expense_service.get_total_monthly_expenses(),
             user=session
         )
@@ -450,6 +449,70 @@ def add_sale():
                          products=products,
                          payment_methods=sale_service.get_available_payment_methods(),
                          user=session)
+
+@app.route('/api/sales/summary', methods=['GET'])
+@login_required
+def api_sales_summary():
+    """
+    Get sales summary with CORRECT revenue calculation.
+    Uses sales.csv (VALOR_TOTAL_VENDA) as the single source of truth.
+    """
+    try:
+        from src.repositories.sale_repository import SaleRepository
+        from src.repositories.sale_item_repository import SaleItemRepository
+        import pandas as pd
+        
+        sale_repo = SaleRepository()
+        item_repo = SaleItemRepository()
+        
+        # Get all sales (CORRECT SOURCE)
+        sales_df = sale_repo.get_all()
+        
+        if sales_df.empty:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'total_sales': 0,
+                    'total_revenue': 0,
+                    'total_items': 0,
+                    'unique_sales': 0
+                }
+            })
+        
+        # Convert columns
+        sales_df['VALOR_TOTAL_VENDA'] = pd.to_numeric(
+            sales_df['VALOR_TOTAL_VENDA'], 
+            errors='coerce'
+        ).fillna(0)
+        
+        # Get items for total quantity
+        items_df = item_repo._read_csv()
+        items_df['QUANTIDADE'] = pd.to_numeric(
+            items_df['QUANTIDADE'], 
+            errors='coerce'
+        ).fillna(0)
+        
+        # Calculate metrics
+        total_sales = len(items_df)  # Total line items
+        total_revenue = float(sales_df['VALOR_TOTAL_VENDA'].sum())  # ← CORRECT
+        total_items = int(items_df['QUANTIDADE'].sum())
+        unique_sales = len(sales_df)  # Unique sale transactions
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'total_sales': total_sales,
+                'total_revenue': total_revenue,
+                'total_items': total_items,
+                'unique_sales': unique_sales
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in sales summary: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ========== ANALYTICS ROUTES ==========
 
@@ -745,16 +808,7 @@ def api_sales_trend():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/analytics/top-products', methods=['GET'])
-@login_required
-def api_top_products():
-    """Get top products."""
-    try:
-        limit = int(request.args.get('limit', 10))
-        performance = analytics_service.get_product_performance(limit)
-        return jsonify({'success': True, 'data': performance['top_products']})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 
 @app.route('/api/analytics/customer-segments', methods=['GET'])
@@ -890,115 +944,441 @@ def api_monthly_revenue():
         print(f"Error in monthly revenue: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
     
+@app.route('/api/analytics/monthly-financial-summary', methods=['GET'])
+@login_required
+def api_monthly_financial_summary():
+    """Resumo financeiro do mês atual."""
+    try:
+        from src.repositories.sale_repository import SaleRepository
+        from src.repositories.sale_item_repository import SaleItemRepository
+        from src.repositories.product_repository import ProductRepository
+        import pandas as pd
+        from datetime import datetime
+        
+        sale_repo = SaleRepository()
+        item_repo = SaleItemRepository()
+        product_repo = ProductRepository()
+        
+        # Pegar vendas do mês atual
+        current_month = datetime.now().strftime('%m/%Y')
+        sales_df = sale_repo.get_all()
+        sales_df['MONTH'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y').dt.strftime('%m/%Y')
+        month_sales = sales_df[sales_df['MONTH'] == current_month]
+        
+        if month_sales.empty:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'gross_margin_pct': 0,
+                    'contribution_margin_pct': 0,
+                    'fixed_expenses': expense_service.get_total_monthly_expenses(),
+                    'net_profit': 0
+                }
+            })
+        
+        # Calcular métricas do mês
+        total_revenue = month_sales['VALOR_TOTAL_VENDA'].astype(float).sum()
+        
+        # Pegar itens do mês
+        sale_ids = month_sales['ID_VENDA'].tolist()
+        items_df = item_repo._read_csv()
+        month_items = items_df[items_df['ID_VENDA'].isin(sale_ids)]
+        
+        # Calcular COGS
+        products_df = product_repo.get_all()
+        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
+        
+        total_cogs = 0
+        for _, item in month_items.iterrows():
+            codigo = str(item['CODIGO'])
+            quantidade = int(item.get('QUANTIDADE', 0))
+            custo = float(product_costs.get(codigo, 0))
+            total_cogs += custo * quantidade
+        
+        # Calcular custos variáveis (estimativa: 3.5% taxa + R$ 3/unidade embalagem)
+        total_units = month_items['QUANTIDADE'].astype(int).sum()
+        payment_fees = total_revenue * 0.035  # 3.5% taxa média
+        packaging_costs = total_units * 3.0   # R$ 3 por unidade (embalagem + materiais)
+        total_variable_costs = payment_fees + packaging_costs
+        
+        # Margens
+        gross_profit = total_revenue - total_cogs
+        gross_margin_pct = (gross_profit / total_revenue * 100) if total_revenue > 0 else 0
+        
+        contribution_margin = gross_profit - total_variable_costs
+        contribution_margin_pct = (contribution_margin / total_revenue * 100) if total_revenue > 0 else 0
+        
+        # Despesas fixas
+        fixed_expenses = expense_service.get_total_monthly_expenses()
+        
+        # Lucro líquido
+        net_profit = contribution_margin - fixed_expenses
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'total_revenue': float(total_revenue),
+                'total_cogs': float(total_cogs),
+                'total_variable_costs': float(total_variable_costs),
+                'gross_profit': float(gross_profit),
+                'gross_margin_pct': float(gross_margin_pct),
+                'contribution_margin': float(contribution_margin),
+                'contribution_margin_pct': float(contribution_margin_pct),
+                'fixed_expenses': float(fixed_expenses),
+                'net_profit': float(net_profit)
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in financial summary: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/analytics/monthly-profit', methods=['GET'])
 @login_required
-def api_monthly_profit():
-    """Get monthly profit margin for last 12 months."""
+def api_monthly_profit_updated():
+    """Lucro líquido mensal (12 meses) - MODELO FINANCEIRO CORRETO"""
     try:
         from collections import defaultdict
         from src.repositories.sale_repository import SaleRepository
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
         import pandas as pd
-        
+        from datetime import datetime, timedelta
+
         sale_repo = SaleRepository()
         item_repo = SaleItemRepository()
         product_repo = ProductRepository()
-        
-        # Get all sales and items
+
         sales_df = sale_repo.get_all()
         items_df = item_repo._read_csv()
         products_df = product_repo.get_all()
-        
-        if sales_df.empty or items_df.empty:
+
+        if sales_df.empty:
             return jsonify({
                 'success': True,
                 'data': {
                     'months': [],
                     'net_profits': [],
-                    'expenses': []
+                    'gross_margins': [],
+                    'contribution_margins': []
                 }
             })
-        
-        # Get last 12 months
+
+        # === Datas ===
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
-        
-        # Convert dates
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y', errors='coerce')
+
+        sales_df['DATA_DT'] = pd.to_datetime(
+            sales_df['DATA'],
+            format='%d/%m/%Y',
+            errors='coerce'
+        )
+
+        sales_df = sales_df[
+            (sales_df['DATA_DT'] >= start_date) &
+            (sales_df['DATA_DT'].notna())
+        ]
+
         sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
-        
-        # Filter last 12 months
-        sales_df = sales_df[sales_df['DATA_DT'] >= start_date]
-        
-        # Get products costs
-        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
-        
-        # Calculate monthly data
+        sales_df['VALOR_TOTAL_VENDA'] = pd.to_numeric(
+            sales_df['VALOR_TOTAL_VENDA'],
+            errors='coerce'
+        ).fillna(0)
+
+        # === Custo dos produtos (COGS) ===
+        product_costs = (
+            products_df
+            .assign(CODIGO=products_df['CODIGO'].astype(str))
+            .set_index('CODIGO')['CUSTO']
+            .to_dict()
+        )
+
+        # === Estrutura mensal ===
         monthly_data = defaultdict(lambda: {
-            'revenue': 0,
-            'cost': 0,
+            'revenue': 0.0,
+            'cogs': 0.0,
+            'units': 0,
             'sales_count': 0
         })
-        
-        # Group sales by month
+
+        # Receita por mês
         for _, sale in sales_df.iterrows():
             month_key = sale['MONTH_KEY']
             monthly_data[month_key]['revenue'] += float(sale['VALOR_TOTAL_VENDA'])
             monthly_data[month_key]['sales_count'] += 1
-        
-        # Add costs from items
-        items_df['CODIGO'] = items_df['CODIGO'].astype(str)
-        items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
-        
-        for _, item in items_df.iterrows():
-            # Find which month this sale belongs to
-            sale_id = item['ID_VENDA']
-            sale_month = sales_df[sales_df['ID_VENDA'] == sale_id]
-            
-            if not sale_month.empty:
-                month_key = sale_month.iloc[0]['MONTH_KEY']
-                codigo = str(item['CODIGO'])
+
+        # Itens vendidos → COGS
+        if not items_df.empty:
+            items_df['CODIGO'] = items_df['CODIGO'].astype(str)
+            items_df['QUANTIDADE'] = pd.to_numeric(
+                items_df['QUANTIDADE'],
+                errors='coerce'
+            ).fillna(0)
+
+            sales_month_map = (
+                sales_df[['ID_VENDA', 'MONTH_KEY']]
+                .set_index('ID_VENDA')['MONTH_KEY']
+                .to_dict()
+            )
+
+            for _, item in items_df.iterrows():
+                sale_id = item['ID_VENDA']
+                month_key = sales_month_map.get(sale_id)
+
+                if not month_key:
+                    continue
+
                 quantidade = int(item['QUANTIDADE'])
-                
-                # Get product cost
-                custo = float(product_costs.get(codigo, 0))
-                monthly_data[month_key]['cost'] += custo * quantidade
-        
-        # Get monthly expenses
-        monthly_expenses = expense_service.get_total_monthly_expenses()
-        
-        # Generate last 12 months
+                custo_unit = float(product_costs.get(item['CODIGO'], 0))
+
+                monthly_data[month_key]['cogs'] += custo_unit * quantidade
+                monthly_data[month_key]['units'] += quantidade
+
+        # === DESPESAS FIXAS REAIS (SEM ESTOQUE) ===
+        fixed_expenses = (
+            76.90 +   # Impostos
+            200.00 +  # Transportadora
+            100.00 +  # Marketing
+            65.00 +   # Telefonia
+            50.00     # Energia
+        )
+
         months = []
         net_profits = []
-        expenses = []
-        
+        gross_margins = []
+        contribution_margins = []
+
         for i in range(11, -1, -1):
-            month_date = end_date - timedelta(days=30*i)
+            month_date = end_date - timedelta(days=30 * i)
             month_key = month_date.strftime('%Y-%m')
             month_label = month_date.strftime('%b/%y')
-            
+
             months.append(month_label)
-            
-            data = monthly_data.get(month_key, {'revenue': 0, 'cost': 0, 'sales_count': 0})
-            
-            gross_profit = data['revenue'] - data['cost']
-            net_profit = gross_profit - monthly_expenses
-            
+
+            data = monthly_data.get(month_key, {
+                'revenue': 0,
+                'cogs': 0,
+                'units': 0,
+                'sales_count': 0
+            })
+
+            revenue = data['revenue']
+            cogs = data['cogs']
+            units = data['units']
+            sales_count = data['sales_count']
+
+            # === Custos variáveis CORRETOS ===
+            payment_fee = revenue * 0.035          # 3,5%
+            packaging = units * 2.00               # embalagem por unidade
+            cards = units * 1.00                   # cartões por unidade
+            shipping_materials = sales_count * 1.50  # por venda
+
+            variable_costs = (
+                payment_fee +
+                packaging +
+                cards +
+                shipping_materials
+            )
+
+            # === Margens ===
+            gross_profit = revenue - cogs
+            gross_margin = (gross_profit / revenue * 100) if revenue > 0 else 0
+
+            contribution = gross_profit - variable_costs
+            contribution_margin = (
+                contribution / revenue * 100
+            ) if revenue > 0 else 0
+
+            net_profit = contribution - fixed_expenses
+
             net_profits.append(round(net_profit, 2))
-            expenses.append(round(monthly_expenses, 2))
-        
+            gross_margins.append(round(gross_margin, 2))
+            contribution_margins.append(round(contribution_margin, 2))
+
         return jsonify({
             'success': True,
             'data': {
                 'months': months,
                 'net_profits': net_profits,
-                'expenses': expenses
+                'gross_margins': gross_margins,
+                'contribution_margins': contribution_margins
+            }
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+@app.route('/api/analytics/cost-breakdown', methods=['GET'])
+@login_required
+def api_cost_breakdown():
+    """Breakdown de custos do mês atual."""
+    try:
+        from src.repositories.sale_repository import SaleRepository
+        from src.repositories.sale_item_repository import SaleItemRepository
+        from src.repositories.product_repository import ProductRepository
+        import pandas as pd
+        from datetime import datetime
+        
+        sale_repo = SaleRepository()
+        item_repo = SaleItemRepository()
+        product_repo = ProductRepository()
+        
+        # Mês atual
+        current_month = datetime.now().strftime('%m/%Y')
+        sales_df = sale_repo.get_all()
+        sales_df['MONTH'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y').dt.strftime('%m/%Y')
+        month_sales = sales_df[sales_df['MONTH'] == current_month]
+        
+        if month_sales.empty:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'total_cogs': 0,
+                    'total_variable_costs': 0,
+                    'total_fixed_expenses': expense_service.get_total_monthly_expenses()
+                }
+            })
+        
+        # COGS
+        sale_ids = month_sales['ID_VENDA'].tolist()
+        items_df = item_repo._read_csv()
+        month_items = items_df[items_df['ID_VENDA'].isin(sale_ids)]
+        
+        products_df = product_repo.get_all()
+        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
+        
+        total_cogs = 0
+        total_units = 0
+        for _, item in month_items.iterrows():
+            codigo = str(item['CODIGO'])
+            quantidade = int(item.get('QUANTIDADE', 0))
+            custo = float(product_costs.get(codigo, 0))
+            total_cogs += custo * quantidade
+            total_units += quantidade
+        
+        # Variable costs
+        total_revenue = month_sales['VALOR_TOTAL_VENDA'].astype(float).sum()
+        payment_fees = total_revenue * 0.035
+        packaging = total_units * 3.0
+        total_variable_costs = payment_fees + packaging
+        
+        # Fixed expenses
+        total_fixed_expenses = expense_service.get_total_monthly_expenses()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'total_cogs': float(total_cogs),
+                'total_variable_costs': float(total_variable_costs),
+                'total_fixed_expenses': float(total_fixed_expenses)
             }
         })
         
     except Exception as e:
-        print(f"Error in monthly profit: {e}")
+        print(f"Error in cost breakdown: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/analytics/breakeven-progress', methods=['GET'])
+@login_required
+def api_breakeven_progress():
+    """Progresso de break-even do mês atual."""
+    try:
+        from src.repositories.sale_repository import SaleRepository
+        from src.repositories.sale_item_repository import SaleItemRepository
+        from src.repositories.product_repository import ProductRepository
+        import pandas as pd
+        from datetime import datetime
+        
+        sale_repo = SaleRepository()
+        item_repo = SaleItemRepository()
+        product_repo = ProductRepository()
+        
+        # Mês atual
+        current_month = datetime.now().strftime('%m/%Y')
+        sales_df = sale_repo.get_all()
+        sales_df['MONTH'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y').dt.strftime('%m/%Y')
+        month_sales = sales_df[sales_df['MONTH'] == current_month]
+        
+        # Despesas fixas
+        fixed_expenses = expense_service.get_total_monthly_expenses()
+        
+        if month_sales.empty:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'current_sales': 0,
+                    'breakeven_sales': 0,
+                    'progress_pct': 0,
+                    'remaining_sales': 0,
+                    'contribution_accumulated': 0,
+                    'fixed_expenses': fixed_expenses
+                }
+            })
+        
+        # Calcular contribuição total
+        sale_ids = month_sales['ID_VENDA'].tolist()
+        items_df = item_repo._read_csv()
+        month_items = items_df[items_df['ID_VENDA'].isin(sale_ids)]
+        
+        products_df = product_repo.get_all()
+        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
+        
+        total_revenue = month_sales['VALOR_TOTAL_VENDA'].astype(float).sum()
+        total_cogs = 0
+        total_units = 0
+        
+        for _, item in month_items.iterrows():
+            codigo = str(item['CODIGO'])
+            quantidade = int(item.get('QUANTIDADE', 0))
+            custo = float(product_costs.get(codigo, 0))
+            total_cogs += custo * quantidade
+            total_units += quantidade
+        
+        # Variable costs
+        payment_fees = total_revenue * 0.035
+        packaging = total_units * 3.0
+        total_variable_costs = payment_fees + packaging
+        
+        # Contribution margin
+        gross_profit = total_revenue - total_cogs
+        contribution_total = gross_profit - total_variable_costs
+        
+        # Current sales count
+        current_sales = len(month_sales)
+        
+        # Average contribution per sale
+        avg_contribution = contribution_total / current_sales if current_sales > 0 else 0
+        
+        # Break-even sales
+        breakeven_sales = fixed_expenses / avg_contribution if avg_contribution > 0 else float('inf')
+        
+        # Progress
+        progress_pct = (current_sales / breakeven_sales * 100) if breakeven_sales > 0 and breakeven_sales != float('inf') else 0
+        remaining_sales = max(0, breakeven_sales - current_sales)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'current_sales': int(current_sales),
+                'breakeven_sales': round(breakeven_sales, 0) if breakeven_sales != float('inf') else 0,
+                'progress_pct': round(progress_pct, 1),
+                'remaining_sales': round(remaining_sales, 0),
+                'contribution_accumulated': round(contribution_total, 2),
+                'fixed_expenses': round(fixed_expenses, 2),
+                'avg_contribution_per_sale': round(avg_contribution, 2)
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in breakeven progress: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1326,7 +1706,7 @@ def api_monthly_margin():
 @app.route('/api/analytics/products-with-margin', methods=['GET'])
 @login_required
 def api_products_with_margin():
-    """Top produtos com nome + categoria e margem."""
+    """Top produtos com nome + categoria, margem bruta e de contribuição."""
     try:
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
@@ -1365,18 +1745,20 @@ def api_products_with_margin():
             # Get cost and price
             product_data = product_costs.get(codigo, {'CUSTO': 0, 'VALOR': 0})
             custo = float(product_data['CUSTO'])
-            valor = float(product_data['VALOR'])
             
-            # Calculate margins
+            # Gross margin
             cost_total = custo * qtd
             gross_profit = receita - cost_total
             gross_margin = (gross_profit / receita * 100) if receita > 0 else 0
             
-            # Net margin (with expenses)
-            monthly_sales = len(items_df['ID_VENDA'].unique())
-            expense_per_sale = expense_service.get_expense_per_sale(monthly_sales)
-            net_profit = gross_profit - expense_per_sale
-            net_margin = (net_profit / receita * 100) if receita > 0 else 0
+            # Variable costs (taxa 3.5% + embalagem R$ 3/un)
+            payment_fee = receita * 0.035
+            packaging = qtd * 3.0
+            variable_costs = payment_fee + packaging
+            
+            # Contribution margin
+            contribution = gross_profit - variable_costs
+            contribution_margin = (contribution / receita * 100) if receita > 0 else 0
             
             results.append({
                 'codigo': codigo,
@@ -1386,7 +1768,8 @@ def api_products_with_margin():
                 'quantity_sold': qtd,
                 'revenue': receita,
                 'gross_margin': round(gross_margin, 2),
-                'net_margin': round(net_margin, 2)
+                'contribution_margin': round(contribution_margin, 2),
+                'net_margin': round(contribution_margin, 2)  # Compatibilidade
             })
         
         # Sort by revenue
@@ -1399,6 +1782,8 @@ def api_products_with_margin():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+
 
 
 @app.route('/api/analytics/category-margin', methods=['GET'])
@@ -1515,6 +1900,8 @@ def api_avg_ticket_trend():
     except Exception as e:
         print(f"Error in avg ticket trend: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+
     
 @app.route('/api/expenses', methods=['GET'])
 @login_required
@@ -1795,17 +2182,7 @@ def api_top_clients_full():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/chart/trend', methods=['GET'])
-@login_required
-def api_chart_trend():
-    """Generate trend chart."""
-    try:
-        days = int(request.args.get('days', 30))
-        trend = analytics_service.get_sales_trend(days)
-        filepath = visualization_service.plot_sales_trend(trend)
-        return send_file(filepath, mimetype='image/png')
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 
 # ========== ERROR HANDLERS ==========

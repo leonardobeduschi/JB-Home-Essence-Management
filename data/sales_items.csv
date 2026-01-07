@@ -1,202 +1,205 @@
 ID_VENDA,PRODUTO,CATEGORIA,CODIGO,QUANTIDADE,PRECO_UNIT,PRECO_TOTAL
-0,Home Spray 300ML,Bambu Garden,BAG02,1,94.0,94.0
-0,Home Spray 300ML,Capim Santo,CAS02,1,94.0,94.0
-0,Difusor de varetas,Jardins da França,JDF03,1,166.0,166.0
-0,Velas aromáticas,Jardins da França,JDF06,1,124.0,124.0
-0,Sabonete em barra,Jardins da França,JDF08,2,34.0,68.0
-0,Sabonete em barra,Mosaico,MOS08,2,70.0,140.0
-0,Kit,Lavanda,,2,74.8,149.6
-1,Conj. Varetas preta,Acessórios,ACE13,1,1.25,1.25
-1,Home Spray 300ML,Havana,HAV02,1,113.0,113.0
-1,Difusor de varetas,Havana,HAV03,1,202.0,202.0
-1,Sabonete líquido,Havana,HAV05,1,160.0,160.0
-10,Home Spray 300ML,Bambu Garden,BAG02,1,94.0,94.0
-10,Home Spray 300ML,Capim Santo,CAS02,1,94.0,94.0
-100,Difusor de varetas,Divina Vanilla,DIV03,1,148.0,148.0
-100,Mini Sabonetes(4),Mosaico,MOS09,1,72.0,72.0
-101,Conj. Varetas Preta,Acessórios,ACE13,6,10.0,60.0
-101,Home Spray 300ML,Havana,HAV02,2,120.0,240.0
-101,Difusor de varetas,Havana,HAV03,4,212.0,848.0
-101,Sabonete Líquido,Havana,HAV05,4,165.0,660.0
-101,Home Spray 300ML,Jardins da França,JDF02,2,120.0,240.0
-101,Difusor de varetas (NOVO),Jardins da França,JDF31,2,246.0,492.0
-102,Difusor de varetas,Havana,HAV03,1,212.0,212.0
-102,Sabonete Líquido,Havana,HAV05,1,165.0,165.0
-102,Home Spray 300ML,Jardins da França,JDF02,1,120.0,120.0
-102,Difusor de varetas (NOVO),Jardins da França,JDF31,1,246.0,246.0
-103,Difusor de varetas,Garbo,GAR03,1,178.0,178.0
-103,Refil difusor de varetas,Garbo,GAR10,1,189.0,189.0
-104,Home Spray 300ML,Jardins da França,JDF02,1,120.0,120.0
-105,Refil difusor de varetas,Havana,HAV10,1,210.0,210.0
-106,Tubo 3 Sabonetes,Capim Santo,CAS33,2,78.0,156.0
-106,Difusor de varetas,Garbo,GAR03,1,178.0,178.0
-107,Refil difusor de varetas,Havana,HAV10,1,210.0,210.0
-108,Home Spray 300ML,Patchouly,PAT02,1,106.0,106.0
-109,Tubo 3 Sabonetes,Capim Santo,CAS33,1,78.0,78.0
-109,Sabonete Líquido,Jardins da França,JDF05,1,126.0,126.0
-109,Sabonete Líquido,Jardins da França,JDF05,1,126.0,126.0
-109,Sabonete Líquido,Jardins da França,JDF05,1,126.0,126.0
-109,difusor de varetas,Monte Carlo,MCA03,1,222.0,222.0
-109,Difusor de varetas,Patchouly,PAT03,1,147.0,147.0
-11,Difusor de varetas,Capim Santo,CAS03,1,134.0,134.0
-11,Sabonete líquido,Capim Santo,CAS05,1,86.0,86.0
-110,Difusor de varetas,Havana,HAV03,1,212.0,212.0
-12,Home Spray 300ML,Jardins da França,JDF02,1,113.0,113.0
-13,Home Spray 300ML,Hortênsia,HOR02,1,101.0,101.0
-14,Sabonete líquido,Hortênsia,HOR05,1,92.0,92.0
-15,Home Spray 300ML,Capim Santo,CAS02,1,101.0,101.0
-16,Difusor de varetas,Capim Santo,CAS03,1,144.0,144.0
-17,Sabonete líquido,Capim Santo,CAS05,1,92.0,92.0
-18,Bandeja Prata 19x10,Acessórios,ACE18,1,75.0,75.0
-19,Home Spray 300ML,Garbo,GAR02,3,94.0,282.0
-2,Difusor de varetas,Havana,HAV03,1,188.0,188.0
-20,Conj. Varetas preta,Acessórios,ACE13,1,10.0,10.0
-20,Difusor de varetas,Jardins da França,JDF03,1,178.0,178.0
-21,Velas aromáticas,Jardins da França,JDF06,1,124.0,124.0
-22,Difusor elétrico,Acessórios,ACE22,1,78.0,78.0
-22,Essência,Bambu Garden,BAG04,1,88.0,88.0
-23,Home Spray 300ML,Folhas de Outono,FDO02,1,114.0,114.0
-24,Home Spray 300ML,Folhas de Outono,FDO02,1,114.0,114.0
-24,Essência,Singular,SIN04,1,95.0,95.0
-25,Home Spray 300ML,Havana,HAV02,1,114.0,114.0
-25,Home Spray 300ML,Jardins da França,JDF02,1,114.0,114.0
-26,Home Spray 300ML,Havana,HAV02,1,114.0,114.0
-27,Refil Home Spray,Garbo,GAR26,1,262.0,262.0
-28,Home Spray 1L,Garbo,,1,262.0,262.0
-29,Difusor elétrico,Acessórios,ACE22,1,78.0,78.0
-29,Essência,Havana,HAV04,1,88.0,88.0
-3,Difusor de varetas,Havana,HAV03,1,188.0,188.0
-30,Difusor de varetas,Capim Santo,CAS03,1,144.0,144.0
-31,Home Spray 300ML,Aroma do bebê,ADB02,1,101.0,101.0
-31,Home Spray 300ML,Hortênsia,HOR02,1,101.0,101.0
-32,Home Spray 300ML,Bambu Garden,BAG02,1,101.0,101.0
-32,Difusor de varetas,Bambu Garden,BAG03,1,153.0,153.0
-33,Home Spray 300ML,Jardins da França,JDF02,3,114.0,342.0
-34,Velas aromáticas,Havana,HAV06,1,133.0,133.0
-35,Home Spray 300ML,Garbo,GAR02,1,101.0,101.0
-36,Home Spray 300ML,Bambu Garden,BAG02,1,101.0,101.0
-36,Home Spray 300ML,Garbo,GAR02,1,101.0,101.0
-37,Água perfumada,Delicato,DEL01,1,92.0,92.0
-38,Difusor elétrico,Acessórios,ACE22,1,78.0,78.0
-38,Home Spray 300ML,Lavanda Inglesa,LAI02,1,101.0,101.0
-38,Difusor de varetas,Lavanda Inglesa,LAI03,1,139.0,139.0
-38,Essência,Lavanda Inglesa,LAI04,1,88.0,88.0
-38,Sabonete líquido,Lavanda Inglesa,LAI05,1,95.0,95.0
-39,Home Spray 300ML,Havana,HAV02,1,114.0,114.0
-39,Difusor de varetas,Havana,HAV03,1,202.0,202.0
-39,Sabonete líquido,Havana,HAV05,1,160.0,160.0
-4,Difusor de varetas,Jardins da França,JDF03,1,166.0,166.0
-40,Home Spray 300ML,Lavanda Inglesa,LAI02,1,101.0,101.0
-41,Água perfumada,Abbraccio,ABR01,2,92.0,184.0
-42,Home Spray 300ML,Singular,SIN02,1,114.0,114.0
-43,Home Spray 300ML,Havana,HAV02,1,114.0,114.0
-44,Difusor de varetas,Bambu Garden,BAG03,1,150.0,150.0
-45,Difusor de varetas,Havana,HAV03,1,202.0,202.0
-45,Difusor de varetas,Lavanda Inglesa,LAI03,1,139.0,139.0
-46,Difusor de varetas,Hortênsia,HOR03,1,145.0,145.0
-47,Sabonete líquido,Hortênsia,HOR05,1,92.0,92.0
-48,Refil Home Spray,Garbo,GAR26,1,262.0,262.0
-49,Conj. Varetas preta,Acessórios,ACE13,1,10.0,10.0
-49,Difusor de varetas,Jardins da França,JDF03,1,178.0,178.0
-5,Home Spray 300ML,Jardins da França,JDF02,1,106.0,106.0
-50,Home Spray 300ML,Bambu Garden,BAG02,1,101.0,101.0
-50,Difusor de varetas,Bambu Garden,BAG03,1,153.0,153.0
-51,Home Spray 300ML,Garbo,GAR02,1,101.0,101.0
-51,Difusor de varetas,Garbo,GAR03,2,170.0,340.0
-52,Home Spray 300ML,Bambu Garden,BAG02,1,101.0,101.0
-52,Difusor de varetas,Bambu Garden,BAG03,1,153.0,153.0
-52,Essência,Bambu Garden,BAG04,1,88.0,88.0
-53,Home Spray 300ML,Bambu Garden,BAG02,1,101.0,101.0
-54,Kit Carro,Monte Carlo,MCA28,1,65.0,65.0
-55,Home Spray 300ML,Jardins da França,JDF02,1,114.0,114.0
-56,Água perfumada,Delicato,DEL01,1,92.0,92.0
-57,Conj. Varetas preta,Acessórios,ACE13,1,10.0,10.0
-57,Home Spray 300ML,Encontro,ENC02,1,101.0,101.0
-57,Difusor de varetas,Encontro,ENC03,1,170.0,170.0
-58,Difusor de varetas,Garbo,GAR03,1,170.0,170.0
-59,Conj. Varetas preta,Acessórios,ACE13,2,10.0,20.0
-59,Difusor elétrico,Acessórios,ACE22,1,78.0,78.0
-59,Home Spray 300ML,Havana,HAV02,1,114.0,114.0
-59,Difusor de varetas,Havana,HAV03,2,202.0,404.0
-59,Essência,Havana,HAV04,1,95.0,95.0
-59,Sabonete em barra,Jardins da França,JDF08,1,0.0,0.0
-6,Home Spray 300ML,Jardins da França,JDF02,1,106.0,106.0
-60,Refil Sabonete Líquido,Hortênsia,HOR07,1,39.5,39.5
-61,Home Spray 300ML,Havana,HAV02,1,114.0,114.0
-62,Home Spray 300ML,Encontro,ENC02,1,101.0,101.0
-63,Refil Home Spray,Garbo,GAR26,1,262.0,262.0
-64,Difusor de varetas,Divina Vanilla,DIV03,1,142.0,142.0
-65,Difusor de varetas,Garbo,GAR03,1,170.0,170.0
-65,Sabonete Líquido,Garbo,GAR05,1,103.0,103.0
-66,Home Spray 300ML,Bambu Garden,BAG02,1,101.0,101.0
-67,Kit Carro,Monte Carlo,MCA28,1,32.5,32.5
-67,Kit Carro,Monte Carlo,MCA28,1,32.5,32.5
-68,Home Spray 300ML,Aroma do bebê,ADB02,1,101.0,101.0
-69,Água perfumada,Delicato,DEL01,1,92.0,92.0
-7,Home Spray 300ML,Jardins da França,JDF02,1,106.0,106.0
-70,Difusor de varetas,Capim Santo,CAS03,1,144.0,144.0
-70,Sabonete Líquido,Capim Santo,CAS05,1,92.0,92.0
-71,Home Spray 300ML,Garbo,GAR02,1,101.0,101.0
-72,Home Spray 300ML,Monte Carlo,MCA02,1,114.0,114.0
-72,Kit Carro,Monte Carlo,MCA28,1,65.0,65.0
-73,Conj. Varetas nude,Acessórios,ACE12,1,10.0,10.0
-73,Difusor de varetas,Garbo,GAR03,1,170.0,170.0
-74,Home Spray 300ML,Hortênsia,HOR02,1,101.0,101.0
-75,Conj. Varetas Branca,Acessórios,ACE11,1,10.0,10.0
-75,Home Spray 300ML,Hortênsia,HOR02,1,101.0,101.0
-75,Difusor de varetas,Hortênsia,HOR03,1,145.0,145.0
-76,Essência,Monte Carlo,MCA04,1,95.0,95.0
-77,Home Spray 300ML,Garbo,GAR02,1,101.0,101.0
-77,Difusor de varetas,Garbo,GAR03,1,170.0,170.0
-77,Sabonete Líquido,Garbo,GAR05,1,103.0,103.0
-78,Refil Home Spray,Garbo,GAR26,1,274.0,274.0
-79,Conj. Varetas Preta,Acessórios,ACE13,1,10.0,10.0
-79,Difusor de varetas,Jardins da França,JDF03,1,188.0,188.0
-8,Difusor de varetas,Garbo,GAR03,1,158.0,158.0
-80,Conj. Varetas Branca,Acessórios,ACE11,2,10.0,20.0
-80,Conj. Varetas Preta,Acessórios,ACE13,1,10.0,10.0
-80,Essência,Bambu Garden,BAG04,1,92.0,92.0
-80,Difusor de varetas,Havana,HAV03,1,212.0,212.0
-80,Difusor de varetas,Hortênsia,HOR03,2,150.0,300.0
-80,Kit Carro,Monte Carlo,MCA28,1,68.0,68.0
-81,Home Spray 300ML,Havana,HAV02,1,120.0,120.0
-81,Essência,Havana,HAV04,1,95.0,95.0
-82,Conj. Varetas Preta,Acessórios,ACE13,1,10.0,10.0
-82,Difusor de varetas,Havana,HAV03,1,212.0,212.0
-83,Essência,Garbo,GAR04,1,92.0,92.0
-83,Essência,Jardins da França,JDF04,1,95.0,95.0
-84,Essência,Encontro,ENC04,1,92.0,92.0
-85,Home Spray 300ML,Monte Carlo,MCA02,1,120.0,120.0
-85,Kit Carro,Monte Carlo,MCA28,1,68.0,68.0
-86,Home Spray 300ML,Bambu Garden,BAG02,1,106.0,106.0
-87,Home Spray 300ML,Jardins da França,JDF02,1,120.0,120.0
-88,Home Spray 300ML,Hortênsia,HOR02,1,106.0,106.0
-89,Home Spray 300ML,Garbo,GAR02,1,112.0,112.0
-89,Difusor de varetas,Hortênsia,HOR03,1,150.0,150.0
-9,Home Spray 300ML,Hortênsia,HOR02,1,94.0,94.0
-90,Kit Carro,Havana,HAV28,1,68.0,68.0
-90,Home Spray 300ML,Jardins da França,JDF02,1,120.0,120.0
-91,Conj. Varetas Preta,Acessórios,ACE13,2,10.0,20.0
-91,Difusor de varetas,Havana,HAV03,1,212.0,212.0
-91,Difusor de varetas,Jardins da França,JDF03,1,188.0,188.0
-92,Home Spray 300ML,Garbo,GAR02,2,112.0,224.0
-93,Difusor elétrico,Acessórios,ACE22,2,81.0,162.0
-93,Home Spray 300ML,Bambu Garden,BAG02,1,106.0,106.0
-93,Difusor de varetas,Bambu Garden,BAG03,1,156.0,156.0
-93,Sabonete Líquido,Bambu Garden,BAG05,1,96.0,96.0
-93,Home Spray 300ML,Encontro,ENC02,1,112.0,112.0
-93,Difusor de varetas,Encontro,ENC03,1,178.0,178.0
-93,Essência,Encontro,ENC04,1,92.0,92.0
-94,Difusor de varetas,Havana,HAV03,1,212.0,212.0
-94,Sabonete Líquido,Havana,HAV05,1,165.0,165.0
-95,Refil Sabonete Líquido,Hortênsia,HOR07,1,94.0,94.0
-96,Home Spray 300ML,Havana,HAV02,1,120.0,120.0
-97,Refil Home Spray,Garbo,GAR26,1,274.0,274.0
-98,Home Spray 300ML,Hortênsia,HOR02,1,106.0,106.0
-99,Home Spray 300ML,Hortênsia,HOR02,1,106.0,106.0
-VND001,DIFUSOR DE VARETAS,DIVINA VANILLA,DIV03,1,148.0,148.0
-VND002,DIFUSOR DE VARETAS,GARBO,GAR03,1,178.0,178.0
-VND003,REFIL SABONETE LÍQUIDO,HAVANA,HAV07,2,112.0,224.0
-VND004,DIFUSOR DE VARETAS,GARBO,GAR03,1,178.0,178.0
-VND005,REFIL DIFUSOR DE VARETAS,GARBO,GAR10,1,189.0,189.0
-VND006,CONJ. VARETAS NUDE,ACESSÓRIOS,ACE12,2,10.0,20.0
+VND000,Home Spray 300ML,Bambu Garden,BAG02,1,94,94
+VND000,Home Spray 300ML,Capim Santo,CAS02,1,94,94
+VND000,Difusor de varetas,Jardins da França,JDF03,1,166,166
+VND000,Velas aromáticas,Jardins da França,JDF06,1,124,124
+VND000,Sabonete em barra,Jardins da França,JDF08,2,34,68
+VND000,Sabonete em barra,Mosaico,MOS08,2,70,140
+VND000,Kit,Lavanda,,2,74.8,149.6
+VND001,Conj. Varetas preta,Acessórios,ACE13,1,1.25,1.25
+VND001,Home Spray 300ML,Havana,HAV02,1,113,113
+VND001,Difusor de varetas,Havana,HAV03,1,202,202
+VND001,Sabonete líquido,Havana,HAV05,1,160,160
+VND002,Difusor de varetas,Havana,HAV03,1,188,188
+VND003,Difusor de varetas,Havana,HAV03,1,188,188
+VND004,Difusor de varetas,Jardins da França,JDF03,1,166,166
+VND005,Home Spray 300ML,Jardins da França,JDF02,1,106,106
+VND006,Home Spray 300ML,Jardins da França,JDF02,1,106,106
+VND007,Home Spray 300ML,Jardins da França,JDF02,1,106,106
+VND008,Difusor de varetas,Garbo,GAR03,1,158,158
+VND009,Home Spray 300ML,Hortênsia,HOR02,1,94,94
+VND010,Home Spray 300ML,Bambu Garden,BAG02,1,94,94
+VND010,Home Spray 300ML,Capim Santo,CAS02,1,94,94
+VND011,Difusor de varetas,Capim Santo,CAS03,1,134,134
+VND011,Sabonete líquido,Capim Santo,CAS05,1,86,86
+VND012,Home Spray 300ML,Jardins da França,JDF02,1,113,113
+VND013,Home Spray 300ML,Hortênsia,HOR02,1,101,101
+VND014,Sabonete líquido,Hortênsia,HOR05,1,92,92
+VND015,Home Spray 300ML,Capim Santo,CAS02,1,101,101
+VND016,Difusor de varetas,Capim Santo,CAS03,1,144,144
+VND017,Sabonete líquido,Capim Santo,CAS05,1,92,92
+VND018,Bandeja Prata 19x10,Acessórios,ACE18,1,75,75
+VND019,Home Spray 300ML,Garbo,GAR02,3,94,282
+VND020,Conj. Varetas preta,Acessórios,ACE13,1,10,10
+VND020,Difusor de varetas,Jardins da França,JDF03,1,178,178
+VND021,Velas aromáticas,Jardins da França,JDF06,1,124,124
+VND022,Difusor elétrico,Acessórios,ACE22,1,78,78
+VND022,Essência,Bambu Garden,BAG04,1,88,88
+VND023,Home Spray 300ML,Folhas de Outono,FDO02,1,114,114
+VND024,Home Spray 300ML,Folhas de Outono,FDO02,1,114,114
+VND024,Essência,Singular,SIN04,1,95,95
+VND025,Home Spray 300ML,Havana,HAV02,1,114,114
+VND025,Home Spray 300ML,Jardins da França,JDF02,1,114,114
+VND026,Home Spray 300ML,Havana,HAV02,1,114,114
+VND027,Refil Home Spray,Garbo,GAR26,1,262,262
+VND028,Home Spray 1L,Garbo,,1,262,262
+VND029,Difusor elétrico,Acessórios,ACE22,1,78,78
+VND029,Essência,Havana,HAV04,1,88,88
+VND030,Difusor de varetas,Capim Santo,CAS03,1,144,144
+VND031,Home Spray 300ML,Aroma do bebê,ADB02,1,101,101
+VND031,Home Spray 300ML,Hortênsia,HOR02,1,101,101
+VND032,Home Spray 300ML,Bambu Garden,BAG02,1,101,101
+VND032,Difusor de varetas,Bambu Garden,BAG03,1,153,153
+VND033,Home Spray 300ML,Jardins da França,JDF02,3,114,342
+VND034,Velas aromáticas,Havana,HAV06,1,133,133
+VND035,Home Spray 300ML,Garbo,GAR02,1,101,101
+VND036,Home Spray 300ML,Bambu Garden,BAG02,1,101,101
+VND036,Home Spray 300ML,Garbo,GAR02,1,101,101
+VND037,Água perfumada,Delicato,DEL01,1,92,92
+VND038,Difusor elétrico,Acessórios,ACE22,1,78,78
+VND038,Home Spray 300ML,Lavanda Inglesa,LAI02,1,101,101
+VND038,Difusor de varetas,Lavanda Inglesa,LAI03,1,139,139
+VND038,Essência,Lavanda Inglesa,LAI04,1,88,88
+VND038,Sabonete líquido,Lavanda Inglesa,LAI05,1,95,95
+VND039,Home Spray 300ML,Havana,HAV02,1,114,114
+VND039,Difusor de varetas,Havana,HAV03,1,202,202
+VND039,Sabonete líquido,Havana,HAV05,1,160,160
+VND040,Home Spray 300ML,Lavanda Inglesa,LAI02,1,101,101
+VND041,Água perfumada,Abbraccio,ABR01,2,92,184
+VND042,Home Spray 300ML,Singular,SIN02,1,114,114
+VND043,Home Spray 300ML,Havana,HAV02,1,114,114
+VND044,Difusor de varetas,Bambu Garden,BAG03,1,150,150
+VND045,Difusor de varetas,Havana,HAV03,1,202,202
+VND045,Difusor de varetas,Lavanda Inglesa,LAI03,1,139,139
+VND046,Difusor de varetas,Hortênsia,HOR03,1,145,145
+VND047,Sabonete líquido,Hortênsia,HOR05,1,92,92
+VND048,Refil Home Spray,Garbo,GAR26,1,262,262
+VND049,Conj. Varetas preta,Acessórios,ACE13,1,10,10
+VND049,Difusor de varetas,Jardins da França,JDF03,1,178,178
+VND050,Home Spray 300ML,Bambu Garden,BAG02,1,101,101
+VND050,Difusor de varetas,Bambu Garden,BAG03,1,153,153
+VND051,Home Spray 300ML,Garbo,GAR02,1,101,101
+VND051,Difusor de varetas,Garbo,GAR03,2,170,340
+VND052,Home Spray 300ML,Bambu Garden,BAG02,1,101,101
+VND052,Difusor de varetas,Bambu Garden,BAG03,1,153,153
+VND052,Essência,Bambu Garden,BAG04,1,88,88
+VND053,Home Spray 300ML,Bambu Garden,BAG02,1,101,101
+VND054,Kit Carro,Monte Carlo,MCA28,1,65,65
+VND055,Home Spray 300ML,Jardins da França,JDF02,1,114,114
+VND056,Água perfumada,Delicato,DEL01,1,92,92
+VND057,Conj. Varetas preta,Acessórios,ACE13,1,10,10
+VND057,Home Spray 300ML,Encontro,ENC02,1,101,101
+VND057,Difusor de varetas,Encontro,ENC03,1,170,170
+VND058,Difusor de varetas,Garbo,GAR03,1,170,170
+VND059,Conj. Varetas preta,Acessórios,ACE13,2,10,20
+VND059,Difusor elétrico,Acessórios,ACE22,1,78,78
+VND059,Home Spray 300ML,Havana,HAV02,1,114,114
+VND059,Difusor de varetas,Havana,HAV03,2,202,404
+VND059,Essência,Havana,HAV04,1,95,95
+VND059,Sabonete em barra,Jardins da França,JDF08,1,0,0
+VND060,Refil Sabonete Líquido,Hortênsia,HOR07,1,39.5,39.5
+VND061,Home Spray 300ML,Havana,HAV02,1,114,114
+VND062,Home Spray 300ML,Encontro,ENC02,1,101,101
+VND063,Refil Home Spray,Garbo,GAR26,1,262,262
+VND064,Difusor de varetas,Divina Vanilla,DIV03,1,142,142
+VND065,Difusor de varetas,Garbo,GAR03,1,170,170
+VND065,Sabonete Líquido,Garbo,GAR05,1,103,103
+VND066,Home Spray 300ML,Bambu Garden,BAG02,1,101,101
+VND067,Kit Carro,Monte Carlo,MCA28,1,32.5,32.5
+VND067,Kit Carro,Monte Carlo,MCA28,1,32.5,32.5
+VND068,Home Spray 300ML,Aroma do bebê,ADB02,1,101,101
+VND069,Água perfumada,Delicato,DEL01,1,92,92
+VND070,Difusor de varetas,Capim Santo,CAS03,1,144,144
+VND070,Sabonete Líquido,Capim Santo,CAS05,1,92,92
+VND071,Home Spray 300ML,Garbo,GAR02,1,101,101
+VND072,Home Spray 300ML,Monte Carlo,MCA02,1,114,114
+VND072,Kit Carro,Monte Carlo,MCA28,1,65,65
+VND073,Conj. Varetas nude,Acessórios,ACE12,1,10,10
+VND073,Difusor de varetas,Garbo,GAR03,1,170,170
+VND074,Home Spray 300ML,Hortênsia,HOR02,1,101,101
+VND075,Conj. Varetas Branca,Acessórios,ACE11,1,10,10
+VND075,Home Spray 300ML,Hortênsia,HOR02,1,101,101
+VND075,Difusor de varetas,Hortênsia,HOR03,1,145,145
+VND076,Essência,Monte Carlo,MCA04,1,95,95
+VND077,Home Spray 300ML,Garbo,GAR02,1,101,101
+VND077,Difusor de varetas,Garbo,GAR03,1,170,170
+VND077,Sabonete Líquido,Garbo,GAR05,1,103,103
+VND078,Refil Home Spray,Garbo,GAR26,1,274,274
+VND079,Conj. Varetas Preta,Acessórios,ACE13,1,10,10
+VND079,Difusor de varetas,Jardins da França,JDF03,1,188,188
+VND080,Conj. Varetas Branca,Acessórios,ACE11,2,10,20
+VND080,Conj. Varetas Preta,Acessórios,ACE13,1,10,10
+VND080,Essência,Bambu Garden,BAG04,1,92,92
+VND080,Difusor de varetas,Havana,HAV03,1,212,212
+VND080,Difusor de varetas,Hortênsia,HOR03,2,150,300
+VND080,Kit Carro,Monte Carlo,MCA28,1,68,68
+VND081,Home Spray 300ML,Havana,HAV02,1,120,120
+VND081,Essência,Havana,HAV04,1,95,95
+VND082,Conj. Varetas Preta,Acessórios,ACE13,1,10,10
+VND082,Difusor de varetas,Havana,HAV03,1,212,212
+VND083,Essência,Garbo,GAR04,1,92,92
+VND083,Essência,Jardins da França,JDF04,1,95,95
+VND084,Essência,Encontro,ENC04,1,92,92
+VND085,Home Spray 300ML,Monte Carlo,MCA02,1,120,120
+VND085,Kit Carro,Monte Carlo,MCA28,1,68,68
+VND086,Home Spray 300ML,Bambu Garden,BAG02,1,106,106
+VND087,Home Spray 300ML,Jardins da França,JDF02,1,120,120
+VND088,Home Spray 300ML,Hortênsia,HOR02,1,106,106
+VND089,Home Spray 300ML,Garbo,GAR02,1,112,112
+VND089,Difusor de varetas,Hortênsia,HOR03,1,150,150
+VND090,Kit Carro,Havana,HAV28,1,68,68
+VND090,Home Spray 300ML,Jardins da França,JDF02,1,120,120
+VND091,Conj. Varetas Preta,Acessórios,ACE13,2,10,20
+VND091,Difusor de varetas,Havana,HAV03,1,212,212
+VND091,Difusor de varetas,Jardins da França,JDF03,1,188,188
+VND092,Home Spray 300ML,Garbo,GAR02,2,112,224
+VND093,Difusor elétrico,Acessórios,ACE22,2,81,162
+VND093,Home Spray 300ML,Bambu Garden,BAG02,1,106,106
+VND093,Difusor de varetas,Bambu Garden,BAG03,1,156,156
+VND093,Sabonete Líquido,Bambu Garden,BAG05,1,96,96
+VND093,Home Spray 300ML,Encontro,ENC02,1,112,112
+VND093,Difusor de varetas,Encontro,ENC03,1,178,178
+VND093,Essência,Encontro,ENC04,1,92,92
+VND094,Difusor de varetas,Havana,HAV03,1,212,212
+VND094,Sabonete Líquido,Havana,HAV05,1,165,165
+VND095,Refil Sabonete Líquido,Hortênsia,HOR07,1,94,94
+VND096,Home Spray 300ML,Havana,HAV02,1,120,120
+VND097,Refil Home Spray,Garbo,GAR26,1,274,274
+VND098,Home Spray 300ML,Hortênsia,HOR02,1,106,106
+VND099,Home Spray 300ML,Hortênsia,HOR02,1,106,106
+VND100,Difusor de varetas,Divina Vanilla,DIV03,1,148,148
+VND100,Mini Sabonetes(4),Mosaico,MOS09,1,72,72
+VND101,Conj. Varetas Preta,Acessórios,ACE13,6,10,60
+VND101,Home Spray 300ML,Havana,HAV02,2,120,240
+VND101,Difusor de varetas,Havana,HAV03,4,212,848
+VND101,Sabonete Líquido,Havana,HAV05,4,165,660
+VND101,Home Spray 300ML,Jardins da França,JDF02,2,120,240
+VND101,Difusor de varetas (NOVO),Jardins da França,JDF31,2,246,492
+VND102,Difusor de varetas,Havana,HAV03,1,212,212
+VND102,Sabonete Líquido,Havana,HAV05,1,165,165
+VND102,Home Spray 300ML,Jardins da França,JDF02,1,120,120
+VND102,Difusor de varetas (NOVO),Jardins da França,JDF31,1,246,246
+VND103,Difusor de varetas,Garbo,GAR03,1,178,178
+VND103,Refil difusor de varetas,Garbo,GAR10,1,189,189
+VND104,Home Spray 300ML,Jardins da França,JDF02,1,120,120
+VND105,Refil difusor de varetas,Havana,HAV10,1,210,210
+VND106,Tubo 3 Sabonetes,Capim Santo,CAS33,2,78,156
+VND106,Difusor de varetas,Garbo,GAR03,1,178,178
+VND107,Refil difusor de varetas,Havana,HAV10,1,210,210
+VND108,Home Spray 300ML,Patchouly,PAT02,1,106,106
+VND109,Tubo 3 Sabonetes,Capim Santo,CAS33,1,78,78
+VND109,Sabonete Líquido,Jardins da França,JDF05,1,126,126
+VND109,Sabonete Líquido,Jardins da França,JDF05,1,126,126
+VND109,Sabonete Líquido,Jardins da França,JDF05,1,126,126
+VND109,difusor de varetas,Monte Carlo,MCA03,1,222,222
+VND109,Difusor de varetas,Patchouly,PAT03,1,147,147
+VND110,Difusor de varetas,Havana,HAV03,1,212,212
+VND111,REFIL SABONETE LÍQUIDO,HAVANA,HAV07,2,112,224
+VND112,DIFUSOR DE VARETAS,DIVINA VANILLA,DIV03,1,148,148
+VND112,DIFUSOR DE VARETAS,GARBO,GAR03,1,178,178
+VND113,DIFUSOR DE VARETAS,GARBO,GAR03,1,178,178
+VND113,REFIL DIFUSOR DE VARETAS,GARBO,GAR10,1,189,189
+VND113,CONJ. VARETAS NUDE,ACESSÓRIOS,ACE12,2,10,20
+VND114,HOME SPRAY 300ML,MONTE CARLO,MCA02,1,120.00,120.00
+VND115,DIFUSOR DE VARETAS,HAVANA,HAV03,1,212.00,212.00
+VND115,SABONETE LÍQUIDO,HAVANA,HAV05,1,165.00,165.00

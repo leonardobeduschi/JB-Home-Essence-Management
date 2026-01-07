@@ -54,7 +54,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="stat-label">Ticket Médio</div>
-                        <div class="stat-value">R$ {{ "%.2f"|format(summary.average_sale_value) }}</div>
+                        <div class="stat-value">R$ {{ summary.average_sale_value|currency }}</div>
                     </div>
                     <i class="bi bi-graph-up" style="font-size: 3rem; opacity: 0.5;"></i>
                 </div>
@@ -165,7 +165,7 @@
                                 <td><span class="badge bg-primary">{{ sale.ID_VENDA }}</span></td>
                                 <td><small>{{ sale.DATA }}</small></td>
                                 <td>{{ sale.CLIENTE }}</td>
-                                <td><strong>R$ {{ "%.2f"|format(sale.VALOR_TOTAL_VENDA|float) }}</strong></td>
+                                <td><strong>R$ {{ (sale.VALOR_TOTAL_VENDA|float)|currency }}</strong></td>
                                 <td>
                                     {% if sale.MEIO == 'dinheiro' %}
                                         <span class="badge bg-success">Dinheiro</span>
@@ -199,7 +199,7 @@
                             <strong>{{ product.produto[:20] }}</strong><br>
                             <small class="text-muted">{{ product.categoria }}</small>
                         </div>
-                        <span class="text-success">R$ {{ "%.2f"|format(product.revenue) }}</span>
+                        <span class="text-success">R$ {{ product.revenue|currency }}</span>
                     </div>
                     <div class="progress" style="height: 8px;">
                         <div class="progress-bar bg-gradient" 
@@ -274,7 +274,7 @@ fetch('/api/analytics/monthly-revenue')
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'R$ ' + context.parsed.y.toFixed(2).replace('.', ',');
+                                    return 'R$ ' + formatCurrencyBR(context.parsed.y);
                                 }
                             }
                         }
@@ -333,7 +333,7 @@ fetch('/api/analytics/monthly-profit')
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': R$ ' + context.parsed.y.toFixed(2).replace('.', ',');
+                                    return context.dataset.label + ': R$ ' + formatCurrencyBR(context.parsed.y);
                                 }
                             }
                         }
@@ -401,7 +401,7 @@ new Chart(ctx2, {
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        return 'R$ ' + context.parsed.y.toFixed(2).replace('.', ',');
+                        return 'R$ ' + formatCurrencyBR(context.parsed.y);
                     }
                 }
             }
@@ -450,7 +450,7 @@ fetch('/api/analytics/top-products-full?limit=10')
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'R$ ' + context.parsed.x.toFixed(2).replace('.', ',');
+                                    return 'R$ ' + formatCurrencyBR(context.parsed.x);
                                 }
                             }
                         }
@@ -501,7 +501,7 @@ fetch('/api/analytics/top-clients-full?limit=10')
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'R$ ' + context.parsed.x.toFixed(2).replace('.', ',');
+                                    return 'R$ ' + formatCurrencyBR(context.parsed.x);
                                 }
                             }
                         }

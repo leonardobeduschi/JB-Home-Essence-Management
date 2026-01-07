@@ -56,7 +56,7 @@
                                             data-stock="{{ product.ESTOQUE }}"
                                             {% if product.ESTOQUE == 0 %}disabled{% endif %}>
                                         {{ product.CODIGO }} - {{ product.PRODUTO }} [{{ product.CATEGORIA }}]
-                                        (R$ {{ "%.2f"|format(product.VALOR) }})
+                                        (R$ {{ product.VALOR|currency }})
                                         - Estoque: {{ product.ESTOQUE }}
                                         {% if product.ESTOQUE == 0 %}[ESGOTADO]{% endif %}
                                     </option>
@@ -301,8 +301,8 @@ function renderCart() {
                 <td><strong>${item.name}</strong><br><small class="text-muted">${item.codigo}</small></td>
                 <td><span class="badge bg-info">${item.category}</span></td>
                 <td><strong>${item.quantity}</strong></td>
-                <td>R$ ${item.price.toFixed(2)}</td>
-                <td><strong>R$ ${item.subtotal.toFixed(2)}</strong></td>
+                <td>R$ ${formatCurrencyBR(item.price)}</td>
+                <td><strong>R$ ${formatCurrencyBR(item.subtotal)}</strong></td>
                 <td>
                     <button type="button" class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
                         <i class="bi bi-trash"></i>
@@ -320,7 +320,7 @@ function updateSummary() {
     const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
     
     document.getElementById('summaryItemCount').innerHTML = `<strong>${itemCount} item(s)</strong>`;
-    document.getElementById('summaryTotal').textContent = `R$ ${total.toFixed(2)}`;
+    document.getElementById('summaryTotal').textContent = `R$ ${formatCurrencyBR(total)}`;
 }
 
 function updateSubmitButton() {

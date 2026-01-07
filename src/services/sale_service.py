@@ -329,9 +329,24 @@ Substitua o método register_sale (legacy - single item) no seu sale_service.py:
         return self.sale_repository.get_by_payment_method(meio)
     
     def get_sales_summary(self) -> dict:
-        """Get sales summary - FIXED for new structure."""
+        """
+        Get sales summary - FIXED for new structure.
+        Uses sales.csv as SINGLE SOURCE OF TRUTH for revenue.
+        """
+        import pandas as pd
+        
+        # Get summary from repository (already correct)
         summary = self.sale_repository.get_sales_summary()
         
+        # The repository already returns the correct data:
+        # - total_sales: unique sales count from sales.csv
+        # - total_revenue: sum of VALOR_TOTAL_VENDA from sales.csv ← CORRECT
+        # - total_items_sold: sum of quantities from sales_items.csv
+        # - average_sale_value: average from sales.csv
+        # - by_payment_method: grouped by payment from sales.csv
+        # - by_category: grouped from sales_items.csv
+        
+        # Print summary (clean version)
         print("\n" + "="*60)
         print("  RESUMO DE VENDAS")
         print("="*60)
@@ -343,50 +358,14 @@ Substitua o método register_sale (legacy - single item) no seu sale_service.py:
         if summary['by_payment_method']:
             print("\nPor meio de pagamento:")
             for meio, valor in summary['by_payment_method'].items():
-                print(f"  - {meio.title()}: R$ {valor:.2f}")
+                print(f"  - {meio}: R$ {valor:.2f}")
         
         if summary['by_category']:
             print("\nPor categoria:")
-            for cat, valor in summary['by_category'].items():
+            for cat, valor in sorted(summary['by_category'].items(), key=lambda x: x[1], reverse=True):
                 print(f"  - {cat}: R$ {valor:.2f}")
         
-        print("="*60)
-        
-        return summary
-        
-        # Calculate unique sales count and correct average
-        df = self.sale_repository.get_all()
-        if not df.empty:
-            unique_sales = df['ID_VENDA'].nunique()
-            df['PRECO_TOTAL_NUM'] = pd.to_numeric(df['PRECO_TOTAL'], errors='coerce').fillna(0)
-            
-            # Group by ID_VENDA and sum totals
-            grouped = df.groupby('ID_VENDA')['PRECO_TOTAL_NUM'].sum()
-            correct_avg = grouped.mean()
-            
-            summary['unique_sales_count'] = unique_sales
-            summary['average_sale_value'] = float(correct_avg)
-        
-        print("\n" + "="*60)
-        print("  RESUMO DE VENDAS")
-        print("="*60)
-        print(f"Total de vendas únicas: {summary.get('unique_sales_count', summary['total_sales'])}")
-        print(f"Total de linhas/itens: {summary['total_sales']}")
-        print(f"Receita total: R$ {summary['total_revenue']:.2f}")
-        print(f"Itens vendidos: {summary['total_items_sold']}")
-        print(f"Ticket médio (CORRETO): R$ {summary['average_sale_value']:.2f}")
-        
-        if summary['by_payment_method']:
-            print("\nPor meio de pagamento:")
-            for meio, valor in summary['by_payment_method'].items():
-                print(f"  - {meio.title()}: R$ {valor:.2f}")
-        
-        if summary['by_category']:
-            print("\nPor categoria:")
-            for cat, valor in summary['by_category'].items():
-                print(f"  - {cat}: R$ {valor:.2f}")
-        
-        print("="*60)
+        print("="*60 + "\n")
         
         return summary
     

@@ -1,4 +1,32 @@
 {
+  "variable_costs": {
+    "payment_fee": {
+      "name": "Taxa de Pagamento",
+      "type": "percentage",
+      "value": 3.5,
+      "description": "Taxa de processamento (% do valor da venda)",
+      "applies_to": ["pix", "cartao_credito", "cartao_debito"]
+    },
+    "packaging": {
+      "name": "Embalagem/Sacolas",
+      "type": "fixed_per_unit",
+      "value": 2.00,
+      "description": "Custo de embalagem por produto (R$ 200/mês ÷ 100 vendas)"
+    },
+    "card_materials": {
+      "name": "Cartões e Adesivos",
+      "type": "fixed_per_unit",
+      "value": 1.00,
+      "description": "Cartões por produto (R$ 100/mês ÷ 100 vendas)"
+    },
+    "shipping_materials": {
+      "name": "Material de Envio",
+      "type": "fixed_per_sale",
+      "value": 1.50,
+      "description": "Etiquetas, fitas por venda"
+    }
+  },
+  
   "monthly_fixed_expenses": {
     "imposto": {
       "name": "Impostos",
@@ -8,12 +36,12 @@
     "transportadora": {
       "name": "Transportadora",
       "value": 200.00,
-      "description": "Frete e transporte mensal"
+      "description": "Taxa base mensal de frete"
     },
     "marketing": {
       "name": "Marketing",
-      "value": 300.00,
-      "description": "Despesas com marketing e publicidade"
+      "value": 100.00,
+      "description": "Despesas com marketing"
     },
     "tim": {
       "name": "TIM (Telefonia)",
@@ -22,14 +50,25 @@
     },
     "celesc": {
       "name": "CELESC (Energia)",
-      "value": 110.00,
-      "description": "Conta de energia elétrica"
+      "value": 50.00,
+      "description": "Conta de energia"
+    },
+    "santho_aroma": {
+      "name": "Santho Aroma",
+      "value": 1500.00,
+      "description": "Compra mensal de estoque"
     }
   },
-  "notes": [
-    "Edite este arquivo para adicionar, remover ou alterar despesas",
-    "As despesas são distribuídas proporcionalmente sobre as vendas",
-    "Para adicionar nova despesa, copie o formato acima",
-    "Para remover, delete a seção correspondente"
-  ]
+  
+  "notes": {
+    "model": "Modelo corrigido: Custos Variáveis + Despesas Fixas",
+    "variable_costs": "Custos que variam com cada venda",
+    "fixed_expenses": "Despesas mensais independentes do volume",
+    "product_margin": "Margem do produto NÃO inclui despesas fixas",
+    "instructions": [
+      "Ajuste os valores de custos variáveis conforme seu volume real",
+      "Taxa de pagamento varia por método (pix, cartão, etc)",
+      "Despesas fixas só entram na análise mensal do negócio"
+    ]
+  }
 }

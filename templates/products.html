@@ -17,13 +17,14 @@
 <!-- Info Card -->
 <div class="alert alert-info mb-4">
     <div class="row align-items-center">
-        <div class="col-md-8">
+        <div class="col-md-12">
             <i class="bi bi-info-circle"></i> 
-            <strong>Margem Líquida:</strong> Considera despesas fixas mensais (R$ {{ "%.2f"|format(total_expenses) }}) 
-            distribuídas em ~{{ monthly_sales }} vendas/mês
-        </div>
-        <div class="col-md-4 text-end">
-            <small class="text-muted">Despesa por venda: R$ {{ "%.2f"|format(total_expenses / monthly_sales if monthly_sales > 0 else 0) }}</small>
+            <strong>Margem Exibida:</strong> Margem de Contribuição (Preço - Custo - Custos Variáveis por venda).
+            <br>
+            <small class="text-muted">
+                <strong>NÃO inclui</strong> despesas fixas mensais (R$ {{ total_expenses|currency }}).
+                Despesas fixas são usadas apenas na análise de resultado mensal do negócio.
+            </small>
         </div>
     </div>
 </div>
@@ -90,8 +91,8 @@
                         <td><span class="badge bg-primary">{{ product.CODIGO }}</span></td>
                         <td><strong>{{ product.PRODUTO }}</strong></td>
                         <td>{{ product.CATEGORIA }}</td>
-                        <td>R$ {{ "%.2f"|format(custo) }}</td>
-                        <td>R$ {{ "%.2f"|format(valor) }}</td>
+                        <td>R$ {{ custo|currency }}</td>
+                        <td>R$ {{ valor|currency }}</td>
                         <td>
                             <div>
                                 <span class="badge {% if margem_liquida > 30 %}bg-success{% elif margem_liquida > 15 %}bg-info{% elif margem_liquida > 0 %}bg-warning{% else %}bg-danger{% endif %}" 
@@ -111,7 +112,7 @@
                                 {{ estoque }} un
                             </span>
                         </td>
-                        <td>R$ {{ "%.2f"|format(valor * estoque) }}</td>
+                        <td>R$ {{ (valor * estoque)|currency }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary me-1" title="Ver detalhes" onclick="viewProduct('{{ product.CODIGO }}')">
                                 <i class="bi bi-eye"></i>
@@ -226,8 +227,8 @@ function viewProduct(codigo) {
                         <tr><th>Código:</th><td><strong>${p.CODIGO}</strong></td></tr>
                         <tr><th>Produto:</th><td>${p.PRODUTO}</td></tr>
                         <tr><th>Categoria:</th><td>${p.CATEGORIA}</td></tr>
-                        <tr><th>Custo:</th><td>R$ ${custo.toFixed(2)}</td></tr>
-                        <tr><th>Preço de Venda:</th><td>R$ ${valor.toFixed(2)}</td></tr>
+                        <tr><th>Custo:</th><td>R$ ${formatCurrencyBR(custo)}</td></tr>
+                        <tr><th>Preço de Venda:</th><td>R$ ${formatCurrencyBR(valor)}</td></tr>
                         <tr>
                             <th>Margem Bruta:</th>
                             <td><span class="badge bg-secondary">${margem_bruta}%</span></td>
@@ -237,7 +238,7 @@ function viewProduct(codigo) {
                             <td><span class="badge bg-success">${margem_liquida}%</span></td>
                         </tr>
                         <tr><th>Estoque:</th><td><strong>${estoque} un</strong></td></tr>
-                        <tr><th>Valor Total:</th><td>R$ ${(valor * estoque).toFixed(2)}</td></tr>
+                        <tr><th>Valor Total:</th><td>R$ ${formatCurrencyBR(valor * estoque)}</td></tr>
                     </table>
                     <div class="alert alert-info mt-3">
                         <small>

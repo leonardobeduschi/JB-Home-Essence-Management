@@ -74,219 +74,687 @@
       ]
     },
     {
-      "id": "vendas",
-      "title": "Processo de Vendas",
-      "icon": "cart-check",
-      "color": "success",
-      "description": "Guia completo para realizar vendas com excelência no atendimento",
+      "id": "vendas-presenciais",
+      "title": "Manual de Vendas Presenciais",
+      "icon": "building",
+      "color": "primary",
+      "description": "Processo completo para visitas comerciais presenciais com excelência",
       "sections": [
         {
           "number": "1.0",
-          "title": "Abordagem Inicial",
-          "icon": "person-raised-hand",
+          "title": "Preparação Pré-Visita",
+          "icon": "clipboard-check",
           "steps": [
             {
               "number": "1.1",
-              "text": "Cumprimentar o cliente com cordialidade e um sorriso"
+              "text": "Participar à equipe: local, data, hora e segmento da visita"
             },
             {
               "number": "1.2",
-              "text": "Perguntar: 'Em que posso ajudá-lo(a) hoje?'",
+              "text": "Estudar brevemente o segmento para apresentar fragrâncias adequadas",
               "highlight": true
             },
             {
               "number": "1.3",
-              "text": "Identificar as necessidades e preferências do cliente"
+              "text": "Revisar DOC de kits/segmento e identificar ambientes possíveis (recepção, sala, clínica, banheiro)"
+            },
+            {
+              "number": "1.4",
+              "text": "Verificar estoque das fragrâncias a serem apresentadas (Se não tiver, não prometa)"
+            },
+            {
+              "number": "1.5",
+              "text": "Verificar preço de cada fragrância que será apresentada"
+            },
+            {
+              "number": "1.6",
+              "text": "Separar kit olfativo: 5 testers, 10 fitas olfativas (zip lock), 10 cartões de visita, 1 home spray e 1 difusor de uma das fragrâncias",
+              "highlight": true
             }
           ]
         },
         {
           "number": "2.0",
-          "title": "Apresentação dos Produtos",
-          "icon": "chat-dots",
+          "title": "Visita ao Local",
+          "icon": "people",
           "steps": [
             {
               "number": "2.1",
-              "text": "Apresentar as fragrâncias de acordo com o perfil do cliente"
+              "text": "Fazer apresentação inicial e quebra-gelo"
             },
             {
               "number": "2.2",
-              "text": "Permitir que o cliente teste as fragrâncias",
-              "highlight": true
+              "text": "Identificar o padrão comportamental do cliente"
             },
             {
               "number": "2.3",
-              "text": "Explicar os benefícios de cada produto"
+              "text": "Perguntar, escutar e entender profundamente o cliente",
+              "highlight": true
             },
             {
               "number": "2.4",
-              "text": "Informar sobre promoções e combos disponíveis"
+              "text": "Identificar palavras-chave do cliente (ex: sofisticação, aconchego, etc.)"
+            },
+            {
+              "number": "2.5",
+              "text": "Apresentação das fragrâncias com storytelling (contar uma história em cada)"
+            },
+            {
+              "number": "2.6",
+              "text": "Permitir que o cliente toque no frasco da fragrância"
+            },
+            {
+              "number": "2.7",
+              "text": "Apresentar opções, sugerir espaços e kit completo (identidade do ambiente)"
+            },
+            {
+              "number": "2.8",
+              "text": "Falar o preço com segurança e confiança",
+              "highlight": true
+            },
+            {
+              "number": "2.9",
+              "text": "Informar: 'Vamos te encaminhar o orçamento e deixar o ambiente perfumado'"
             }
           ]
         },
         {
           "number": "3.0",
-          "title": "Finalização da Venda",
-          "icon": "check-circle",
+          "title": "Envio do Orçamento",
+          "icon": "send",
           "steps": [
             {
               "number": "3.1",
-              "text": "Confirmar os produtos escolhidos com o cliente"
+              "text": "Encaminhar pedido para equipe JB (equipe atenta ao WhatsApp durante visita)"
             },
             {
               "number": "3.2",
-              "text": "Informar o valor total e opções de pagamento",
-              "highlight": true
+              "text": "Identificar detalhes: é para presente? Qual local específico?"
             },
             {
               "number": "3.3",
-              "text": "Registrar a venda no sistema"
+              "text": "Encaminhar todos os dados para equipe JB"
             },
             {
               "number": "3.4",
-              "text": "Agradecer pela compra e convidar para retornar"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "atendimento",
-      "title": "Atendimento ao Cliente",
-      "icon": "headset",
-      "color": "info",
-      "description": "Padrões de excelência no atendimento ao cliente JB Home Essence",
-      "sections": [
-        {
-          "number": "1.0",
-          "title": "Recepção do Cliente",
-          "icon": "door-open",
-          "steps": [
-            {
-              "number": "1.1",
-              "text": "Cumprimentar o cliente assim que entrar na loja"
-            },
-            {
-              "number": "1.2",
-              "text": "Manter contato visual e postura profissional",
+              "text": "Conferir minuciosamente o orçamento gerado",
               "highlight": true
             },
             {
-              "number": "1.3",
-              "text": "Estar disponível para dúvidas sem ser invasivo"
+              "number": "3.5",
+              "text": "Enviar orçamento ao cliente com o próximo passo claro"
             }
           ]
         },
         {
-          "number": "2.0",
-          "title": "Durante o Atendimento",
-          "icon": "chat-left-heart",
+          "number": "4.0",
+          "title": "Fechamento do Pedido",
+          "icon": "currency-dollar",
           "steps": [
             {
-              "number": "2.1",
-              "text": "Ouvir atentamente as necessidades do cliente"
+              "number": "4.1",
+              "text": "Definir forma de pagamento com o cliente"
             },
             {
-              "number": "2.2",
-              "text": "Demonstrar conhecimento sobre os produtos",
+              "number": "4.2",
+              "text": "Separar o material conforme pedido"
+            },
+            {
+              "number": "4.3",
+              "text": "Definir forma e data de entrega",
               "highlight": true
-            },
-            {
-              "number": "2.3",
-              "text": "Ser paciente e educado em todas as situações"
-            },
-            {
-              "number": "2.4",
-              "text": "Oferecer soluções personalizadas"
             }
           ]
         },
         {
-          "number": "3.0",
-          "title": "Pós-Atendimento",
-          "icon": "star",
+          "number": "5.0",
+          "title": "Separação do Pedido",
+          "icon": "box-seam",
           "steps": [
             {
-              "number": "3.1",
-              "text": "Agradecer pela visita, mesmo sem compra"
+              "number": "5.1",
+              "text": "Conferir orçamento e separar produtos corretamente"
             },
             {
-              "number": "3.2",
-              "text": "Convidar para seguir nas redes sociais",
+              "number": "5.2",
+              "text": "Identificar sacola ideal e organização interna"
+            },
+            {
+              "number": "5.3",
+              "text": "Verificar etiqueta da JB em cada produto"
+            },
+            {
+              "number": "5.4",
+              "text": "Limpar vidro dos frascos"
+            },
+            {
+              "number": "5.5",
+              "text": "Proteger difusores e essências com plástico bolha",
               "highlight": true
             },
             {
-              "number": "3.3",
-              "text": "Oferecer cartão de visita"
+              "number": "5.6",
+              "text": "Embalar de forma bonita e cuidadosa"
+            },
+            {
+              "number": "5.7",
+              "text": "Gravar vídeo da separação do pedido"
+            },
+            {
+              "number": "5.8",
+              "text": "Colocar adesivo e cartão na sacola"
+            },
+            {
+              "number": "5.9",
+              "text": "Perfumar a sacola com a fragrância escolhida pelo cliente"
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": "estoque",
-      "title": "Gestão de Estoque",
-      "icon": "box",
-      "color": "warning",
-      "description": "Procedimentos para manutenção e controle do estoque",
-      "sections": [
+        },
         {
-          "number": "1.0",
-          "title": "Recebimento de Produtos",
+          "number": "6.0",
+          "title": "Entrega",
           "icon": "truck",
           "steps": [
             {
+              "number": "6.1",
+              "text": "Verificar localização e rota de entrega"
+            },
+            {
+              "number": "6.2",
+              "text": "Confirmar forma de entrega combinada"
+            },
+            {
+              "number": "6.3",
+              "text": "Registrar QUEM recebeu o produto (informação importante)",
+              "highlight": true
+            },
+            {
+              "number": "6.4",
+              "text": "Enviar material de modo de uso após entrega"
+            }
+          ]
+        },
+        {
+          "number": "7.0",
+          "title": "Follow-up",
+          "icon": "arrow-repeat",
+          "steps": [
+            {
+              "number": "7.1",
+              "text": "Realizar follow-up em 3-5 dias após entrega",
+              "highlight": true
+            },
+            {
+              "number": "7.2",
+              "text": "Registrar cliente no sistema"
+            },
+            {
+              "number": "7.3",
+              "text": "Atualizar registro de estoque"
+            },
+            {
+              "number": "7.4",
+              "text": "Colocar label no WhatsApp para identificação do cliente"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "atendimento-whatsapp",
+      "title": "Atendimento WhatsApp",
+      "icon": "whatsapp",
+      "color": "success",
+      "description": "Guia completo para atendimento humanizado e eficiente via WhatsApp",
+      "sections": [
+        {
+          "number": "1.0",
+          "title": "Primeiro Contato",
+          "icon": "chat-heart",
+          "steps": [
+            {
               "number": "1.1",
-              "text": "Conferir a nota fiscal com os produtos recebidos"
+              "text": "Enviar mensagem automática inicial:\n'Olá, aqui é o Matheus 💚 da JB Home Essence.\nQue bom ter você por aqui! 🌿\nNossa equipe já vai te atender e te ajudar a escolher a fragrância perfeita para o seu espaço ✨'"
             },
             {
               "number": "1.2",
-              "text": "Verificar condições de embalagem e possíveis avarias",
+              "text": "Responder manualmente de forma personalizada:\n'Olá [nome do cliente]! Tudo bem? 😊\nSeja bem-vindo(a) à JB Home Essence 💚\nVocê está procurando uma fragrância para sua casa, para presentear ou para o seu negócio?'",
               "highlight": true
             },
             {
               "number": "1.3",
-              "text": "Registrar entrada no sistema imediatamente"
+              "text": "Usar o nome do cliente para gerar conexão imediata"
             }
           ]
         },
         {
           "number": "2.0",
-          "title": "Organização",
-          "icon": "grid-3x3",
+          "title": "Entendendo o Cliente",
+          "icon": "person-lines-fill",
           "steps": [
             {
               "number": "2.1",
-              "text": "Organizar produtos por categoria e fragrância"
+              "text": "Perguntar para identificar preferências:\n'Você gosta de aromas mais suaves ou mais marcantes?'"
             },
             {
               "number": "2.2",
-              "text": "Manter produtos mais antigos na frente (FIFO)",
+              "text": "Questionar sobre o estilo preferido:\n'Prefere fragrâncias florais, amadeiradas, cítricas ou adocicadas?'",
               "highlight": true
             },
             {
               "number": "2.3",
-              "text": "Identificar claramente cada produto com etiquetas"
+              "text": "Entender o espaço do cliente:\n'Seu espaço é pequeno, médio ou grande?'"
+            },
+            {
+              "number": "2.4",
+              "text": "Evitar respostas curtas como 'ok' ou 'sim' - sempre elaborar"
             }
           ]
         },
         {
           "number": "3.0",
-          "title": "Controle e Inventário",
-          "icon": "clipboard-data",
+          "title": "Apresentação das Opções",
+          "icon": "flower1",
           "steps": [
             {
               "number": "3.1",
-              "text": "Realizar contagem semanal de estoque crítico"
+              "text": "Personalizar a recomendação:\n'Baseado no que você comentou, tenho certeza que vai amar essas opções:'"
             },
             {
               "number": "3.2",
-              "text": "Alertar sobre produtos com estoque baixo (≤ 5 unidades)",
+              "text": "Apresentar a fragrância com descrição sensorial:\n'Essa é a fragrância [nome da fragrância] - [descrição envolvente da fragrância]'",
               "highlight": true
             },
             {
               "number": "3.3",
-              "text": "Inventário completo mensal"
+              "text": "Envolver o cliente com descrições que criem conexão emocional"
+            }
+          ]
+        },
+        {
+          "number": "4.0",
+          "title": "Tratamento de Objeções",
+          "icon": "currency-exchange",
+          "steps": [
+            {
+              "number": "4.1",
+              "text": "Quando o cliente pergunta sobre preço:\n'Temos sim 🌿\nPosso te mostrar versões menores ou combinações com desconto.'"
+            },
+            {
+              "number": "4.2",
+              "text": "Valorizar o produto mesmo ao oferecer alternativas:\n'Mas fico feliz que você tenha gostado da fragrância! Ela realmente é uma das mais elegantes da coleção 💚'",
+              "highlight": true
+            },
+            {
+              "number": "4.3",
+              "text": "Oferecer solução criativa:\n'Se quiser, posso montar um kit especial pra você aproveitar melhor o custo-benefício. Quer que eu te mostre?'"
+            },
+            {
+              "number": "4.4",
+              "text": "Quando o cliente não gosta:\n'Entendo totalmente 😅\nFragrância é algo muito pessoal mesmo!\nSe quiser, posso te mostrar outras opções que costumam agradar mais perfis como o seu'"
+            }
+          ]
+        },
+        {
+          "number": "5.0",
+          "title": "Fechamento da Venda",
+          "icon": "bag-check",
+          "steps": [
+            {
+              "number": "5.1",
+              "text": "Quando o cliente demonstra interesse:\n'Que ótimo saber que gostou! 🌸\nPosso reservar pra você ainda hoje?'"
+            },
+            {
+              "number": "5.2",
+              "text": "Criar urgência positiva:\n'Estamos com um pequeno lote dessa fragrância e posso garantir a disponibilidade se quiser aproveitar agora 💚'",
+              "highlight": true
+            },
+            {
+              "number": "5.3",
+              "text": "Oferecer opções de pagamento:\n'Quer que eu envie o link pra pagamento ou prefere transferência/PIX? Assim já separamos pra você ✨'"
+            },
+            {
+              "number": "5.4",
+              "text": "Quando o cliente pede preço específico:\n1. Primeiro mostrar o diferencial do produto\n2. Depois enviar o preço\n3. Fazer pergunta para gerar conexão"
+            }
+          ]
+        },
+        {
+          "number": "6.0",
+          "title": "Follow-up e Pós-Venda",
+          "icon": "arrow-repeat",
+          "steps": [
+            {
+              "number": "6.1",
+              "text": "Após 2 dias sem resposta:\n'Olá [nome]! 💚 Tudo bem?\nPassando só pra saber se conseguiu ver as opções que te mandei.\nAinda temos disponível aquela fragrância que você gostou'"
+            },
+            {
+              "number": "6.2",
+              "text": "Após 5 dias sem resposta:\n'Olá [nome]! 🌸 Tudo bem por aí?\nQuis só confirmar se ainda tem interesse nas fragrâncias que conversamos.\nSe quiser, posso te enviar algumas novidades que chegaram recentemente ✨'",
+              "highlight": true
+            },
+            {
+              "number": "6.3",
+              "text": "Confirmação de compra:\n'Perfeito, [nome]! 💚\nSeu pedido foi confirmado 🌿\nAssim que estiver pronto, te avisamos aqui.\nAgradecemos de coração pela confiança!'"
+            }
+          ]
+        },
+        {
+          "number": "7.0",
+          "title": "Catálogo e Reativação",
+          "icon": "camera",
+          "steps": [
+            {
+              "number": "7.1",
+              "text": "Quando o cliente pede catálogo:\n'Perfeito 💚\nPosso te enviar sim!\nSó pra eu te indicar melhor — você procura algo mais suave ou marcante? Floral, amadeirado, cítrico…?'"
+            },
+            {
+              "number": "7.2",
+              "text": "Enviar catálogo com guia:\n'Aqui está nosso catálogo digital 🌿\nNele você vai encontrar nossas fragrâncias com descrições e valores.\nSe quiser, posso te ajudar a escolher as que combinam mais com o estilo do seu ambiente 💚'",
+              "highlight": true
+            },
+            {
+              "number": "7.3",
+              "text": "Personalizar após envio:\n'[Nome], com base no que você comentou, acho que você vai gostar muito da 'Jardins da França' e do 'Garbo'. São leves, sofisticadas e transmitem bem-estar ✨'"
+            },
+            {
+              "number": "7.4",
+              "text": "Reativação após 30+ dias:\n'Olá [nome]! 💚 Tudo bem?\nPassando pra te contar que chegaram novas fragrâncias aqui na JB Home Essence 🌿\nComo você já conhece nosso trabalho, posso te mostrar as novidades primeiro? ✨'"
+            }
+          ]
+        },
+        {
+          "number": "8.0",
+          "title": "Feedback e Relacionamento",
+          "icon": "heart",
+          "steps": [
+            {
+              "number": "8.1",
+              "text": "Solicitar feedback pós-venda:\n'Olá [nome]! 🌿 Tudo bem?\nPassando pra saber como foi sua experiência com a fragrância que escolheu 💚\nGostou do aroma no ambiente?'"
+            },
+            {
+              "number": "8.2",
+              "text": "Feedback positivo:\n'Que bom! Ficamos muito felizes 💚\nÉ ótimo saber que a fragrância te agradou. Quando quiser experimentar outras opções, temos coleções novas chegando ✨'"
+            },
+            {
+              "number": "8.3",
+              "text": "Feedback neutro/negativo:\n'Entendo perfeitamente! 😊\nCada aroma tem seu estilo mesmo. Se quiser, posso te recomendar outras fragrâncias com notas mais próximas do que você costuma gostar 🌿'",
+              "highlight": true
+            },
+            {
+              "number": "8.4",
+              "text": "Quando cliente elogia:\n'Que bom que gostou! 💚\nEssa fragrância realmente tem esse toque especial — ela deixa o ambiente com uma sensação de leveza e conforto 🌿'"
+            }
+          ]
+        },
+        {
+          "number": "9.0",
+          "title": "Dicas Gerais de Atendimento",
+          "icon": "stars",
+          "steps": [
+            {
+              "number": "9.1",
+              "text": "Sempre usar o nome do cliente para gerar conexão"
+            },
+            {
+              "number": "9.2",
+              "text": "Evitar responder com apenas 'ok' ou 'sim' - sempre elaborar a resposta",
+              "highlight": true
+            },
+            {
+              "number": "9.3",
+              "text": "Usar emojis suaves e coerentes com a marca (✨💚🌿🌸)"
+            },
+            {
+              "number": "9.4",
+              "text": "Encerrar sempre com uma pergunta para manter o diálogo ativo"
+            },
+            {
+              "number": "9.5",
+              "text": "Padronizar a escrita: evitar abreviações ('você', 'também', 'que')"
+            },
+            {
+              "number": "9.6",
+              "text": "Manter tom acolhedor, profissional e sempre disponível para ajudar"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "controle-estoque",
+      "title": "Manual de Controle de Estoque",
+      "icon": "box-seam",
+      "color": "warning",
+      "description": "Sistema completo para gestão e controle de estoque de fragrâncias",
+      "sections": [
+        {
+          "number": "1.0",
+          "title": "Estrutura do Estoque",
+          "icon": "diagram-3",
+          "steps": [
+            {
+              "number": "1.1",
+              "text": "Organizar o estoque nas seguintes colunas no sistema:",
+              "substeps": [
+                "Código (código único do produto)",
+                "Produto (nome do produto)",
+                "Categoria (Fragrância)",
+                "P (pedido 1, 2, 3...) - histórico de pedidos",
+                "Total (quantidade acumulada)",
+                "Em estoque (quantidade atual disponível)"
+              ]
+            },
+            {
+              "number": "1.2",
+              "text": "Manter categorias organizadas por tipo de produto: Home Spray, Difusor, Velas, etc.",
+              "highlight": true
+            },
+            {
+              "number": "1.3",
+              "text": "Cada fragrância deve ter código único para fácil identificação"
+            }
+          ]
+        },
+        {
+          "number": "2.0",
+          "title": "Controle de Entradas",
+          "icon": "truck",
+          "steps": [
+            {
+              "number": "2.1",
+              "text": "Registrar TODA chegada de produtos e insumos no sistema imediatamente",
+              "highlight": true
+            },
+            {
+              "number": "2.2",
+              "text": "Informações obrigatórias para registro de entrada:",
+              "substeps": [
+                "Data de entrada",
+                "Fornecedor",
+                "Quantidade recebida",
+                "Número do lote",
+                "Data de validade (quando aplicável)",
+                "Responsável pelo recebimento"
+              ]
+            },
+            {
+              "number": "2.3",
+              "text": "Conferir fisicamente os produtos recebidos com a nota fiscal"
+            },
+            {
+              "number": "2.4",
+              "text": "Armazenar produtos com validade observando a regra PEPS (Primeiro que Entra, Primeiro que Sai)"
+            }
+          ]
+        },
+        {
+          "number": "3.0",
+          "title": "Revisão Semanal do Estoque",
+          "icon": "clipboard-check",
+          "steps": [
+            {
+              "number": "3.1",
+              "text": "Realizar revisão completa TODAS as sextas-feiras",
+              "highlight": true
+            },
+            {
+              "number": "3.2",
+              "text": "Procedimento de revisão:",
+              "substeps": [
+                "Responsável fica no computador com acesso ao sistema",
+                "Citar produtos por categoria na ordem estabelecida",
+                "Exemplo: 'Home Spray - Bambu' → conferir quantidade física",
+                "Seguir para próximo: 'Home Spray - Capim'",
+                "Continuar por todas as fragrâncias da categoria",
+                "Passar para próxima categoria: 'Difusor - Bambu'"
+              ]
+            },
+            {
+              "number": "3.3",
+              "text": "TODAS as linhas de fragrâncias devem ser revisadas, mesmo aquelas que não vendem há meses",
+              "highlight": true
+            },
+            {
+              "number": "3.4",
+              "text": "Ajustar sistema em caso de divergências entre estoque físico e sistema"
+            }
+          ]
+        },
+        {
+          "number": "4.0",
+          "title": "Controle Pós-Venda",
+          "icon": "cart-check",
+          "steps": [
+            {
+              "number": "4.1",
+              "text": "APÓS cada venda realizada, executar imediatamente:",
+              "substeps": [
+                "Registrar cliente no sistema (se for novo)",
+                "Registrar venda completa",
+                "Dar baixa no estoque de TODOS os produtos vendidos"
+              ],
+              "highlight": true
+            },
+            {
+              "number": "4.2",
+              "text": "Cadastro completo do cliente (aba Clientes):",
+              "substeps": [
+                "Número do cliente (sequencial automático)",
+                "Nome completo",
+                "Vendedor responsável",
+                "Tipo (Pessoa Física ou Empresa)",
+                "Idade",
+                "Gênero",
+                "Profissão",
+                "CPF ou CNPJ",
+                "Telefone/WhatsApp",
+                "Produto e fragrância preferida",
+                "Local de uso (casa, escritório, comércio, presente)"
+              ]
+            },
+            {
+              "number": "4.3",
+              "text": "Registro completo da venda (aba Vendas):",
+              "substeps": [
+                "ID do cliente",
+                "ID da venda",
+                "Nome do cliente",
+                "Meio de venda (WhatsApp, Loja Física, Instagram)",
+                "Data da venda",
+                "Produto(s) vendido(s)",
+                "Categoria do produto",
+                "Código do produto",
+                "Quantidade",
+                "Preço unitário",
+                "Preço total",
+                "Anotações importantes da venda"
+              ],
+              "highlight": true
+            }
+          ]
+        },
+        {
+          "number": "5.0",
+          "title": "Conferência e Análise Mensal",
+          "icon": "graph-up",
+          "steps": [
+            {
+              "number": "5.1",
+              "text": "Realizar análise completa no ÚLTIMO DIA ÚTIL de cada mês",
+              "highlight": true
+            },
+            {
+              "number": "5.2",
+              "text": "Análise de vendas - identificar:",
+              "substeps": [
+                "Quais fragrâncias foram MAIS vendidas",
+                "Quantidade exata vendida de cada uma",
+                "Ranking completo por categoria"
+              ]
+            },
+            {
+              "number": "5.3",
+              "text": "Verificação de reposição - definir:",
+              "substeps": [
+                "Quais produtos precisam de reposição URGENTE",
+                "Quais precisam de reposição para próximo pedido",
+                "Quantidade ideal para pedido baseado em histórico"
+              ]
+            },
+            {
+              "number": "5.4",
+              "text": "Identificação de produtos parados - ações:",
+              "substeps": [
+                "Listar produtos que NÃO estão saindo",
+                "Analisar se devemos continuar com o produto",
+                "Criar promoções específicas para escoar estoque",
+                "Considerar descontinuar produto se não houver movimento"
+              ],
+              "highlight": true
+            },
+            {
+              "number": "5.5",
+              "text": "Gerar relatório mensal com:",
+              "substeps": [
+                "Top 10 produtos mais vendidos",
+                "Top 5 fragrâncias preferidas",
+                "Produtos com necessidade de reposição",
+                "Produtos para promoção/descontinuação",
+                "Comparativo com mês anterior"
+              ]
+            }
+          ]
+        },
+        {
+          "number": "6.0",
+          "title": "Boas Práticas e Regras",
+          "icon": "shield-check",
+          "steps": [
+            {
+              "number": "6.1",
+              "text": "NUNCA realizar venda sem dar baixa no sistema",
+              "highlight": true
+            },
+            {
+              "number": "6.2",
+              "text": "Estoque físico DEVE bater com sistema após cada revisão semanal"
+            },
+            {
+              "number": "6.3",
+              "text": "Produtos com validade: sempre observar e seguir PEPS"
+            },
+            {
+              "number": "6.4",
+              "text": "Manter organização física do estoque por categoria e fragrância"
+            },
+            {
+              "number": "6.5",
+              "text": "Comunicar imediatamente qualquer divergência ao gestor"
+            },
+            {
+              "number": "6.6",
+              "text": "Backup diário do sistema de controle"
             }
           ]
         }

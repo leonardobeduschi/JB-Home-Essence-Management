@@ -1,236 +1,117 @@
-ID_VENDA,ID_CLIENTE,CLIENTE,MEIO,DATA,VALOR_TOTAL_VENDA
-
-0,0,Jeanete,,24/02/2024,835.6
-
-1,2,Edifício Apolo 11,,03/02/2025,476.25
-
-10,10,Marcelo G.,,21/12/2024,188.0
-
-100,75,Tânia Fischer,Amigo,04/12/2025,220.0
-
-101,76,Splendia Tower,Cold call,05/12/2025,2540.0
-
-102,77,André Faria,Cold call,05/12/2025,743.0
-
-103,57,Marcia Pereira,Amigo,06/12/2025,367.0
-
-104,78,Cris by Cris (Karine),Amostras,08/12/2025,120.0
-
-105,79,Janaina,Santho Aroma,08/12/2025,210.0
-
-106,60,Sonia ,Amigo,11/12/2025,334.0
-
-107,70,Fran Almeida,Indicação,15/12/2025,210.0
-
-108,21,Eduarda Schnaider (Mãe),Amostras,18/12/2025,106.0
-
-109,1,Edilson,,15/12/2025,825.0
-
-11,11,Wilma,Amigo,06/12/2024,220.0
-
-110,46,German Pablo,Santho Aroma,16/12/2025,212.0
-
-12,12,Milena,,27/12/2024,113.0
-
-13,9,Margo,,17/01/2025,101.0
-
-14,8,Silvana Mussi,,16/01/2025,92.0
-
-15,13,Edifício Fabimar,,07/02/2025,101.0
-
-16,13,Edifício Fabimar,,07/02/2025,144.0
-
-17,13,Edifício Fabimar,,07/02/2025,92.0
-
-18,13,Edifício Fabimar,,07/02/2025,75.0
-
-19,14,Condomínio Peniche,,06/02/2025,282.0
-
-2,1,Edilson,,09/10/2024,188.0
-
-20,15,Gabriel Galarça,Amigo,12/03/2025,188.0
-
-21,16,Maurício Magnabosco,Amigo,13/12/2024,124.0
-
-22,16,Maurício Magnabosco,Amigo,14/12/2024,166.0
-
-23,17,Évilyn,Amigo,19/02/2025,114.0
-
-24,18,Anna Paula,,04/04/2025,209.0
-
-25,19,Clarita,,04/04/2025,228.0
-
-26,20,Beto,Amigo,28/03/2025,114.0
-
-27,14,Condomínio Peniche,,04/04/2025,262.0
-
-28,14,Condomínio Peniche,,10/03/2025,262.0
-
-29,2,Edifício Apolo 11,,18/02/2025,166.0
-
-3,3,Roberta Voltolini,Amigo,01/11/2024,188.0
-
-30,21,Eduarda Schnaider (Mãe),Amostras,09/04/2025,144.0
-
-31,22,Margareth (Amiga Silvana),,30/10/2024,202.0
-
-32,23,Fabiana Biston (Fabi),Amigo,07/02/2025,254.0
-
-33,25,Marcela,,20/02/2025,342.0
-
-34,24,Teógenes,Amigo,28/10/2024,133.0
-
-35,26,Júlio César,Amostras,14/04/2025,101.0
-
-36,27,Juliana Takaki,Amostras,17/04/2025,202.0
-
-37,28,Rose ,Amigo,22/04/2025,92.0
-
-38,30,Edificio Residencial Chandon,Amigo,23/04/2025,501.0
-
-39,31,Marcia,,25/04/2025,476.0
-
-4,4,Dra. Zuleide,,10/10/2024,166.0
-
-40,32,Luciana Caires,Amigo,25/04/2025,101.0
-
-41,33,Ana Maria,,28/04/2025,184.0
-
-42,34,Alba Academia,Amostras,06/05/2025,114.0
-
-43,35,Margara,,09/05/2025,114.0
-
-44,1,Edilson,,09/05/2025,150.0
-
-45,33,Ana Maria,,13/05/2025,341.0
-
-46,36,Raul Ehlke,Cold call,14/05/2025,145.0
-
-47,0,Jeanete,,20/05/2025,92.0
-
-48,14,Condomínio Peniche,,26/05/2025,262.0
-
-49,37,Marcos XM Invest,D2D,28/05/2025,188.0
-
-5,5,Odecir,Amigo,04/12/2024,106.0
-
-50,38,Santina Predebon,Amigo,30/05/2025,254.0
-
-51,39,Nant Comercio,Indicação,30/05/2025,441.0
-
-52,40,Elias Formighieri,Amigo,04/06/2025,342.0
-
-53,41,Rose Gomes,Amigo,03/06/2025,101.0
-
-54,0,Jeanete,,11/06/2025,65.0
-
-55,42,Ana Paula de Poli,Amigo,20/06/2025,114.0
-
-56,43,Silvana Cordeiro,,23/06/2025,92.0
-
-57,44,Miguel Academia,Amostras,26/06/2025,281.0
-
-58,45,Gillian Nava,Amigo,11/07/2025,170.0
-
-59,46,German Pablo,Santho Aroma,16/07/2025,711.0
-
-6,6,Ademir,Amigo,18/11/2024,106.0
-
-60,0,Jeanete,,18/07/2025,39.5
-
-61,47,Liliane Borges de Mendonça,Amigo,21/07/2025,114.0
-
-62,48,Pricyla Coelho,Amigo,21/07/2025,101.0
-
-63,49,Ótica oito6,Cold call,11/08/2025,262.0
-
-64,50,Eliane (Mundial Imóveis),Indicação,19/08/2025,142.0
-
-65,51,Alyne,,19/08/2025,273.0
-
-66,23,Fabiana Biston (Fabi),Amigo,22/08/2025,101.0
-
-67,52,Leonardo Beduschi Iunes,,25/08/2025,65.0
-
-68,0,Jeanete,,26/08/2025,101.0
-
-69,43,Silvana Cordeiro,,04/09/2025,92.0
-
-7,7,Mateus MR Portas,Amigo,03/12/2024,106.0
-
-70,54,Adalmir da Silva,,05/09/2025,236.0
-
-71,55,Emilia Wetter,Amigo,05/09/2025,101.0
-
-72,56,Jean Claude,Amigo,05/09/2025,179.0
-
-73,57,Marcia Pereira,,08/09/2025,180.0
-
-74,0,Jeanete,,08/09/2025,101.0
-
-75,58,Ed. Santa Fé III,Amigo,19/09/2025,256.0
-
-76,59,Jorge Floriani,Amigo,19/09/2025,95.0
-
-77,60,Sonia ,Amigo,19/09/2025,374.0
-
-78,14,Condomínio Peniche,,26/09/2025,274.0
-
-79,62,Simone Liebl,Amigo,27/09/2025,198.0
-
-8,8,Silvana Mussi,,16/01/2025,158.0
-
-80,46,German Pablo,Santho Aroma,26/09/2025,702.0
-
-81,63,Edifício Cartagena,,29/09/2025,215.0
-
-82,64,Jose Montilla Rubio (Fibra América),Santho Aroma,25/09/2025,222.0
-
-83,65,Juan Maba,Santho Aroma,27/09/2025,187.0
-
-84,66,Neusa De Carli,Amigo,08/10/2025,92.0
-
-85,67,Sidney,Amigo,13/10/2025,188.0
-
-86,23,Fabiana Biston (Fabi),Amigo,14/10/2025,106.0
-
-87,42,Ana Paula de Poli,Amigo,14/10/2025,120.0
-
-88,68,Claudete de Morais,Amigo,14/10/2025,106.0
-
-89,69,Gilda,Amigo,03/11/2025,262.0
-
-9,9,Margo,,17/01/2025,94.0
-
-90,12,Milena,Amigo,06/11/2025,188.0
-
-91,70,Fran Almeida,Indicação,07/11/2025,420.0
-
-92,61,João Paulo (Vó e Mãe),Amigo,11/09/2025,224.0
-
-93,71,Tati,Amigo,17/11/2025,902.0
-
-94,35,Margara,Amigo,21/11/2025,377.0
-
-95,8,Silvana Mussi,Amigo,24/11/2025,94.0
-
-96,72,Jacque Schneider,Indicação,24/11/2025,120.0
-
-97,14,Condomínio Peniche,,26/11/2025,274.0
-
-98,73,Denise,Amigo,27/11/2025,106.0
-
-99,74,Marcia Krebs,Amigo,04/12/2025,106.0
-
-VND001,75,Tânia Fischer,pix,22/12/2025,148.0
-
-VND002,75,Tânia Fischer,pix,22/12/2025,178.0
-
-VND003,76,Splendia Tower,boleto,22/12/2025,224.0
-
-VND004,CLI001,Adriana,cartão de crédito,22/12/2025,178.0
-
-VND005,CLI001,Adriana,cartão de crédito,22/12/2025,189.0
-
-VND006,CLI001,Adriana,cartão de crédito,22/12/2025,20.0
-
+ID_VENDA,ID_CLIENTE,CLIENTE,MEIO,DATA,VALOR_TOTAL_VENDA
+VND000,CLI000,Jeanete,Não informado,24/02/2024,835.6
+VND002,CLI001,Edilson,Não informado,09/10/2024,188.0
+VND004,CLI004,Dra. Zuleide,Não informado,10/10/2024,166.0
+VND034,CLI024,Teógenes,Não informado,28/10/2024,133.0
+VND031,CLI022,Margareth (Amiga Silvana),Não informado,30/10/2024,202.0
+VND003,CLI003,Roberta Voltolini,Não informado,01/11/2024,188.0
+VND006,CLI006,Ademir,Não informado,18/11/2024,106.0
+VND007,CLI007,Mateus MR Portas,Não informado,03/12/2024,106.0
+VND005,CLI005,Odecir,Não informado,04/12/2024,106.0
+VND011,CLI011,Wilma,Não informado,06/12/2024,220.0
+VND021,CLI016,Maurício Magnabosco,Não informado,13/12/2024,124.0
+VND022,CLI016,Maurício Magnabosco,Não informado,14/12/2024,166.0
+VND010,CLI010,Marcelo G.,Não informado,21/12/2024,188.0
+VND012,CLI012,Milena,Não informado,27/12/2024,113.0
+VND014,CLI008,Silvana Mussi,Não informado,16/01/2025,92.0
+VND008,CLI008,Silvana Mussi,Não informado,16/01/2025,158.0
+VND013,CLI009,Margo,Não informado,17/01/2025,101.0
+VND009,CLI009,Margo,Não informado,17/01/2025,94.0
+VND001,CLI002,Edifício Apolo 11,Não informado,03/02/2025,476.25
+VND019,CLI014,Condomínio Peniche,Não informado,06/02/2025,282.0
+VND016,CLI013,Edifício Fabimar,Não informado,07/02/2025,144.0
+VND018,CLI013,Edifício Fabimar,Não informado,07/02/2025,75.0
+VND017,CLI013,Edifício Fabimar,Não informado,07/02/2025,92.0
+VND032,CLI023,Fabiana Biston (Fabi),Não informado,07/02/2025,254.0
+VND015,CLI013,Edifício Fabimar,Não informado,07/02/2025,101.0
+VND029,CLI002,Edifício Apolo 11,Não informado,18/02/2025,166.0
+VND023,CLI017,Évilyn,Não informado,19/02/2025,114.0
+VND033,CLI025,Marcela,Não informado,20/02/2025,342.0
+VND028,CLI014,Condomínio Peniche,Não informado,10/03/2025,262.0
+VND020,CLI015,Gabriel Galarça,Não informado,12/03/2025,188.0
+VND026,CLI020,Beto,Não informado,28/03/2025,114.0
+VND024,CLI018,Anna Paula,Não informado,04/04/2025,209.0
+VND027,CLI014,Condomínio Peniche,Não informado,04/04/2025,262.0
+VND025,CLI019,Clarita,Não informado,04/04/2025,228.0
+VND030,CLI021,Eduarda Schnaider (Mãe),Não informado,09/04/2025,144.0
+VND035,CLI026,Júlio César,Não informado,14/04/2025,101.0
+VND036,CLI027,Juliana Takaki,Não informado,17/04/2025,202.0
+VND037,CLI028,Rose,Não informado,22/04/2025,92.0
+VND038,CLI030,Edificio Residencial Chandon,Não informado,23/04/2025,501.0
+VND039,CLI031,Marcia,Não informado,25/04/2025,476.0
+VND040,CLI032,Luciana Caires,Não informado,25/04/2025,101.0
+VND041,CLI033,Ana Maria,Não informado,28/04/2025,184.0
+VND042,CLI034,Alba Academia,Não informado,06/05/2025,114.0
+VND044,CLI001,Edilson,Não informado,09/05/2025,150.0
+VND043,CLI035,Margara,Não informado,09/05/2025,114.0
+VND045,CLI033,Ana Maria,Não informado,13/05/2025,341.0
+VND046,CLI036,Raul Ehlke,Não informado,14/05/2025,145.0
+VND047,CLI000,Jeanete,Não informado,20/05/2025,92.0
+VND048,CLI014,Condomínio Peniche,Não informado,26/05/2025,262.0
+VND049,CLI037,Marcos XM Invest,Não informado,28/05/2025,188.0
+VND050,CLI038,Santina Predebon,Não informado,30/05/2025,254.0
+VND051,CLI039,Nant Comercio,Não informado,30/05/2025,441.0
+VND053,CLI041,Rose Gomes,Não informado,03/06/2025,101.0
+VND052,CLI040,Elias Formighieri,Não informado,04/06/2025,342.0
+VND054,CLI000,Jeanete,Não informado,11/06/2025,65.0
+VND055,CLI042,Ana Paula de Poli,Não informado,20/06/2025,114.0
+VND056,CLI043,Silvana Cordeiro,Não informado,23/06/2025,92.0
+VND057,CLI044,Miguel Academia,Não informado,26/06/2025,281.0
+VND058,CLI045,Gillian Nava,Não informado,11/07/2025,170.0
+VND059,CLI046,German Pablo,Não informado,16/07/2025,711.0
+VND060,CLI000,Jeanete,Não informado,18/07/2025,39.5
+VND062,CLI048,Pricyla Coelho,Não informado,21/07/2025,101.0
+VND061,CLI047,Liliane Borges de Mendonça,Não informado,21/07/2025,114.0
+VND063,CLI049,Ótica oito6,Não informado,11/08/2025,262.0
+VND065,CLI051,Alyne,Não informado,19/08/2025,273.0
+VND064,CLI050,Eliane (Mundial Imóveis),Não informado,19/08/2025,142.0
+VND066,CLI023,Fabiana Biston (Fabi),Não informado,22/08/2025,101.0
+VND067,CLI052,Leonardo Beduschi Iunes,Não informado,25/08/2025,65.0
+VND068,CLI000,Jeanete,Não informado,26/08/2025,101.0
+VND069,CLI043,Silvana Cordeiro,Não informado,04/09/2025,92.0
+VND071,CLI055,Emilia Wetter,Não informado,05/09/2025,101.0
+VND070,CLI054,Adalmir da Silva,Não informado,05/09/2025,236.0
+VND072,CLI056,Jean Claude,Não informado,05/09/2025,179.0
+VND073,CLI057,Marcia Pereira,Não informado,08/09/2025,180.0
+VND074,CLI000,Jeanete,Não informado,08/09/2025,101.0
+VND092,CLI061,João Paulo (Vó e Mãe),Não informado,11/09/2025,224.0
+VND077,CLI060,Sonia,Não informado,19/09/2025,374.0
+VND076,CLI059,Jorge Floriani,Não informado,19/09/2025,95.0
+VND075,CLI058,Ed. Santa Fé III,Não informado,19/09/2025,256.0
+VND082,CLI064,Jose Montilla Rubio (Fibra América),Não informado,25/09/2025,222.0
+VND080,CLI046,German Pablo,Não informado,26/09/2025,702.0
+VND078,CLI014,Condomínio Peniche,Não informado,26/09/2025,274.0
+VND083,CLI065,Juan Maba,Não informado,27/09/2025,187.0
+VND079,CLI062,Simone Liebl,Não informado,27/09/2025,198.0
+VND081,CLI063,Edifício Cartagena,Não informado,29/09/2025,215.0
+VND084,CLI066,Neusa De Carli,Não informado,08/10/2025,92.0
+VND085,CLI067,Sidney,Não informado,13/10/2025,188.0
+VND088,CLI068,Claudete de Morais,Não informado,14/10/2025,106.0
+VND087,CLI042,Ana Paula de Poli,Não informado,14/10/2025,120.0
+VND086,CLI023,Fabiana Biston (Fabi),Não informado,14/10/2025,106.0
+VND089,CLI069,Gilda,Não informado,03/11/2025,262.0
+VND090,CLI012,Milena,Não informado,06/11/2025,188.0
+VND091,CLI070,Fran Almeida,Não informado,07/11/2025,420.0
+VND093,CLI071,Tati,Não informado,17/11/2025,902.0
+VND094,CLI035,Margara,Não informado,21/11/2025,377.0
+VND096,CLI072,Jacque Schneider,Não informado,24/11/2025,120.0
+VND095,CLI008,Silvana Mussi,Não informado,24/11/2025,94.0
+VND097,CLI014,Condomínio Peniche,Não informado,26/11/2025,274.0
+VND098,CLI073,Denise,Não informado,27/11/2025,106.0
+VND099,CLI074,Marcia Krebs,Não informado,04/12/2025,106.0
+VND100,CLI075,Tânia Fischer,Não informado,04/12/2025,220.0
+VND102,CLI077,André Faria,Não informado,05/12/2025,743.0
+VND101,CLI076,Splendia Tower,Não informado,05/12/2025,2540.0
+VND103,CLI057,Marcia Pereira,Não informado,06/12/2025,367.0
+VND105,CLI079,Janaina,Não informado,08/12/2025,210.0
+VND104,CLI078,Cris by Cris (Karine),Não informado,08/12/2025,120.0
+VND106,CLI060,Sonia,Não informado,11/12/2025,334.0
+VND109,CLI001,Edilson,Não informado,15/12/2025,825.0
+VND107,CLI070,Fran Almeida,Não informado,15/12/2025,210.0
+VND110,CLI046,German Pablo,Não informado,16/12/2025,212.0
+VND108,CLI021,Eduarda Schnaider (Mãe),Não informado,18/12/2025,106.0
+VND111,CLI076,Splendia Tower,boleto,22/12/2025,224.0
+VND112,CLI075,Tânia Fischer,pix,22/12/2025,148.0
+VND113,CLI080,Adriana,cartão de crédito,22/12/2025,189.0
+VND114,CLI063,Edifício Cartagena,boleto,23/12/2025,120.00
+VND115,CLI002,Edifício Apolo 11,boleto,31/12/2025,377.00

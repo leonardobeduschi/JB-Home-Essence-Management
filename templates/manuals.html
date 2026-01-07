@@ -116,20 +116,49 @@
         line-height: 1.6;
     }
     
+    .substep-list {
+        margin-top: 0.75rem;
+        margin-left: 1rem;
+        padding-left: 1rem;
+        border-left: 3px solid #dee2e6;
+    }
+    
+    .substep-item {
+        padding: 0.5rem 0;
+        color: #495057;
+        line-height: 1.6;
+        position: relative;
+    }
+    
+    .substep-item:before {
+        content: "▸";
+        color: #667eea;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+    
     .back-btn {
         position: fixed;
         bottom: 30px;
         right: 30px;
         z-index: 1000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        border: none;
     }
     
-    .print-btn {
-        position: fixed;
-        bottom: 90px;
-        right: 30px;
-        z-index: 1000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    .back-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    }
+    
+    .back-btn i {
+        font-size: 1.5rem;
     }
     
     @media print {
@@ -183,13 +212,9 @@
     <!-- Content will be loaded dynamically -->
 </div>
 
-<!-- Floating Buttons -->
-<button class="btn btn-primary btn-lg rounded-circle back-btn no-print" id="backBtn" style="display: none;" onclick="hideManual()">
+<!-- Floating Button -->
+<button class="btn btn-primary btn-lg back-btn no-print" id="backBtn" style="display: none;" onclick="hideManual()" title="Voltar">
     <i class="bi bi-arrow-left"></i>
-</button>
-
-<button class="btn btn-info btn-lg rounded-circle print-btn no-print" id="printBtn" style="display: none;" onclick="window.print()">
-    <i class="bi bi-printer"></i>
 </button>
 {% endblock %}
 
@@ -218,8 +243,7 @@ function showManual(manualId) {
                 // Hide grid, show detail
                 document.getElementById('manualsGrid').style.display = 'none';
                 document.getElementById('manualDetail').style.display = 'block';
-                document.getElementById('backBtn').style.display = 'block';
-                document.getElementById('printBtn').style.display = 'block';
+                document.getElementById('backBtn').style.display = 'flex';
                 
                 // Scroll to top
                 window.scrollTo(0, 0);
@@ -236,10 +260,19 @@ function hideManual() {
     document.getElementById('manualsGrid').style.display = 'block';
     document.getElementById('manualDetail').style.display = 'none';
     document.getElementById('backBtn').style.display = 'none';
-    document.getElementById('printBtn').style.display = 'none';
     
     // Scroll to top
     window.scrollTo(0, 0);
+}
+
+// Render substeps
+function renderSubsteps(substeps) {
+    let html = '<div class="substep-list">';
+    substeps.forEach(substep => {
+        html += `<div class="substep-item">${substep}</div>`;
+    });
+    html += '</div>';
+    return html;
 }
 
 // Render manual detail
@@ -274,7 +307,10 @@ function renderManualDetail(manual) {
             html += `
                 <div class="step-item ${highlightClass}">
                     <span class="step-number">${step.number}</span>
-                    <div class="step-text">${step.text}</div>
+                    <div class="step-text">
+                        ${step.text}
+                        ${step.substeps ? renderSubsteps(step.substeps) : ''}
+                    </div>
                 </div>
             `;
         });
@@ -286,10 +322,6 @@ function renderManualDetail(manual) {
     });
     
     html += `
-            <div class="alert alert-info mt-4 no-print">
-                <i class="bi bi-info-circle"></i>
-                <strong>Dica:</strong> Use o botão de impressão para salvar este manual em PDF ou imprimir.
-            </div>
         </div>
     `;
     
