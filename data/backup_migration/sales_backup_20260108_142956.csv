@@ -1,0 +1,117 @@
+ID_VENDA,ID_CLIENTE,CLIENTE,MEIO,DATA,VALOR_TOTAL_VENDA
+VND000,CLI000,Jeanete,Não informado,2024-02-24,835.6
+VND002,CLI001,Edilson,Não informado,2024-10-09,188
+VND004,CLI004,Dra. Zuleide,Não informado,2024-10-10,166
+VND034,CLI024,Teógenes,Não informado,2024-10-28,133
+VND031,CLI022,Margareth (Amiga Silvana),Não informado,2024-10-30,202
+VND003,CLI003,Roberta Voltolini,Não informado,2024-11-01,188
+VND006,CLI006,Ademir,Não informado,2024-11-18,106
+VND007,CLI007,Mateus MR Portas,Não informado,2024-12-03,106
+VND005,CLI005,Odecir,Não informado,2024-12-04,106
+VND011,CLI011,Wilma,Não informado,2024-12-06,220
+VND021,CLI016,Maurício Magnabosco,Não informado,2024-12-13,124
+VND022,CLI016,Maurício Magnabosco,Não informado,2024-12-14,166
+VND010,CLI010,Marcelo G.,Não informado,2024-12-21,188
+VND012,CLI012,Milena,Não informado,2024-12-27,113
+VND014,CLI008,Silvana Mussi,Não informado,2025-01-16,92
+VND008,CLI008,Silvana Mussi,Não informado,2025-01-16,158
+VND013,CLI009,Margo,Não informado,2025-01-17,101
+VND009,CLI009,Margo,Não informado,2025-01-17,94
+VND001,CLI002,Edifício Apolo 11,Não informado,2025-02-03,476.25
+VND019,CLI014,Condomínio Peniche,Não informado,2025-02-06,282
+VND016,CLI013,Edifício Fabimar,Não informado,2025-02-07,144
+VND018,CLI013,Edifício Fabimar,Não informado,2025-02-07,75
+VND017,CLI013,Edifício Fabimar,Não informado,2025-02-07,92
+VND032,CLI023,Fabiana Biston (Fabi),Não informado,2025-02-07,254
+VND015,CLI013,Edifício Fabimar,Não informado,2025-02-07,101
+VND029,CLI002,Edifício Apolo 11,Não informado,2025-02-18,166
+VND023,CLI017,Évilyn,Não informado,2025-02-19,114
+VND033,CLI025,Marcela,Não informado,2025-02-20,342
+VND028,CLI014,Condomínio Peniche,Não informado,2025-03-10,262
+VND020,CLI015,Gabriel Galarça,Não informado,2025-03-12,188
+VND026,CLI020,Beto,Não informado,2025-03-28,114
+VND024,CLI018,Anna Paula,Não informado,2025-04-04,209
+VND027,CLI014,Condomínio Peniche,Não informado,2025-04-04,262
+VND025,CLI019,Clarita,Não informado,2025-04-04,228
+VND030,CLI021,Eduarda Schnaider (Mãe),Não informado,2025-04-09,144
+VND035,CLI026,Júlio César,Não informado,2025-04-14,101
+VND036,CLI027,Juliana Takaki,Não informado,2025-04-17,202
+VND037,CLI028,Rose,Não informado,2025-04-22,92
+VND038,CLI030,Edificio Residencial Chandon,Não informado,2025-04-23,501
+VND039,CLI031,Marcia,Não informado,2025-04-25,476
+VND040,CLI032,Luciana Caires,Não informado,2025-04-25,101
+VND041,CLI033,Ana Maria,Não informado,2025-04-28,184
+VND042,CLI034,Alba Academia,Não informado,2025-05-06,114
+VND044,CLI001,Edilson,Não informado,2025-05-09,150
+VND043,CLI035,Margara,Não informado,2025-05-09,114
+VND045,CLI033,Ana Maria,Não informado,2025-05-13,341
+VND046,CLI036,Raul Ehlke,Não informado,2025-05-14,145
+VND047,CLI000,Jeanete,Não informado,2025-05-20,92
+VND048,CLI014,Condomínio Peniche,Não informado,2025-05-26,262
+VND049,CLI037,Marcos XM Invest,Não informado,2025-05-28,188
+VND050,CLI038,Santina Predebon,Não informado,2025-05-30,254
+VND051,CLI039,Nant Comercio,Não informado,2025-05-30,441
+VND053,CLI041,Rose Gomes,Não informado,2025-06-03,101
+VND052,CLI040,Elias Formighieri,Não informado,2025-06-04,342
+VND054,CLI000,Jeanete,Não informado,2025-06-11,65
+VND055,CLI042,Ana Paula de Poli,Não informado,2025-06-20,114
+VND056,CLI043,Silvana Cordeiro,Não informado,2025-06-23,92
+VND057,CLI044,Miguel Academia,Não informado,2025-06-26,281
+VND058,CLI045,Gillian Nava,Não informado,2025-07-11,170
+VND059,CLI046,German Pablo,Não informado,2025-07-16,711
+VND060,CLI000,Jeanete,Não informado,2025-07-18,39.5
+VND062,CLI048,Pricyla Coelho,Não informado,2025-07-21,101
+VND061,CLI047,Liliane Borges de Mendonça,Não informado,2025-07-21,114
+VND063,CLI049,Ótica oito6,Não informado,2025-08-11,262
+VND065,CLI051,Alyne,Não informado,2025-08-19,273
+VND064,CLI050,Eliane (Mundial Imóveis),Não informado,2025-08-19,142
+VND066,CLI023,Fabiana Biston (Fabi),Não informado,2025-08-22,101
+VND067,CLI052,Leonardo Beduschi Iunes,Não informado,2025-08-25,65
+VND068,CLI000,Jeanete,Não informado,2025-08-26,101
+VND069,CLI043,Silvana Cordeiro,Não informado,2025-09-04,92
+VND071,CLI055,Emilia Wetter,Não informado,2025-09-05,101
+VND070,CLI054,Adalmir da Silva,Não informado,2025-09-05,236
+VND072,CLI056,Jean Claude,Não informado,2025-09-05,179
+VND073,CLI057,Marcia Pereira,Não informado,2025-09-08,180
+VND074,CLI000,Jeanete,Não informado,2025-09-08,101
+VND092,CLI061,João Paulo (Vó e Mãe),Não informado,2025-09-11,224
+VND077,CLI060,Sonia,Não informado,2025-09-19,374
+VND076,CLI059,Jorge Floriani,Não informado,2025-09-19,95
+VND075,CLI058,Ed. Santa Fé III,Não informado,2025-09-19,256
+VND082,CLI064,Jose Montilla Rubio (Fibra América),Não informado,2025-09-25,222
+VND080,CLI046,German Pablo,Não informado,2025-09-26,702
+VND078,CLI014,Condomínio Peniche,Não informado,2025-09-26,274
+VND083,CLI065,Juan Maba,Não informado,2025-09-27,187
+VND079,CLI062,Simone Liebl,Não informado,2025-09-27,198
+VND081,CLI063,Edifício Cartagena,Não informado,2025-09-29,215
+VND084,CLI066,Neusa De Carli,Não informado,2025-10-08,92
+VND085,CLI067,Sidney,Não informado,2025-10-13,188
+VND088,CLI068,Claudete de Morais,Não informado,2025-10-14,106
+VND087,CLI042,Ana Paula de Poli,Não informado,2025-10-14,120
+VND086,CLI023,Fabiana Biston (Fabi),Não informado,2025-10-14,106
+VND089,CLI069,Gilda,Não informado,2025-11-03,262
+VND090,CLI012,Milena,Não informado,2025-11-06,188
+VND091,CLI070,Fran Almeida,Não informado,2025-11-07,420
+VND093,CLI071,Tati,Não informado,2025-11-17,902
+VND094,CLI035,Margara,Não informado,2025-11-21,377
+VND096,CLI072,Jacque Schneider,Não informado,2025-11-24,120
+VND095,CLI008,Silvana Mussi,Não informado,2025-11-24,94
+VND097,CLI014,Condomínio Peniche,Não informado,2025-11-26,274
+VND098,CLI073,Denise,Não informado,2025-11-27,106
+VND099,CLI074,Marcia Krebs,Não informado,2025-12-04,106
+VND100,CLI075,Tânia Fischer,Não informado,2025-12-04,220
+VND102,CLI077,André Faria,Não informado,2025-12-05,743
+VND101,CLI076,Splendia Tower,Não informado,2025-12-05,2540
+VND103,CLI057,Marcia Pereira,Não informado,2025-12-06,367
+VND105,CLI079,Janaina,Não informado,2025-12-08,210
+VND104,CLI078,Cris by Cris (Karine),Não informado,2025-12-08,120
+VND106,CLI060,Sonia,Não informado,2025-12-11,334
+VND109,CLI001,Edilson,Não informado,2025-12-15,825
+VND107,CLI070,Fran Almeida,Não informado,2025-12-15,210
+VND110,CLI046,German Pablo,Não informado,2025-12-16,212
+VND108,CLI021,Eduarda Schnaider (Mãe),Não informado,2025-12-18,106
+VND111,CLI076,Splendia Tower,boleto,2025-12-22,224
+VND112,CLI075,Tânia Fischer,pix,2025-12-22,148
+VND113,CLI080,Adriana,cartão de crédito,2025-12-22,189
+VND114,CLI063,Edifício Cartagena,boleto,2025-12-23,120
+VND115,CLI002,Edifício Apolo 11,boleto,2025-12-31,377

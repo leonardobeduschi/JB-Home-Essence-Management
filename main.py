@@ -12,6 +12,8 @@ from src.services.sale_service import SaleService
 from src.services.analytics_service import AnalyticsService
 from src.services.visualization_service import VisualizationService
 from src.ui.analytics_display import *
+from backup_sqlite import run_backup
+
 
 
 class PerfumeryApp:
@@ -909,6 +911,7 @@ class PerfumeryApp:
 
 def main():
     """Application entry point."""
+    run_backup()
     app = PerfumeryApp()
     app.run()
 
