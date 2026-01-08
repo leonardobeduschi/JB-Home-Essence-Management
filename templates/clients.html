@@ -27,20 +27,14 @@
             <div class="col-md-3">
                 <select id="vendedorFilter" class="form-select">
                     <option value="">Todos os Vendedores</option>
-                    {% set vendedores = clients|map(attribute='VENDEDOR')|select|unique|list %}
-                    {% for vendedor in vendedores|sort %}
-                        {% if vendedor %}
-                        <option value="{{ vendedor }}">{{ vendedor }}</option>
-                        {% endif %}
-                    {% endfor %}
                 </select>
             </div>
         </div>
 
         <!-- Clients Table -->
-        <div class="table-responsive">
+        <div class="table-responsive" id="tableContainer" style="max-height: 600px; overflow-y: auto;">
             <table class="table table-hover" id="clientsTable">
-                <thead>
+                <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                     <tr>
                         <th>ID</th>
                         <th>Cliente</th>
@@ -51,110 +45,50 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for client in clients %}
-                    <tr data-type="{{ client.TIPO|lower }}" data-vendedor="{{ client.VENDEDOR }}">
-                        <td><span class="badge bg-primary">{{ client.ID_CLIENTE }}</span></td>
-                        <td>
-                            <strong>{{ client.CLIENTE }}</strong>
-                            {% if client.CPF_CNPJ %}
-                                <br><small class="text-muted">{{ client.CPF_CNPJ }}</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if client.TIPO|lower == 'pessoa' %}
-                                <span class="badge bg-info">
-                                    <i class="bi bi-person"></i> Pessoa
-                                </span>
-                            {% else %}
-                                <span class="badge bg-success">
-                                    <i class="bi bi-building"></i> Empresa
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>{{ client.VENDEDOR if client.VENDEDOR else '-' }}</td>
-                        <td>
-                            {% if client.TELEFONE %}
-                                <i class="bi bi-telephone"></i> {{ client.TELEFONE }}<br>
-                            {% endif %}
-                            {% if client.ENDERECO %}
-                                <small class="text-muted">
-                                    <i class="bi bi-geo-alt"></i> {{ client.ENDERECO[:30] }}{% if client.ENDERECO|length > 30 %}...{% endif %}
-                                </small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if client.TIPO|lower == 'pessoa' %}
-                                {% if client.IDADE %}
-                                    <small><i class="bi bi-calendar"></i> {{ client.IDADE }}</small><br>
-                                {% endif %}
-                                {% if client.GENERO %}
-                                    <small><i class="bi bi-gender-ambiguous"></i> {{ client.GENERO }}</small><br>
-                                {% endif %}
-                            {% endif %}
-                            {% if client.PROFISSAO %}
-                                <small><i class="bi bi-briefcase"></i> {{ client.PROFISSAO }}</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewClient('{{ client.ID_CLIENTE }}')" title="Ver Detalhes">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-success" onclick="editClient('{{ client.ID_CLIENTE }}')" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-outline-danger" onclick="deleteClient('{{ client.ID_CLIENTE }}')" title="Excluir">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">
-                            <i class="bi bi-people" style="font-size: 3rem;"></i>
-                            <p>Nenhum cliente cadastrado</p>
-                            <a href="{{ url_for('add_client') }}" class="btn btn-primary">Adicionar Primeiro Cliente</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                <tbody id="clientsTableBody">
+                    <!-- Loaded dynamically -->
                 </tbody>
             </table>
+            
+            <div id="loadingIndicator" class="text-center py-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="text-muted mt-2">Carregando mais clientes...</p>
+            </div>
+            
+            <div id="noMoreData" class="text-center py-3 text-muted" style="display: none;">
+                <i class="bi bi-check-circle"></i> Todos os clientes foram carregados
+            </div>
         </div>
 
         <!-- Statistics -->
-        {% if clients %}
-        <div class="row mt-4">
+        <div class="row mt-4" id="statsSection" style="display: none;">
             <div class="col-md-3">
                 <div class="text-center">
-                    <h3 class="mb-0">{{ clients|length }}</h3>
+                    <h3 class="mb-0" id="totalClients">0</h3>
                     <small class="text-muted">Total de Clientes</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="text-center">
-                    {% set pessoas = clients|selectattr('TIPO', 'equalto', 'Pessoa')|list|length + clients|selectattr('TIPO', 'equalto', 'pessoa')|list|length %}
-                    <h3 class="mb-0">{{ pessoas }}</h3>
+                    <h3 class="mb-0" id="totalPessoas">0</h3>
                     <small class="text-muted">Pessoas Físicas</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="text-center">
-                    {% set empresas = clients|selectattr('TIPO', 'equalto', 'Empresa')|list|length + clients|selectattr('TIPO', 'equalto', 'empresa')|list|length %}
-                    <h3 class="mb-0">{{ empresas }}</h3>
+                    <h3 class="mb-0" id="totalEmpresas">0</h3>
                     <small class="text-muted">Empresas</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="text-center">
-                    {% set vendedores_count = clients|map(attribute='VENDEDOR')|select|unique|list|length %}
-                    <h3 class="mb-0">{{ vendedores_count }}</h3>
+                    <h3 class="mb-0" id="totalVendedores">0</h3>
                     <small class="text-muted">Vendedores</small>
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 
@@ -166,9 +100,7 @@
                 <h5 class="modal-title">Detalhes do Cliente</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="clientModalBody">
-                <!-- Content loaded dynamically -->
-            </div>
+            <div class="modal-body" id="clientModalBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
             </div>
@@ -179,46 +111,193 @@
 
 {% block extra_js %}
 <script>
-// Filtros
-document.getElementById('searchInput').addEventListener('keyup', filterTable);
-document.getElementById('typeFilter').addEventListener('change', filterTable);
-document.getElementById('vendedorFilter').addEventListener('change', filterTable);
+// ===== INFINITE SCROLL STATE =====
+let allClients = [];
+let displayedClients = [];
+let currentOffset = 0;
+const BATCH_SIZE = 50;
+let isLoading = false;
+let hasMore = true;
+let vendedores = new Set();
 
+// ===== LOAD CLIENTS BATCH =====
+async function loadClientsBatch() {
+    if (isLoading || !hasMore) return;
+    
+    isLoading = true;
+    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    try {
+        const response = await fetch(`/api/clients/paginated?offset=${currentOffset}&limit=${BATCH_SIZE}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            allClients = [...allClients, ...result.data];
+            hasMore = result.has_more;
+            currentOffset += BATCH_SIZE;
+            
+            // Extract vendedores
+            result.data.forEach(client => {
+                if (client.VENDEDOR) vendedores.add(client.VENDEDOR);
+            });
+            
+            updateVendedorFilter();
+            filterTable();
+            updateStatistics();
+            
+            if (!hasMore) {
+                document.getElementById('noMoreData').style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading clients:', error);
+    } finally {
+        isLoading = false;
+        document.getElementById('loadingIndicator').style.display = 'none';
+    }
+}
+
+// ===== UPDATE VENDEDOR FILTER =====
+function updateVendedorFilter() {
+    const filter = document.getElementById('vendedorFilter');
+    const currentValue = filter.value;
+    
+    filter.innerHTML = '<option value="">Todos os Vendedores</option>';
+    
+    Array.from(vendedores).sort().forEach(v => {
+        const option = document.createElement('option');
+        option.value = v;
+        option.textContent = v;
+        filter.appendChild(option);
+    });
+    
+    filter.value = currentValue;
+}
+
+// ===== RENDER CLIENTS =====
+function renderClients(clients) {
+    const tbody = document.getElementById('clientsTableBody');
+    
+    if (clients.length === 0 && currentOffset === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted py-5">
+                    <i class="bi bi-people" style="font-size: 3rem;"></i>
+                    <p>Nenhum cliente cadastrado</p>
+                    <a href="${'{{ url_for("add_client") }}'}" class="btn btn-primary">Adicionar Primeiro Cliente</a>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    const html = clients.map(client => {
+        const tipoLower = (client.TIPO || '').toLowerCase();
+        const tipoBadge = tipoLower === 'pessoa' 
+            ? '<span class="badge bg-info"><i class="bi bi-person"></i> Pessoa</span>'
+            : '<span class="badge bg-success"><i class="bi bi-building"></i> Empresa</span>';
+        
+        return `
+            <tr data-type="${tipoLower}" data-vendedor="${client.VENDEDOR || ''}">
+                <td><span class="badge bg-primary">${client.ID_CLIENTE}</span></td>
+                <td>
+                    <strong>${client.CLIENTE}</strong>
+                    ${client.CPF_CNPJ ? `<br><small class="text-muted">${client.CPF_CNPJ}</small>` : ''}
+                </td>
+                <td>${tipoBadge}</td>
+                <td>${client.VENDEDOR || '-'}</td>
+                <td>
+                    ${client.TELEFONE ? `<i class="bi bi-telephone"></i> ${client.TELEFONE}<br>` : ''}
+                    ${client.ENDERECO ? `<small class="text-muted"><i class="bi bi-geo-alt"></i> ${client.ENDERECO.substring(0, 30)}${client.ENDERECO.length > 30 ? '...' : ''}</small>` : ''}
+                </td>
+                <td>
+                    ${tipoLower === 'pessoa' ? `
+                        ${client.IDADE ? `<small><i class="bi bi-calendar"></i> ${client.IDADE}</small><br>` : ''}
+                        ${client.GENERO ? `<small><i class="bi bi-gender-ambiguous"></i> ${client.GENERO}</small><br>` : ''}
+                    ` : ''}
+                    ${client.PROFISSAO ? `<small><i class="bi bi-briefcase"></i> ${client.PROFISSAO}</small>` : ''}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="viewClient('${client.ID_CLIENTE}')" title="Ver Detalhes">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-success" onclick="editClient('${client.ID_CLIENTE}')" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="deleteClient('${client.ID_CLIENTE}')" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    tbody.innerHTML = html;
+}
+
+// ===== FILTER TABLE =====
 function filterTable() {
     const searchValue = document.getElementById('searchInput').value.toLowerCase();
     const typeValue = document.getElementById('typeFilter').value.toLowerCase();
     const vendedorValue = document.getElementById('vendedorFilter').value;
-    const rows = document.querySelectorAll('#clientsTable tbody tr');
     
-    rows.forEach(row => {
-        if (row.cells.length === 1 && row.querySelector('i.bi-people')) return; // linha vazia
+    displayedClients = allClients.filter(client => {
+        // Search filter
+        if (searchValue) {
+            const searchText = `${client.CLIENTE} ${client.ID_CLIENTE} ${client.CPF_CNPJ || ''}`.toLowerCase();
+            if (!searchText.includes(searchValue)) return false;
+        }
         
-        const text = row.textContent.toLowerCase();
-        const type = (row.dataset.type || '').toLowerCase();
-        const vendedor = row.dataset.vendedor || '';
+        // Type filter
+        const clientType = (client.TIPO || '').toLowerCase();
+        if (typeValue && clientType !== typeValue) return false;
         
-        let show = true;
-        if (searchValue && !text.includes(searchValue)) show = false;
-        if (typeValue && type !== typeValue) show = false;
-        if (vendedorValue && vendedor !== vendedorValue) show = false;
+        // Vendedor filter
+        if (vendedorValue && client.VENDEDOR !== vendedorValue) return false;
         
-        row.style.display = show ? '' : 'none';
+        return true;
     });
+    
+    renderClients(displayedClients);
 }
 
-// VER DETALHES
+// ===== UPDATE STATISTICS =====
+function updateStatistics() {
+    if (allClients.length === 0) return;
+    
+    const pessoas = allClients.filter(c => (c.TIPO || '').toLowerCase() === 'pessoa').length;
+    const empresas = allClients.filter(c => (c.TIPO || '').toLowerCase() === 'empresa').length;
+    
+    document.getElementById('totalClients').textContent = allClients.length;
+    document.getElementById('totalPessoas').textContent = pessoas;
+    document.getElementById('totalEmpresas').textContent = empresas;
+    document.getElementById('totalVendedores').textContent = vendedores.size;
+    document.getElementById('statsSection').style.display = 'flex';
+}
+
+// ===== INFINITE SCROLL =====
+document.getElementById('tableContainer').addEventListener('scroll', function() {
+    if (this.scrollTop + this.clientHeight >= this.scrollHeight - 100) {
+        loadClientsBatch();
+    }
+});
+
+// ===== FILTER LISTENERS =====
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('typeFilter').addEventListener('change', filterTable);
+document.getElementById('vendedorFilter').addEventListener('change', filterTable);
+
+// ===== CLIENT ACTIONS =====
 function viewClient(id) {
     fetch(`/api/clients/${id}`)
-        .then(r => {
-            if (!r.ok) throw new Error('Cliente não encontrado');
-            return r.json();
-        })
+        .then(r => r.json())
         .then(data => {
             if (data.success) {
                 const c = data.data;
                 const tipoLower = (c.TIPO || '').toLowerCase();
                 const isPessoa = tipoLower === 'pessoa';
-                const tipoDisplay = isPessoa ? 'Pessoa Física' : 'Empresa';
                 
                 let html = `
                     <div class="row">
@@ -226,34 +305,20 @@ function viewClient(id) {
                             <table class="table table-sm">
                                 <tr><th>ID:</th><td><strong>${c.ID_CLIENTE}</strong></td></tr>
                                 <tr><th>Nome:</th><td>${c.CLIENTE}</td></tr>
-                                <tr><th>Tipo:</th><td>${tipoDisplay}</td></tr>
+                                <tr><th>Tipo:</th><td>${isPessoa ? 'Pessoa Física' : 'Empresa'}</td></tr>
                                 <tr><th>Vendedor:</th><td>${c.VENDEDOR || '-'}</td></tr>
-                `;
-                
-                if (c.CPF_CNPJ) {
-                    html += `<tr><th>${isPessoa ? 'CPF' : 'CNPJ'}:</th><td>${c.CPF_CNPJ}</td></tr>`;
-                }
-                if (c.TELEFONE) {
-                    html += `<tr><th>Telefone:</th><td>${c.TELEFONE}</td></tr>`;
-                }
-                if (c.ENDERECO) {
-                    html += `<tr><th>Endereço:</th><td>${c.ENDERECO}</td></tr>`;
-                }
-                
-                html += `
+                                ${c.CPF_CNPJ ? `<tr><th>${isPessoa ? 'CPF' : 'CNPJ'}:</th><td>${c.CPF_CNPJ}</td></tr>` : ''}
+                                ${c.TELEFONE ? `<tr><th>Telefone:</th><td>${c.TELEFONE}</td></tr>` : ''}
+                                ${c.ENDERECO ? `<tr><th>Endereço:</th><td>${c.ENDERECO}</td></tr>` : ''}
                             </table>
                         </div>
                         <div class="col-md-6">
                             <table class="table table-sm">
-                `;
-                
-                if (isPessoa) {
-                    if (c.IDADE) html += `<tr><th>Faixa Etária:</th><td>${c.IDADE}</td></tr>`;
-                    if (c.GENERO) html += `<tr><th>Gênero:</th><td>${c.GENERO}</td></tr>`;
-                    if (c.PROFISSAO) html += `<tr><th>Profissão:</th><td>${c.PROFISSAO}</td></tr>`;
-                }
-                
-                html += `
+                                ${isPessoa ? `
+                                    ${c.IDADE ? `<tr><th>Faixa Etária:</th><td>${c.IDADE}</td></tr>` : ''}
+                                    ${c.GENERO ? `<tr><th>Gênero:</th><td>${c.GENERO}</td></tr>` : ''}
+                                    ${c.PROFISSAO ? `<tr><th>Profissão:</th><td>${c.PROFISSAO}</td></tr>` : ''}
+                                ` : ''}
                             </table>
                         </div>
                     </div>
@@ -262,23 +327,16 @@ function viewClient(id) {
                 document.getElementById('clientModalBody').innerHTML = html;
                 new bootstrap.Modal(document.getElementById('clientModal')).show();
             }
-        })
-        .catch(err => {
-            alert('Erro ao carregar cliente: ' + err.message);
         });
 }
 
-// EDITAR
 function editClient(id) {
     window.location.href = `/clients/edit/${id}`;
 }
 
-// EXCLUIR
 function deleteClient(id) {
-    if (!confirm(`⚠️ Tem certeza que deseja EXCLUIR permanentemente o cliente ${id}?\nEsta ação não pode ser desfeita!`)) {
-        return;
-    }
-
+    if (!confirm(`⚠️ Tem certeza que deseja EXCLUIR permanentemente o cliente ${id}?`)) return;
+    
     fetch('/api/clients/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -292,8 +350,12 @@ function deleteClient(id) {
         } else {
             alert('Erro: ' + data.error);
         }
-    })
-    .catch(() => alert('Erro de conexão'));
+    });
 }
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+    loadClientsBatch();
+});
 </script>
 {% endblock %}

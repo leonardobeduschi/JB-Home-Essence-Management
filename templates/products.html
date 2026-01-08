@@ -7,7 +7,18 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-0">Lista de Produtos</h4>
-        <p class="text-muted mb-0">Total: {{ products|length }} produtos cadastrados</p>
+        <p class="text-muted mb-0">
+            Total: {{ products|length }} produtos cadastrados
+            <br>
+            {% set total_stock = namespace(value=0) %}
+            {% for product in products %}
+                {% if product.CATEGORIA|upper != 'ACESSÓRIOS' %}
+                    {% set total_stock.value = total_stock.value + (product.ESTOQUE|int) %}
+                {% endif %}
+            {% endfor %}
+            <span class="badge bg-info">{{ total_stock.value }} unidades em estoque</span>
+            <small class="text-muted">(exceto acessórios)</small>
+        </p>
     </div>
     <a href="{{ url_for('add_product') }}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Novo Produto
@@ -86,7 +97,7 @@
                     {% set valor = product.VALOR|float %}
                     {% set estoque = product.ESTOQUE|int %}
                     {% set margem_bruta = ((valor - custo) / valor * 100) if valor > 0 else 0 %}
-                    {% set margem_liquida = product.get('net_margin_pct', margem_bruta) %}
+                    {% set margem_contribuicao = product.get('contribution_margin_pct', margem_bruta) %}
                     <tr data-category="{{ product.CATEGORIA }}" data-stock="{{ estoque }}">
                         <td><span class="badge bg-primary">{{ product.CODIGO }}</span></td>
                         <td><strong>{{ product.PRODUTO }}</strong></td>
@@ -95,9 +106,9 @@
                         <td>R$ {{ valor|currency }}</td>
                         <td>
                             <div>
-                                <span class="badge {% if margem_liquida > 30 %}bg-success{% elif margem_liquida > 15 %}bg-info{% elif margem_liquida > 0 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                      title="Margem Líquida (com despesas fixas)">
-                                    {{ "%.1f"|format(margem_liquida) }}%
+                                <span class="badge {% if margem_contribuicao > 30 %}bg-success{% elif margem_contribuicao > 15 %}bg-info{% elif margem_contribuicao > 0 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                      title="Margem de Contribuição">
+                                    {{ "%.1f"|format(margem_contribuicao) }}%
                                 </span>
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">
                                     Bruta: {{ "%.1f"|format(margem_bruta) }}%
@@ -219,31 +230,60 @@ function viewProduct(codigo) {
                 const custo = parseFloat(p.CUSTO);
                 const valor = parseFloat(p.VALOR);
                 const estoque = parseInt(p.ESTOQUE);
-                const margem_bruta = custo > 0 ? ((valor - custo) / valor * 100).toFixed(1) : 0;
-                const margem_liquida = p.net_margin_pct ? p.net_margin_pct.toFixed(1) : margem_bruta;
+                
+                // ✅ USAR VALORES DO BACKEND (já calculados corretamente)
+                const margem_bruta_pct = parseFloat(p.gross_margin_pct || 0);
+                const margem_contribuicao_pct = parseFloat(p.contribution_margin_pct || 0);
+                const custos_variaveis_total = parseFloat(p.variable_costs || 0);
+                
+                // Calcular valores individuais para exibição
+                const lucro_bruto = valor - custo;
+                const margem_contribuicao_valor = valor - custo - custos_variaveis_total;
                 
                 document.getElementById('productDetails').innerHTML = `
                     <table class="table table-sm">
                         <tr><th>Código:</th><td><strong>${p.CODIGO}</strong></td></tr>
                         <tr><th>Produto:</th><td>${p.PRODUTO}</td></tr>
                         <tr><th>Categoria:</th><td>${p.CATEGORIA}</td></tr>
-                        <tr><th>Custo:</th><td>R$ ${formatCurrencyBR(custo)}</td></tr>
+                        <tr><th>Custo Unitário:</th><td>R$ ${formatCurrencyBR(custo)}</td></tr>
                         <tr><th>Preço de Venda:</th><td>R$ ${formatCurrencyBR(valor)}</td></tr>
                         <tr>
                             <th>Margem Bruta:</th>
-                            <td><span class="badge bg-secondary">${margem_bruta}%</span></td>
+                            <td>
+                                <span class="badge bg-secondary">${margem_bruta_pct.toFixed(1)}%</span>
+                                <small class="text-muted d-block">R$ ${formatCurrencyBR(lucro_bruto)}</small>
+                            </td>
                         </tr>
                         <tr>
-                            <th>Margem Líquida:</th>
-                            <td><span class="badge bg-success">${margem_liquida}%</span></td>
+                            <th>Custos Variáveis:</th>
+                            <td>
+                                <span class="badge bg-warning text-dark">R$ ${formatCurrencyBR(custos_variaveis_total)}</span>
+                                <small class="text-muted d-block">
+                                    Taxa pagamento (3,5%) + Embalagem (R$ 2) + Cartão (R$ 1)
+                                </small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Margem de Contribuição:</th>
+                            <td>
+                                <span class="badge ${margem_contribuicao_pct > 30 ? 'bg-success' : margem_contribuicao_pct > 15 ? 'bg-info' : margem_contribuicao_pct > 0 ? 'bg-warning' : 'bg-danger'}">
+                                    ${margem_contribuicao_pct.toFixed(1)}%
+                                </span>
+                                <small class="text-muted d-block">R$ ${formatCurrencyBR(margem_contribuicao_valor)}</small>
+                            </td>
                         </tr>
                         <tr><th>Estoque:</th><td><strong>${estoque} un</strong></td></tr>
-                        <tr><th>Valor Total:</th><td>R$ ${formatCurrencyBR(valor * estoque)}</td></tr>
+                        <tr><th>Valor Total Estoque:</th><td>R$ ${formatCurrencyBR(valor * estoque)}</td></tr>
                     </table>
                     <div class="alert alert-info mt-3">
                         <small>
-                            <strong>Margem Líquida:</strong> Considera despesas fixas distribuídas nas vendas mensais.<br>
-                            <strong>Margem Bruta:</strong> Apenas Preço - Custo.
+                            <i class="bi bi-info-circle"></i> <strong>Entendendo as Margens:</strong><br>
+                            <strong>Margem Bruta:</strong> Preço - Custo = ${margem_bruta_pct.toFixed(1)}%<br>
+                            <strong>Margem de Contribuição:</strong> Margem Bruta - Custos Variáveis = ${margem_contribuicao_pct.toFixed(1)}%<br>
+                            <small class="text-muted">
+                                Custos Variáveis: taxa de pagamento (3,5%), embalagem (R$ 2) e cartão (R$ 1).<br>
+                                A margem de contribuição <strong>NÃO inclui</strong> despesas fixas mensais.
+                            </small>
                         </small>
                     </div>
                 `;

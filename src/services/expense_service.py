@@ -136,7 +136,9 @@ class ExpenseService:
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-                return config.get('monthly_fixed_expenses', {})
+                monthly = config.get('monthly_fixed_expenses', {})
+                print(f"[ANALYTICS] monthly_expenses loaded: {len(monthly)}")
+                return monthly
         except Exception as e:
             print(f"Erro ao carregar despesas: {e}")
             return {}

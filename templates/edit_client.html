@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 
 {% block title %}Editar Cliente - Sistema de Gestão{% endblock %}
-{% block page_title %}Editar Cliente{% endblock %}
+{% block page_title %}Editar Cliente - {{ client.ID_CLIENTE }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10">
         <div class="card">
             <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-pencil"></i> Editar Cliente: {{ client.CLIENTE }}</h5>
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil-square"></i> Editar Cliente: {{ client.CLIENTE }}
+                </h5>
             </div>
             <div class="card-body">
                 {% if error %}
@@ -19,107 +21,123 @@
                 {% endif %}
 
                 <form method="POST" id="clientForm">
-                    <!-- Tipo (somente leitura - não pode mudar de pessoa para empresa) -->
+                    <!-- Client Type Display (não editável) -->
                     <div class="mb-4">
                         <label class="form-label"><i class="bi bi-diagram-3"></i> Tipo de Cliente</label>
-                        <div class="p-3 bg-light rounded">
-                            {% if client.TIPO == 'pessoa' %}
-                                <span class="badge bg-info fs-6"><i class="bi bi-person"></i> Pessoa Física</span>
+                        <div class="alert alert-info mb-0">
+                            {% if client.TIPO|lower == 'pessoa' %}
+                                <i class="bi bi-person"></i> <strong>Pessoa Física</strong>
                             {% else %}
-                                <span class="badge bg-success fs-6"><i class="bi bi-building"></i> Empresa</span>
+                                <i class="bi bi-building"></i> <strong>Empresa</strong>
                             {% endif %}
-                            <input type="hidden" name="tipo" value="{{ client.TIPO }}">
+                            <small class="text-muted d-block">O tipo de cliente não pode ser alterado após o cadastro.</small>
                         </div>
-                        <small class="text-muted">O tipo não pode ser alterado após o cadastro.</small>
+                        <input type="hidden" name="tipo" value="{{ client.TIPO }}">
                     </div>
 
                     <!-- Basic Information -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label"><i class="bi bi-person-badge"></i> Nome/Razão Social *</label>
-                            <input type="text" name="cliente" class="form-control" required value="{{ client.CLIENTE }}">
+                            <input type="text" name="cliente" class="form-control" required 
+                                   value="{{ client.CLIENTE }}" placeholder="Nome do cliente">
                         </div>
+
                         <div class="col-md-6 mb-3">
-                            <label class="form-label"><i class="bi bi-person-workspace"></i> Vendedor *</label>
-                            <input type="text" name="vendedor" class="form-control" required value="{{ client.VENDEDOR }}">
+                            <label class="form-label"><i class="bi bi-person-workspace"></i> Vendedor</label>
+                            <input type="text" name="vendedor" class="form-control" 
+                                   value="{{ client.VENDEDOR if client.VENDEDOR else '' }}" 
+                                   placeholder="Nome do vendedor (opcional)">
                         </div>
                     </div>
 
-                    {% if client.TIPO == 'pessoa' %}
-                    <!-- Pessoa Fields -->
+                    <!-- Person-specific fields -->
+                    {% if client.TIPO|lower == 'pessoa' %}
                     <div id="pessoaFields">
                         <h6 class="text-primary mb-3"><i class="bi bi-person"></i> Informações da Pessoa</h6>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Faixa Etária *</label>
-                                <select name="idade" class="form-select" required>
+                                <select name="idade" class="form-select" id="idadeSelect" required>
                                     <option value="">Selecione...</option>
                                     {% for age_range in age_ranges %}
-                                    <option value="{{ age_range }}" {% if age_range == client.IDADE %}selected{% endif %}>
+                                    <option value="{{ age_range }}" 
+                                            {% if client.IDADE == age_range %}selected{% endif %}>
                                         {{ age_range }}
                                     </option>
                                     {% endfor %}
                                 </select>
                             </div>
+
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Gênero *</label>
-                                <select name="genero" class="form-select" required>
+                                <select name="genero" class="form-select" id="generoSelect" required>
                                     <option value="">Selecione...</option>
                                     <option value="Masculino" {% if client.GENERO == 'Masculino' %}selected{% endif %}>Masculino</option>
                                     <option value="Feminino" {% if client.GENERO == 'Feminino' %}selected{% endif %}>Feminino</option>
                                     <option value="Outro" {% if client.GENERO == 'Outro' %}selected{% endif %}>Outro</option>
-                                    <option value="Prefiro não informar" {% if client.GENERO == 'Prefiro não informar' %}selected{% endif %}>
-                                        Prefiro não informar
-                                    </option>
+                                    <option value="Prefiro não informar" {% if client.GENERO == 'Prefiro não informar' %}selected{% endif %}>Prefiro não informar</option>
                                 </select>
                             </div>
+
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Profissão</label>
-                                <input type="text" name="profissao" class="form-control" value="{{ client.PROFISSAO or '' }}">
+                                <input type="text" name="profissao" class="form-control" 
+                                       value="{{ client.PROFISSAO if client.PROFISSAO else '' }}"
+                                       placeholder="Ex: Engenheiro">
                             </div>
                         </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">CPF</label>
-                                <input type="text" name="cpf_cnpj" class="form-control" id="cpfInput"
-                                       value="{{ client.CPF_CNPJ or '' }}" placeholder="000.000.000-00">
-                                <small class="text-muted">Opcional</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% else %}
-                    <!-- Empresa Fields -->
-                    <div id="empresaFields">
-                        <h6 class="text-success mb-3"><i class="bi bi-building"></i> Informações da Empresa</h6>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">CNPJ *</label>
-                                <input type="text" name="cpf_cnpj" class="form-control" id="cnpjInput" required
-                                       value="{{ client.CPF_CNPJ or '' }}" placeholder="00.000.000/0000-00">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Endereço *</label>
-                                <input type="text" name="endereco" class="form-control" required
-                                       value="{{ client.ENDERECO or '' }}">
+                                <input type="text" name="cpf_cnpj" class="form-control" id="cpfInput" 
+                                       value="{{ client.CPF_CNPJ if client.CPF_CNPJ else '' }}"
+                                       placeholder="000.000.000-00" maxlength="14">
+                                <small class="text-muted">Opcional para pessoa física</small>
                             </div>
                         </div>
                     </div>
                     {% endif %}
 
-                    <!-- Contato comum -->
+                    <!-- Company-specific fields -->
+                    {% if client.TIPO|lower == 'empresa' %}
+                    <div id="empresaFields">
+                        <h6 class="text-success mb-3"><i class="bi bi-building"></i> Informações da Empresa</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CNPJ *</label>
+                                <input type="text" name="cpf_cnpj" class="form-control" id="cnpjInput" 
+                                       value="{{ client.CPF_CNPJ if client.CPF_CNPJ else '' }}"
+                                       placeholder="00.000.000/0000-00" maxlength="18" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Endereço *</label>
+                                <input type="text" name="endereco" class="form-control" id="enderecoEmpresa"
+                                       value="{{ client.ENDERECO if client.ENDERECO else '' }}"
+                                       placeholder="Rua, número, bairro, cidade" required>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Common Contact Fields -->
                     <h6 class="text-secondary mb-3 mt-3"><i class="bi bi-telephone"></i> Contato</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Telefone</label>
                             <input type="text" name="telefone" class="form-control" id="telefoneInput"
-                                   value="{{ client.TELEFONE or '' }}" placeholder="(00) 00000-0000">
+                                   value="{{ client.TELEFONE if client.TELEFONE else '' }}"
+                                   placeholder="(00) 00000-0000" maxlength="15">
                         </div>
-                        {% if client.TIPO == 'pessoa' %}
+
+                        {% if client.TIPO|lower == 'pessoa' %}
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Endereço</label>
-                            <input type="text" name="endereco" class="form-control"
-                                   value="{{ client.ENDERECO or '' }}">
+                            <input type="text" name="endereco" class="form-control" id="enderecoPessoa"
+                                   value="{{ client.ENDERECO if client.ENDERECO else '' }}"
+                                   placeholder="Rua, número, bairro, cidade">
                         </div>
                         {% endif %}
                     </div>
@@ -135,46 +153,81 @@
                 </form>
             </div>
         </div>
+
+        <!-- Client Info Card -->
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informações do Cliente</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>ID do Cliente:</strong> {{ client.ID_CLIENTE }}</p>
+                        <p><strong>Tipo:</strong> 
+                            {% if client.TIPO|lower == 'pessoa' %}
+                                Pessoa Física
+                            {% else %}
+                                Empresa
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Vendedor Atual:</strong> {{ client.VENDEDOR if client.VENDEDOR else 'Não atribuído' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Máscaras (mesmas do add_client.html)
-document.getElementById('cpfInput')?.addEventListener('input', function(e) {
-    let v = e.target.value.replace(/\D/g, '');
-    if (v.length <= 11) {
-        v = v.replace(/(\d{3})(\d)/, '$1.$2');
-        v = v.replace(/(\d{3})(\d)/, '$1.$2');
-        v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        e.target.value = v;
-    }
-});
-
-document.getElementById('cnpjInput')?.addEventListener('input', function(e) {
-    let v = e.target.value.replace(/\D/g, '');
-    if (v.length <= 14) {
-        v = v.replace(/^(\d{2})(\d)/, '$1.$2');
-        v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-        v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
-        v = v.replace(/(\d{4})(\d)/, '$1-$2');
-        e.target.value = v;
-    }
-});
-
-document.getElementById('telefoneInput')?.addEventListener('input', function(e) {
-    let v = e.target.value.replace(/\D/g, '');
-    if (v.length <= 11) {
-        if (v.length <= 10) {
-            v = v.replace(/^(\d{2})(\d)/, '($1) $2');
-            v = v.replace(/(\d{4})(\d)/, '$1-$2');
-        } else {
-            v = v.replace(/^(\d{2})(\d)/, '($1) $2');
-            v = v.replace(/(\d{5})(\d)/, '$1-$2');
+// CPF Mask
+const cpfInput = document.getElementById('cpfInput');
+if (cpfInput) {
+    cpfInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 11) {
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            e.target.value = value;
         }
-        e.target.value = v;
-    }
-});
+    });
+}
+
+// CNPJ Mask
+const cnpjInput = document.getElementById('cnpjInput');
+if (cnpjInput) {
+    cnpjInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 14) {
+            value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+            value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+            value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            e.target.value = value;
+        }
+    });
+}
+
+// Phone Mask
+const telefoneInput = document.getElementById('telefoneInput');
+if (telefoneInput) {
+    telefoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 11) {
+            if (value.length <= 10) {
+                value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            } else {
+                value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            }
+            e.target.value = value;
+        }
+    });
+}
 </script>
 {% endblock %}

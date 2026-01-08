@@ -25,16 +25,38 @@
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Cliente *</label>
-                                <select class="form-select" id="clientSelect" required>
-                                    <option value="">Selecione um cliente...</option>
-                                    {% for client in clients %}
-                                    <option value="{{ client.ID_CLIENTE }}" 
-                                            data-name="{{ client.CLIENTE }}">
-                                        {{ client.ID_CLIENTE }} - {{ client.CLIENTE }}
-                                        {% if client.CPF_CNPJ %}({{ client.CPF_CNPJ }}){% endif %}
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                                <div class="btn-group w-100 mb-2" role="group">
+                                    <button type="button" class="btn btn-outline-primary active" id="clientSearchBtn" onclick="toggleClientMode('search')">
+                                        <i class="bi bi-search"></i> Buscar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" id="clientDropdownBtn" onclick="toggleClientMode('dropdown')">
+                                        <i class="bi bi-list"></i> Lista Completa
+                                    </button>
+                                </div>
+                                
+                                <!-- Search Mode -->
+                                <div id="clientSearchMode">
+                                    <input type="text" 
+                                           class="form-control mb-2" 
+                                           id="clientSearch" 
+                                           placeholder="🔍 Digite para buscar cliente por nome, ID ou CPF/CNPJ..."
+                                           autocomplete="off">
+                                    <div id="clientSearchResults" class="list-group" style="max-height: 200px; overflow-y: auto;"></div>
+                                </div>
+                                
+                                <!-- Dropdown Mode -->
+                                <div id="clientDropdownMode" style="display: none;">
+                                    <select class="form-select" id="clientSelect">
+                                        <option value="">Selecione um cliente...</option>
+                                        {% for client in clients %}
+                                        <option value="{{ client.ID_CLIENTE }}" 
+                                                data-name="{{ client.CLIENTE }}">
+                                            {{ client.ID_CLIENTE }} - {{ client.CLIENTE }}
+                                            {% if client.CPF_CNPJ %}({{ client.CPF_CNPJ }}){% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -46,22 +68,44 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Produto</label>
-                                <select class="form-select" id="productSelect">
-                                    <option value="">Selecione um produto...</option>
-                                    {% for product in products %}
-                                    <option value="{{ product.CODIGO }}"
-                                            data-name="{{ product.PRODUTO }}"
-                                            data-category="{{ product.CATEGORIA }}"
-                                            data-price="{{ product.VALOR }}"
-                                            data-stock="{{ product.ESTOQUE }}"
-                                            {% if product.ESTOQUE == 0 %}disabled{% endif %}>
-                                        {{ product.CODIGO }} - {{ product.PRODUTO }} [{{ product.CATEGORIA }}]
-                                        (R$ {{ product.VALOR|currency }})
-                                        - Estoque: {{ product.ESTOQUE }}
-                                        {% if product.ESTOQUE == 0 %}[ESGOTADO]{% endif %}
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                                <div class="btn-group w-100 mb-2" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-success active" id="productSearchBtn" onclick="toggleProductMode('search')">
+                                        <i class="bi bi-search"></i> Buscar
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-success" id="productDropdownBtn" onclick="toggleProductMode('dropdown')">
+                                        <i class="bi bi-list"></i> Lista Completa
+                                    </button>
+                                </div>
+                                
+                                <!-- Search Mode -->
+                                <div id="productSearchMode">
+                                    <input type="text" 
+                                           class="form-control mb-2" 
+                                           id="productSearch" 
+                                           placeholder="🔍 Digite produto, código ou categoria..."
+                                           autocomplete="off">
+                                    <div id="productSearchResults" class="list-group" style="max-height: 200px; overflow-y: auto;"></div>
+                                </div>
+                                
+                                <!-- Dropdown Mode -->
+                                <div id="productDropdownMode" style="display: none;">
+                                    <select class="form-select" id="productSelect">
+                                        <option value="">Selecione um produto...</option>
+                                        {% for product in products %}
+                                        <option value="{{ product.CODIGO }}"
+                                                data-name="{{ product.PRODUTO }}"
+                                                data-category="{{ product.CATEGORIA }}"
+                                                data-price="{{ product.VALOR }}"
+                                                data-stock="{{ product.ESTOQUE }}"
+                                                {% if product.ESTOQUE == 0 %}disabled{% endif %}>
+                                            {{ product.CODIGO }} - {{ product.PRODUTO }} [{{ product.CATEGORIA }}]
+                                            (R$ {{ product.VALOR|currency }})
+                                            - Estoque: {{ product.ESTOQUE }}
+                                            {% if product.ESTOQUE == 0 %}[ESGOTADO]{% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="col-md-3">
@@ -94,36 +138,42 @@
                                             <th></th>
                                         </tr>
                                     </thead>
-                                    <tbody id="cartItems">
-                                    </tbody>
+                                    <tbody id="cartItems"></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Step 3: Payment Method -->
+                    <!-- Step 3: Payment Method and Date -->
                     <div class="step-section mb-4">
-                        <h6 class="text-warning"><i class="bi bi-credit-card"></i> 3. Meio de Pagamento</h6>
+                        <h6 class="text-warning"><i class="bi bi-credit-card"></i> 3. Pagamento e Data</h6>
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Meio de Pagamento *</label>
                                 <select class="form-select" id="paymentSelect" required>
-                                    <option value="">Selecione o meio de pagamento...</option>
-                                    {% for method in payment_methods %}
-                                    <option value="{{ method }}">
-                                        {% if method == 'dinheiro' %}💵 Dinheiro
-                                        {% elif method == 'pix' %}📱 PIX
-                                        {% elif method == 'cartão de crédito' %}💳 Cartão de Crédito
-                                        {% elif method == 'cartão de débito' %}💳 Cartão de Débito
-                                        {% else %}{{ method|title }}
-                                        {% endif %}
-                                    </option>
-                                    {% endfor %}
+                                    <option value="">Selecione...</option>
+                                    <option value="dinheiro">💵 Dinheiro</option>
+                                    <option value="pix">📱 PIX</option>
+                                    <option value="cartão de crédito">💳 Cartão de Crédito</option>
+                                    <option value="cartão de débito">💳 Cartão de Débito</option>
+                                    <option value="boleto">📄 Boleto</option>
+                                    <option value="transferência">🏦 Transferência Bancária</option>
+                                    <option value="cheque">📝 Cheque</option>
+                                    <option value="crediário">📋 Crediário</option>
                                 </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data da Venda</label>
+                                <input type="date" 
+                                       class="form-control" 
+                                       id="saleDate" 
+                                       max="{{ now.strftime('%Y-%m-%d') if now else '' }}">
+                                <small class="text-muted">Deixe em branco para usar a data de hoje</small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Hidden inputs for form submission -->
+                    <!-- Hidden inputs -->
                     <input type="hidden" name="cart_data" id="cartData">
 
                     <div class="d-flex justify-content-between">
@@ -161,25 +211,17 @@
                     <div id="summaryPayment" class="text-muted">Não selecionado</div>
                 </div>
 
+                <div class="mb-3">
+                    <strong>Data da Venda:</strong>
+                    <div id="summaryDate" class="text-muted">Hoje</div>
+                </div>
+
                 <hr>
 
                 <div class="text-center">
                     <h3 class="mb-0">Total</h3>
                     <h1 class="text-success" id="summaryTotal">R$ 0.00</h1>
                 </div>
-            </div>
-        </div>
-
-        <!-- Quick Tips -->
-        <div class="card mt-3">
-            <div class="card-header bg-info text-white">
-                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Dica Rápida</h6>
-            </div>
-            <div class="card-body">
-                <small>
-                    <strong>Novo sistema de carrinho!</strong><br>
-                    Adicione múltiplos itens à venda. O estoque será atualizado automaticamente para todos os itens ao confirmar.
-                </small>
             </div>
         </div>
     </div>
@@ -189,87 +231,236 @@
 {% block extra_js %}
 <script>
 let cart = [];
+let clients = [];
+let products = [];
+let selectedClient = null;
+let selectedProduct = null;
 
-// Client selection
+// ===== MODE TOGGLES =====
+function toggleClientMode(mode) {
+    const searchMode = document.getElementById('clientSearchMode');
+    const dropdownMode = document.getElementById('clientDropdownMode');
+    const searchBtn = document.getElementById('clientSearchBtn');
+    const dropdownBtn = document.getElementById('clientDropdownBtn');
+    
+    if (mode === 'search') {
+        searchMode.style.display = 'block';
+        dropdownMode.style.display = 'none';
+        searchBtn.classList.add('active');
+        dropdownBtn.classList.remove('active');
+        document.getElementById('clientSearch').focus();
+    } else {
+        searchMode.style.display = 'none';
+        dropdownMode.style.display = 'block';
+        searchBtn.classList.remove('active');
+        dropdownBtn.classList.add('active');
+    }
+}
+
+function toggleProductMode(mode) {
+    const searchMode = document.getElementById('productSearchMode');
+    const dropdownMode = document.getElementById('productDropdownMode');
+    const searchBtn = document.getElementById('productSearchBtn');
+    const dropdownBtn = document.getElementById('productDropdownBtn');
+    
+    if (mode === 'search') {
+        searchMode.style.display = 'block';
+        dropdownMode.style.display = 'none';
+        searchBtn.classList.add('active');
+        dropdownBtn.classList.remove('active');
+        document.getElementById('productSearch').focus();
+    } else {
+        searchMode.style.display = 'none';
+        dropdownMode.style.display = 'block';
+        searchBtn.classList.remove('active');
+        dropdownBtn.classList.add('active');
+    }
+}
+
+// ===== LOAD DATA =====
+async function loadData() {
+    try {
+        // Load clients
+        const clientsRes = await fetch('/api/clients');
+        const clientsData = await clientsRes.json();
+        if (clientsData.success) {
+            clients = clientsData.data;
+        }
+        
+        // Load products
+        const productsRes = await fetch('/api/products');
+        const productsData = await productsRes.json();
+        if (productsData.success) {
+            products = productsData.data;
+        }
+    } catch (error) {
+        console.error('Error loading data:', error);
+    }
+}
+
+// ===== CLIENT SEARCH =====
+document.getElementById('clientSearch').addEventListener('input', function() {
+    const query = this.value.toLowerCase().trim();
+    const results = document.getElementById('clientSearchResults');
+    
+    if (query.length < 2) {
+        results.innerHTML = '';
+        return;
+    }
+    
+    const filtered = clients.filter(c => {
+        const searchText = `${c.CLIENTE} ${c.ID_CLIENTE} ${c.CPF_CNPJ || ''}`.toLowerCase();
+        return searchText.includes(query);
+    }).slice(0, 10);
+    
+    if (filtered.length === 0) {
+        results.innerHTML = '<div class="list-group-item text-muted">Nenhum cliente encontrado</div>';
+        return;
+    }
+    
+    results.innerHTML = filtered.map(c => `
+        <button type="button" class="list-group-item list-group-item-action" onclick="selectClient('${c.ID_CLIENTE}')">
+            <strong>${c.CLIENTE}</strong> <small class="text-muted">(${c.ID_CLIENTE})</small>
+            ${c.CPF_CNPJ ? `<br><small>${c.CPF_CNPJ}</small>` : ''}
+        </button>
+    `).join('');
+});
+
+function selectClient(id) {
+    selectedClient = clients.find(c => c.ID_CLIENTE === id);
+    if (selectedClient) {
+        document.getElementById('clientSearch').value = selectedClient.CLIENTE;
+        document.getElementById('clientSearchResults').innerHTML = '';
+        document.getElementById('summaryClient').innerHTML = `<strong>${selectedClient.CLIENTE}</strong>`;
+        document.getElementById('summaryClient').classList.remove('text-muted');
+        updateSubmitButton();
+    }
+}
+
+// ===== CLIENT DROPDOWN (from original) =====
 document.getElementById('clientSelect').addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
     if (this.value) {
-        const name = selected.getAttribute('data-name');
-        document.getElementById('summaryClient').innerHTML = `<strong>${name}</strong>`;
-        document.getElementById('summaryClient').classList.remove('text-muted');
+        selectedClient = clients.find(c => c.ID_CLIENTE === this.value);
+        if (selectedClient) {
+            const name = selected.getAttribute('data-name');
+            document.getElementById('summaryClient').innerHTML = `<strong>${name}</strong>`;
+            document.getElementById('summaryClient').classList.remove('text-muted');
+            updateSubmitButton();
+        }
     } else {
+        selectedClient = null;
         document.getElementById('summaryClient').textContent = 'Não selecionado';
         document.getElementById('summaryClient').classList.add('text-muted');
+        updateSubmitButton();
     }
-    updateSubmitButton();
 });
 
-// Payment method
-document.getElementById('paymentSelect').addEventListener('change', function() {
+
+// ===== PRODUCT SEARCH =====
+document.getElementById('productSearch').addEventListener('input', function() {
+    const query = this.value.toLowerCase().trim();
+    const results = document.getElementById('productSearchResults');
+    
+    if (query.length < 2) {
+        results.innerHTML = '';
+        return;
+    }
+    
+    const filtered = products.filter(p => {
+        const searchText = `${p.PRODUTO} ${p.CODIGO} ${p.CATEGORIA}`.toLowerCase();
+        return searchText.includes(query) && p.ESTOQUE > 0;
+    }).slice(0, 10);
+    
+    if (filtered.length === 0) {
+        results.innerHTML = '<div class="list-group-item text-muted">Nenhum produto encontrado</div>';
+        return;
+    }
+    
+    results.innerHTML = filtered.map(p => `
+        <button type="button" 
+                class="list-group-item list-group-item-action" 
+                onclick='selectProduct(${JSON.stringify(p).replace(/'/g, "&apos;")})'>
+            <strong>${p.PRODUTO}</strong> <span class="badge bg-info">${p.CATEGORIA}</span>
+            <br>
+            <small class="text-muted">${p.CODIGO}</small> - 
+            <strong>R$ ${formatCurrencyBR(p.VALOR)}</strong> - 
+            <small>Estoque: ${p.ESTOQUE}</small>
+        </button>
+    `).join('');
+});
+
+function selectProduct(product) {
+    selectedProduct = product;
+    document.getElementById('productSearch').value = `${product.PRODUTO} - ${product.CATEGORIA}`;
+    document.getElementById('productSearchResults').innerHTML = '';
+    document.getElementById('quantityInput').focus();
+}
+
+// ===== PRODUCT DROPDOWN (from original) =====
+document.getElementById('productSelect').addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
     if (this.value) {
-        document.getElementById('summaryPayment').innerHTML = `<strong>${selected.textContent}</strong>`;
-        document.getElementById('summaryPayment').classList.remove('text-muted');
+        selectedProduct = {
+            CODIGO: this.value,
+            PRODUTO: selected.getAttribute('data-name'),
+            CATEGORIA: selected.getAttribute('data-category'),
+            VALOR: parseFloat(selected.getAttribute('data-price')),
+            ESTOQUE: parseInt(selected.getAttribute('data-stock'))
+        };
+        document.getElementById('quantityInput').focus();
     } else {
-        document.getElementById('summaryPayment').textContent = 'Não selecionado';
-        document.getElementById('summaryPayment').classList.add('text-muted');
+        selectedProduct = null;
     }
-    updateSubmitButton();
 });
 
+
+// ===== CART MANAGEMENT =====
 function addToCart() {
-    const productSelect = document.getElementById('productSelect');
-    const quantityInput = document.getElementById('quantityInput');
-    
-    if (!productSelect.value) {
+    if (!selectedProduct) {
         alert('Selecione um produto!');
         return;
     }
     
-    const selected = productSelect.options[productSelect.selectedIndex];
-    const codigo = productSelect.value;
-    const name = selected.getAttribute('data-name');
-    const category = selected.getAttribute('data-category');
-    const price = parseFloat(selected.getAttribute('data-price'));
-    const stock = parseInt(selected.getAttribute('data-stock'));
-    const quantity = parseInt(quantityInput.value);
+    const quantity = parseInt(document.getElementById('quantityInput').value);
     
-    // Validate quantity
     if (quantity <= 0) {
         alert('Quantidade deve ser maior que zero!');
         return;
     }
     
-    if (quantity > stock) {
-        alert(`Estoque insuficiente! Disponível: ${stock} unidades`);
+    if (quantity > selectedProduct.ESTOQUE) {
+        alert(`Estoque insuficiente! Disponível: ${selectedProduct.ESTOQUE} unidades`);
         return;
     }
     
-    // Check if product already in cart
-    const existing = cart.find(item => item.codigo === codigo);
+    // Check if already in cart
+    const existing = cart.find(item => item.codigo === selectedProduct.CODIGO);
     if (existing) {
         const newQty = existing.quantity + quantity;
-        if (newQty > stock) {
-            alert(`Estoque insuficiente! Você já tem ${existing.quantity} no carrinho. Disponível: ${stock} unidades`);
+        if (newQty > selectedProduct.ESTOQUE) {
+            alert(`Estoque insuficiente! Você já tem ${existing.quantity} no carrinho.`);
             return;
         }
         existing.quantity = newQty;
         existing.subtotal = existing.quantity * existing.price;
     } else {
         cart.push({
-            codigo: codigo,
-            name: name,
-            category: category,
-            price: price,
+            codigo: selectedProduct.CODIGO,
+            name: selectedProduct.PRODUTO,
+            category: selectedProduct.CATEGORIA,
+            price: parseFloat(selectedProduct.VALOR),
             quantity: quantity,
-            stock: stock,
-            subtotal: price * quantity
+            stock: selectedProduct.ESTOQUE,
+            subtotal: parseFloat(selectedProduct.VALOR) * quantity
         });
     }
     
-    // Reset selections
-    productSelect.value = '';
-    quantityInput.value = 1;
+    // Reset
+    document.getElementById('productSearch').value = '';
+    document.getElementById('productSelect').value = '';
+    document.getElementById('quantityInput').value = 1;
+    selectedProduct = null;
     
     renderCart();
     updateSummary();
@@ -294,25 +485,20 @@ function renderCart() {
     
     cartSection.style.display = 'block';
     
-    let html = '';
-    cart.forEach((item, index) => {
-        html += `
-            <tr>
-                <td><strong>${item.name}</strong><br><small class="text-muted">${item.codigo}</small></td>
-                <td><span class="badge bg-info">${item.category}</span></td>
-                <td><strong>${item.quantity}</strong></td>
-                <td>R$ ${formatCurrencyBR(item.price)}</td>
-                <td><strong>R$ ${formatCurrencyBR(item.subtotal)}</strong></td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    cartItems.innerHTML = html;
+    cartItems.innerHTML = cart.map((item, index) => `
+        <tr>
+            <td><strong>${item.name}</strong><br><small class="text-muted">${item.codigo}</small></td>
+            <td><span class="badge bg-info">${item.category}</span></td>
+            <td><strong>${item.quantity}</strong></td>
+            <td>R$ ${formatCurrencyBR(item.price)}</td>
+            <td><strong>R$ ${formatCurrencyBR(item.subtotal)}</strong></td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
 }
 
 function updateSummary() {
@@ -323,48 +509,86 @@ function updateSummary() {
     document.getElementById('summaryTotal').textContent = `R$ ${formatCurrencyBR(total)}`;
 }
 
+// ===== PAYMENT & DATE =====
+document.getElementById('paymentSelect').addEventListener('change', function() {
+    if (this.value) {
+        document.getElementById('summaryPayment').innerHTML = `<strong>${this.options[this.selectedIndex].textContent}</strong>`;
+        document.getElementById('summaryPayment').classList.remove('text-muted');
+    } else {
+        document.getElementById('summaryPayment').textContent = 'Não selecionado';
+        document.getElementById('summaryPayment').classList.add('text-muted');
+    }
+    updateSubmitButton();
+});
+
+document.getElementById('saleDate').addEventListener('change', function() {
+    if (this.value) {
+        const date = new Date(this.value + 'T00:00:00');
+        document.getElementById('summaryDate').innerHTML = `<strong>${date.toLocaleDateString('pt-BR')}</strong>`;
+    } else {
+        document.getElementById('summaryDate').textContent = 'Hoje';
+    }
+});
+
+// ===== SUBMIT =====
 function updateSubmitButton() {
-    const client = document.getElementById('clientSelect').value;
-    const payment = document.getElementById('paymentSelect').value;
+    const hasClient = selectedClient !== null;
+    const hasPayment = document.getElementById('paymentSelect').value !== '';
     const hasItems = cart.length > 0;
     
-    document.getElementById('submitBtn').disabled = !(client && payment && hasItems);
+    document.getElementById('submitBtn').disabled = !(hasClient && hasPayment && hasItems);
 }
 
-// Form submission
 document.getElementById('saleForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    if (cart.length === 0) {
-        alert('❌ Adicione pelo menos um produto ao carrinho!');
+    if (!selectedClient) {
+        alert('Selecione um cliente!');
         return;
     }
     
-    const client = document.getElementById('clientSelect').value;
+    if (cart.length === 0) {
+        alert('Adicione pelo menos um produto!');
+        return;
+    }
+    
     const payment = document.getElementById('paymentSelect').value;
     const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
     
-    // Confirm sale
-    if (!confirm(`Confirmar venda de ${cart.length} produto(s) no valor total de R$ ${total.toFixed(2)}?`)) {
+    if (!confirm(`Confirmar venda de ${cart.length} produto(s) no valor total de R$ ${formatCurrencyBR(total)}?`)) {
         return;
     }
     
-    // Prepare data for submission
+    // Get date in DD/MM/YYYY format
+    let saleDate = null;
+    const dateInput = document.getElementById('saleDate').value;
+    if (dateInput) {
+        const date = new Date(dateInput + 'T00:00:00');
+        saleDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    }
+    
     const cartData = {
-        id_cliente: client,
+        id_cliente: selectedClient.ID_CLIENTE,
         meio: payment,
         items: cart.map(item => ({
             codigo: item.codigo,
             quantidade: item.quantity,
             preco_unit: item.price
-        }))
+        })),
+        data: saleDate
     };
     
-    // Set hidden input
     document.getElementById('cartData').value = JSON.stringify(cartData);
-    
-    // Submit form
     this.submit();
+});
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    
+    // Set max date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('saleDate').max = today;
 });
 </script>
 {% endblock %}

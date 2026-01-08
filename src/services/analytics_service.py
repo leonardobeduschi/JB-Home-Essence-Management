@@ -27,7 +27,17 @@ class AnalyticsService:
         self.item_repo = sale_item_repository or SaleItemRepository()
         self.product_repo = product_repository or ProductRepository()
         self.client_repo = client_repository or ClientRepository()
-    
+
+    def _parse_date_str(self, s: str):
+        """Parse a date string flexibly, supporting dd/mm/YYYY and ISO.
+        Returns a datetime.datetime or None if it cannot be parsed."""
+        try:
+            ts = pd.to_datetime(s, dayfirst=True, errors='coerce')
+            if pd.isna(ts):
+                return None
+            return ts.to_pydatetime()
+        except Exception:
+            return None    
     # ========== SALES ANALYTICS ==========
     
     def get_sales_trend(self, days: int = 30) -> Dict:
@@ -41,13 +51,16 @@ class AnalyticsService:
             end_date.strftime('%d/%m/%Y')
         )
         
-        # Group by date
+        # Group by date (flexible parsing)
         daily_sales = defaultdict(lambda: {'count': 0, 'revenue': 0.0})
-        
+        print(f"[ANALYTICS] get_sales_trend: sales rows={len(sales)}")
         for sale in sales:
-            date = sale['DATA']
-            daily_sales[date]['count'] += 1
-            daily_sales[date]['revenue'] += float(sale['VALOR_TOTAL_VENDA'])
+            date_obj = self._parse_date_str(sale.get('DATA'))
+            if not date_obj:
+                continue
+            date_key = date_obj.strftime('%d/%m/%Y')
+            daily_sales[date_key]['count'] += 1
+            daily_sales[date_key]['revenue'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
         
         # Get total items from sale_items
         items_df = self.item_repo._read_csv()
@@ -55,11 +68,14 @@ class AnalyticsService:
         items_in_period = items_df[items_df['ID_VENDA'].isin(sale_ids)]
         
         for _, item in items_in_period.iterrows():
-            # Find corresponding sale date
+            # Find corresponding sale date (parsed)
             sale = next((s for s in sales if s['ID_VENDA'] == item['ID_VENDA']), None)
             if sale:
-                date = sale['DATA']
-                daily_sales[date]['items'] = daily_sales[date].get('items', 0) + int(item['QUANTIDADE'])
+                date_obj = self._parse_date_str(sale.get('DATA'))
+                if not date_obj:
+                    continue
+                date_key = date_obj.strftime('%d/%m/%Y')
+                daily_sales[date_key]['items'] = daily_sales[date_key].get('items', 0) + int(item['QUANTIDADE'])
         
         # Convert to sorted list
         trend = []
@@ -150,14 +166,12 @@ class AnalyticsService:
         dow_sales = defaultdict(lambda: {'count': 0, 'revenue': 0.0})
         
         for sale in sales:
-            try:
-                date_obj = datetime.strptime(sale['DATA'], '%d/%m/%Y')
-                dow = date_obj.strftime('%A')
-                
-                dow_sales[dow]['count'] += 1
-                dow_sales[dow]['revenue'] += float(sale['VALOR_TOTAL_VENDA'])
-            except:
+            date_obj = self._parse_date_str(sale.get('DATA'))
+            if not date_obj:
                 continue
+            dow = date_obj.strftime('%A')
+            dow_sales[dow]['count'] += 1
+            dow_sales[dow]['revenue'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
         
         return dict(dow_sales)
     
@@ -166,12 +180,14 @@ class AnalyticsService:
     def get_product_performance(self, top_n: int = 10) -> Dict:
         """Get product performance using sales_items."""
         item_stats = self.item_repo.get_product_stats()
+        print(f"[ANALYTICS] get_product_performance: item_stats rows={0 if item_stats is None else (0 if getattr(item_stats, 'empty', False) else len(item_stats))}")
         
         if item_stats.empty:
             return {'top_products': [], 'all_products': [], 'total_revenue': 0}
         
         # Enrich with cost data
         products_df = self.product_repo.get_all()
+        print(f"[ANALYTICS] get_product_performance: products rows={len(products_df)}")
         
         results = []
         for _, row in item_stats.iterrows():
@@ -295,9 +311,11 @@ class AnalyticsService:
         
         for sale in sales:
             id_cliente = sale['ID_CLIENTE']
-            date = datetime.strptime(sale['DATA'], '%d/%m/%Y')
+            date = self._parse_date_str(sale.get('DATA'))
+            if not date:
+                continue
             
-            customer_metrics[id_cliente]['total_spent'] += float(sale['VALOR_TOTAL_VENDA'])
+            customer_metrics[id_cliente]['total_spent'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
             customer_metrics[id_cliente]['purchases'] += 1
             
             if customer_metrics[id_cliente]['last_purchase_date'] is None or date > customer_metrics[id_cliente]['last_purchase_date']:
@@ -384,9 +402,11 @@ class AnalyticsService:
         
         for sale in sales:
             id_cliente = sale['ID_CLIENTE']
-            date = datetime.strptime(sale['DATA'], '%d/%m/%Y')
+            date = self._parse_date_str(sale.get('DATA'))
+            if not date:
+                continue
             
-            customer_clv[id_cliente]['total_spent'] += float(sale['VALOR_TOTAL_VENDA'])
+            customer_clv[id_cliente]['total_spent'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
             customer_clv[id_cliente]['purchases'] += 1
             
             if customer_clv[id_cliente]['first_purchase'] is None or date < customer_clv[id_cliente]['first_purchase']:
@@ -428,7 +448,9 @@ class AnalyticsService:
     def get_profitability_report(self) -> Dict:
         """Comprehensive profitability analysis."""
         items_df = self.item_repo._read_csv()
+        print(f"[ANALYTICS] get_profitability_report: items rows={len(items_df)}")
         products = self.product_repo.get_all().to_dict('records')
+        print(f"[ANALYTICS] get_profitability_report: products rows={len(products)}")
         
         total_revenue = 0.0
         total_cost = 0.0
@@ -465,6 +487,7 @@ class AnalyticsService:
     def get_payment_method_analysis(self) -> Dict:
         """Analyze sales by payment method."""
         sales = self.sale_repo.get_all().to_dict('records')
+        print(f"[ANALYTICS] get_payment_method_analysis: sales rows={len(sales)}")
         
         payment_metrics = defaultdict(lambda: {
             'count': 0,
@@ -510,19 +533,26 @@ class AnalyticsService:
         if not items:
             return {'error': 'No sales history for this product'}
         
-        # Get sales dates
+# Get sales dates and aggregate by actual date objects (robust to formats)
         sales_df = self.sale_repo.get_all()
-        
-        # Group by date
+
+        # Group by date (date objects)
         daily_sales = defaultdict(int)
         for item in items:
             sale = sales_df[sales_df['ID_VENDA'] == item['ID_VENDA']]
             if not sale.empty:
-                date = sale.iloc[0]['DATA']
-                daily_sales[date] += int(item['QUANTIDADE'])
-        
-        sorted_dates = sorted(daily_sales.keys(), key=lambda x: datetime.strptime(x, '%d/%m/%Y'))
-        
+                date_raw = sale.iloc[0]['DATA']
+                date_obj = self._parse_date_str(date_raw)
+                if not date_obj:
+                    continue
+                date_key = date_obj.date()
+                daily_sales[date_key] += int(item['QUANTIDADE'])
+
+        if not daily_sales:
+            return {'error': 'No sales history for this product'}
+
+        sorted_dates = sorted(daily_sales.keys())
+
         if len(sorted_dates) < 7:
             avg_daily = sum(daily_sales.values()) / len(daily_sales)
             forecast = [avg_daily] * periods_ahead
@@ -530,10 +560,9 @@ class AnalyticsService:
             recent_sales = [daily_sales[date] for date in sorted_dates[-7:]]
             avg_daily = sum(recent_sales) / len(recent_sales)
             forecast = [avg_daily] * periods_ahead
-        
-        last_date = datetime.strptime(sorted_dates[-1], '%d/%m/%Y')
-        forecast_dates = [(last_date + timedelta(days=i+1)).strftime('%d/%m/%Y') 
-                         for i in range(periods_ahead)]
+
+        last_date = sorted_dates[-1]
+        forecast_dates = [(last_date + timedelta(days=i+1)).strftime('%d/%m/%Y') for i in range(periods_ahead)]
         
         product = self.product_repo.get_by_codigo(product_codigo)
         
@@ -561,34 +590,32 @@ class AnalyticsService:
         by_day_of_month = defaultdict(lambda: {'count': 0, 'revenue': 0.0})
         
         for sale in sales:
-            try:
-                date_obj = datetime.strptime(sale['DATA'], '%d/%m/%Y')
-                revenue = float(sale['VALOR_TOTAL_VENDA'])
-                
-                # By month
-                month = date_obj.strftime('%B')
-                by_month[month]['count'] += 1
-                by_month[month]['revenue'] += revenue
-                
-                # By weekday
-                weekday = date_obj.strftime('%A')
-                by_weekday[weekday]['count'] += 1
-                by_weekday[weekday]['revenue'] += revenue
-                
-                # By day of month period
-                day = date_obj.day
-                if day <= 10:
-                    period = 'Início (1-10)'
-                elif day <= 20:
-                    period = 'Meio (11-20)'
-                else:
-                    period = 'Fim (21-31)'
-                
-                by_day_of_month[period]['count'] += 1
-                by_day_of_month[period]['revenue'] += revenue
-                
-            except:
+            date_obj = self._parse_date_str(sale.get('DATA'))
+            if not date_obj:
                 continue
+            revenue = float(sale.get('VALOR_TOTAL_VENDA', 0))
+
+            # By month
+            month = date_obj.strftime('%B')
+            by_month[month]['count'] += 1
+            by_month[month]['revenue'] += revenue
+
+            # By weekday
+            weekday = date_obj.strftime('%A')
+            by_weekday[weekday]['count'] += 1
+            by_weekday[weekday]['revenue'] += revenue
+
+            # By day of month period
+            day = date_obj.day
+            if day <= 10:
+                period = 'Início (1-10)'
+            elif day <= 20:
+                period = 'Meio (11-20)'
+            else:
+                period = 'Fim (21-31)'
+
+            by_day_of_month[period]['count'] += 1
+            by_day_of_month[period]['revenue'] += revenue
         
         # Find patterns
         month_order = ['January', 'February', 'March', 'April', 'May', 'June',

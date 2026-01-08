@@ -44,7 +44,9 @@ class ManualService:
         try:
             with open(self.manuals_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                return data.get('manuals', [])
+                manuals = data.get('manuals', [])
+                print(f"[ANALYTICS] manuals loaded: {len(manuals)}")
+                return manuals
         except Exception as e:
             print(f"Erro ao carregar manuais: {e}")
             return []

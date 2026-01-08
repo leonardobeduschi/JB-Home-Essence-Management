@@ -20,19 +20,15 @@
             <div class="col-md-2">
                 <select id="paymentFilter" class="form-select">
                     <option value="">Todos os Pagamentos</option>
-                    {% set payment_methods = sales|map(attribute='MEIO')|unique|list %}
-                    {% for method in payment_methods|sort %}
-                        <option value="{{ method }}">{{ method|title }}</option>
-                    {% endfor %}
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix">PIX</option>
+                    <option value="cartão de crédito">Cartão de Crédito</option>
+                    <option value="cartão de débito">Cartão de Débito</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <select id="categoryFilter" class="form-select">
                     <option value="">Todas Categorias</option>
-                    {% set categories = sales|map(attribute='CATEGORIA')|unique|list %}
-                    {% for category in categories|sort %}
-                        <option value="{{ category }}">{{ category }}</option>
-                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
@@ -48,7 +44,7 @@
             </div>
         </div>
 
-        <!-- Summary Cards - CORRECTED -->
+        <!-- Summary Cards -->
         <div class="row mb-3">
             <div class="col-md-3">
                 <div class="card bg-primary text-white">
@@ -85,9 +81,9 @@
         </div>
 
         <!-- Sales Table -->
-        <div class="table-responsive">
+        <div class="table-responsive" id="tableContainer" style="max-height: 600px; overflow-y: auto;">
             <table class="table table-hover table-sm" id="salesTable">
-                <thead>
+                <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                     <tr>
                         <th>ID</th>
                         <th>Data</th>
@@ -101,58 +97,21 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for sale in sales|reverse %}
-                    <tr data-payment="{{ sale.MEIO }}" data-category="{{ sale.CATEGORIA }}" data-date="{{ sale.DATA }}" data-sale-id="{{ sale.ID_VENDA }}">
-                        <td><span class="badge bg-secondary">{{ sale.ID_VENDA }}</span></td>
-                        <td>{{ sale.DATA }}</td>
-                        <td>
-                            <strong>{{ sale.CLIENTE }}</strong><br>
-                            <small class="text-muted">{{ sale.ID_CLIENTE }}</small>
-                        </td>
-                        <td>
-                            {{ sale.PRODUTO }}<br>
-                            <small class="text-muted">{{ sale.CODIGO }}</small>
-                        </td>
-                        <td><span class="badge bg-info">{{ sale.CATEGORIA }}</span></td>
-                        <td><strong>{{ sale.QUANTIDADE }}</strong></td>
-                        <td>R$ {{ sale.PRECO_UNIT|float|currency }}</td>
-                        <td><strong class="text-success">R$ {{ sale.PRECO_TOTAL|float|currency }}</strong></td>
-                        <td>
-                            {% if sale.MEIO == 'dinheiro' %}
-                                <span class="badge bg-success"><i class="bi bi-cash"></i> Dinheiro</span>
-                            {% elif sale.MEIO == 'pix' %}
-                                <span class="badge bg-primary"><i class="bi bi-phone"></i> PIX</span>
-                            {% elif sale.MEIO == 'cartao_credito' %}
-                                <span class="badge bg-info"><i class="bi bi-credit-card"></i> Crédito</span>
-                            {% elif sale.MEIO == 'cartao_debito' %}
-                                <span class="badge bg-warning text-dark"><i class="bi bi-credit-card-2-front"></i> Débito</span>
-                            {% else %}
-                                <span class="badge bg-secondary">{{ sale.MEIO }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <button class="btn btn-outline-primary" title="Ver detalhes" onclick="viewSaleDetails('{{ sale.ID_VENDA }}')">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-danger" title="Excluir venda" onclick="deleteSale('{{ sale.ID_VENDA }}')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="10" class="text-center text-muted">
-                            <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
-                            <p>Nenhuma venda registrada</p>
-                            <a href="{{ url_for('add_sale') }}" class="btn btn-primary">Registrar Primeira Venda</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                <tbody id="salesTableBody">
+                    <!-- Loaded dynamically -->
                 </tbody>
             </table>
+            
+            <div id="loadingIndicator" class="text-center py-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="text-muted mt-2">Carregando mais vendas...</p>
+            </div>
+            
+            <div id="noMoreData" class="text-center py-3 text-muted" style="display: none;">
+                <i class="bi bi-check-circle"></i> Todas as vendas foram carregadas
+            </div>
         </div>
     </div>
 </div>
@@ -165,9 +124,7 @@
                 <h5 class="modal-title">Detalhes da Venda</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="saleModalBody">
-                <!-- Content loaded dynamically -->
-            </div>
+            <div class="modal-body" id="saleModalBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
             </div>
@@ -178,98 +135,192 @@
 
 {% block extra_js %}
 <script>
-// ===== LOAD CORRECT SUMMARY FROM API =====
+// ===== INFINITE SCROLL STATE =====
+let allSales = [];
+let displayedSales = [];
+let currentOffset = 0;
+const BATCH_SIZE = 50;
+let isLoading = false;
+let hasMore = true;
+let categories = new Set();
+
+// ===== LOAD SALES BATCH =====
+async function loadSalesBatch() {
+    if (isLoading || !hasMore) return;
+    
+    isLoading = true;
+    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    try {
+        const response = await fetch(`/api/sales/paginated?offset=${currentOffset}&limit=${BATCH_SIZE}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            allSales = [...allSales, ...result.data];
+            hasMore = result.has_more;
+            currentOffset += BATCH_SIZE;
+            
+            // Extract categories
+            result.data.forEach(sale => {
+                if (sale.CATEGORIA) categories.add(sale.CATEGORIA);
+            });
+            
+            updateCategoryFilter();
+            filterTable();
+            
+            if (!hasMore) {
+                document.getElementById('noMoreData').style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading sales:', error);
+    } finally {
+        isLoading = false;
+        document.getElementById('loadingIndicator').style.display = 'none';
+    }
+}
+
+// ===== UPDATE CATEGORY FILTER =====
+function updateCategoryFilter() {
+    const filter = document.getElementById('categoryFilter');
+    const currentValue = filter.value;
+    
+    // Keep first option
+    filter.innerHTML = '<option value="">Todas Categorias</option>';
+    
+    Array.from(categories).sort().forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        filter.appendChild(option);
+    });
+    
+    filter.value = currentValue;
+}
+
+// ===== RENDER SALES =====
+function renderSales(sales) {
+    const tbody = document.getElementById('salesTableBody');
+    
+    if (sales.length === 0 && currentOffset === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center text-muted py-5">
+                    <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+                    <p>Nenhuma venda registrada</p>
+                    <a href="${'{{ url_for("add_sale") }}'}" class="btn btn-primary">Registrar Primeira Venda</a>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    const html = sales.map(sale => `
+        <tr data-payment="${sale.MEIO}" data-category="${sale.CATEGORIA}" data-date="${sale.DATA}" data-sale-id="${sale.ID_VENDA}">
+            <td><span class="badge bg-secondary">${sale.ID_VENDA}</span></td>
+            <td>${sale.DATA}</td>
+            <td>
+                <strong>${sale.CLIENTE}</strong><br>
+                <small class="text-muted">${sale.ID_CLIENTE}</small>
+            </td>
+            <td>
+                ${sale.PRODUTO}<br>
+                <small class="text-muted">${sale.CODIGO}</small>
+            </td>
+            <td><span class="badge bg-info">${sale.CATEGORIA}</span></td>
+            <td><strong>${sale.QUANTIDADE}</strong></td>
+            <td>R$ ${formatCurrencyBR(sale.PRECO_UNIT)}</td>
+            <td><strong class="text-success">R$ ${formatCurrencyBR(sale.PRECO_TOTAL)}</strong></td>
+            <td>${getPaymentBadge(sale.MEIO)}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewSaleDetails('${sale.ID_VENDA}')">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="deleteSale('${sale.ID_VENDA}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    tbody.innerHTML = html;
+}
+
+function getPaymentBadge(meio) {
+    const badges = {
+        'dinheiro': '<span class="badge bg-success"><i class="bi bi-cash"></i> Dinheiro</span>',
+        'pix': '<span class="badge bg-primary"><i class="bi bi-phone"></i> PIX</span>',
+        'cartão de crédito': '<span class="badge bg-info"><i class="bi bi-credit-card"></i> Crédito</span>',
+        'cartão de débito': '<span class="badge bg-warning text-dark"><i class="bi bi-credit-card-2-front"></i> Débito</span>'
+    };
+    return badges[meio.toLowerCase()] || `<span class="badge bg-secondary">${meio}</span>`;
+}
+
+// ===== FILTER TABLE =====
+function filterTable() {
+    const searchValue = document.getElementById('searchInput').value.toLowerCase();
+    const paymentValue = document.getElementById('paymentFilter').value.toLowerCase();
+    const categoryValue = document.getElementById('categoryFilter').value;
+    const dateFrom = document.getElementById('dateFromFilter').value;
+    const dateTo = document.getElementById('dateToFilter').value;
+    
+    displayedSales = allSales.filter(sale => {
+        // Search filter
+        if (searchValue) {
+            const searchText = `${sale.CLIENTE} ${sale.PRODUTO} ${sale.CODIGO} ${sale.ID_VENDA}`.toLowerCase();
+            if (!searchText.includes(searchValue)) return false;
+        }
+        
+        // Payment filter
+        if (paymentValue && sale.MEIO.toLowerCase() !== paymentValue) return false;
+        
+        // Category filter
+        if (categoryValue && sale.CATEGORIA !== categoryValue) return false;
+        
+        // Date filters
+        if (dateFrom || dateTo) {
+            const saleDate = parseDate(sale.DATA);
+            if (dateFrom && saleDate < new Date(dateFrom)) return false;
+            if (dateTo && saleDate > new Date(dateTo)) return false;
+        }
+        
+        return true;
+    });
+    
+    renderSales(displayedSales);
+    updateFilteredSummary();
+}
+
+function parseDate(dateStr) {
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(dateStr);
+}
+
+// ===== UPDATE SUMMARY =====
+function updateFilteredSummary() {
+    const visibleCount = displayedSales.length;
+    const visibleItems = displayedSales.reduce((sum, s) => sum + s.QUANTIDADE, 0);
+    const visibleSaleIds = new Set(displayedSales.map(s => s.ID_VENDA));
+    
+    document.getElementById('totalSalesDisplay').textContent = visibleCount;
+    document.getElementById('totalItemsDisplay').textContent = visibleItems;
+    document.getElementById('uniqueSalesDisplay').textContent = visibleSaleIds.size;
+}
+
 function loadSalesSummary() {
     fetch('/api/sales/summary')
         .then(r => r.json())
         .then(result => {
             if (result.success) {
                 const data = result.data;
-                document.getElementById('totalSalesDisplay').textContent = data.total_sales;
                 document.getElementById('totalRevenueDisplay').textContent = 'R$ ' + formatCurrencyBR(data.total_revenue);
-                document.getElementById('totalItemsDisplay').textContent = data.total_items;
-                document.getElementById('uniqueSalesDisplay').textContent = data.unique_sales;
             }
-        })
-        .catch(err => console.error('Error loading summary:', err));
-}
-
-// Load on page load
-document.addEventListener('DOMContentLoaded', loadSalesSummary);
-
-// Filter functionality
-document.getElementById('searchInput').addEventListener('keyup', filterTable);
-document.getElementById('paymentFilter').addEventListener('change', filterTable);
-document.getElementById('categoryFilter').addEventListener('change', filterTable);
-document.getElementById('dateFromFilter').addEventListener('change', filterTable);
-document.getElementById('dateToFilter').addEventListener('change', filterTable);
-
-function filterTable() {
-    const searchValue = document.getElementById('searchInput').value.toLowerCase();
-    const paymentValue = document.getElementById('paymentFilter').value;
-    const categoryValue = document.getElementById('categoryFilter').value;
-    const dateFrom = document.getElementById('dateFromFilter').value;
-    const dateTo = document.getElementById('dateToFilter').value;
-    
-    const rows = document.querySelectorAll('#salesTable tbody tr');
-    let visibleCount = 0;
-    let visibleItems = 0;
-    const visibleSaleIds = new Set();
-    
-    rows.forEach(row => {
-        if (row.cells.length === 1) return; // Skip empty state
-        
-        const text = row.textContent.toLowerCase();
-        const payment = row.getAttribute('data-payment');
-        const category = row.getAttribute('data-category');
-        const date = row.getAttribute('data-date');
-        const saleId = row.getAttribute('data-sale-id');
-        
-        let showRow = true;
-        
-        // Search filter
-        if (searchValue && !text.includes(searchValue)) {
-            showRow = false;
-        }
-        
-        // Payment filter
-        if (paymentValue && payment !== paymentValue) {
-            showRow = false;
-        }
-        
-        // Category filter
-        if (categoryValue && category !== categoryValue) {
-            showRow = false;
-        }
-        
-        // Date filters
-        if (dateFrom || dateTo) {
-            const saleDate = parseDate(date);
-            if (dateFrom && saleDate < new Date(dateFrom)) showRow = false;
-            if (dateTo && saleDate > new Date(dateTo)) showRow = false;
-        }
-        
-        row.style.display = showRow ? '' : 'none';
-        
-        // Update summary
-        if (showRow) {
-            visibleCount++;
-            const qty = parseInt(row.cells[5].textContent);
-            visibleItems += qty;
-            visibleSaleIds.add(saleId);
-        }
-    });
-    
-    // Update filtered summary (items only, revenue stays from API)
-    document.getElementById('totalSalesDisplay').textContent = visibleCount;
-    document.getElementById('totalItemsDisplay').textContent = visibleItems;
-    document.getElementById('uniqueSalesDisplay').textContent = visibleSaleIds.size;
-}
-
-function parseDate(dateStr) {
-    // Assumes DD/MM/YYYY format
-    const parts = dateStr.split('/');
-    return new Date(parts[2], parts[1] - 1, parts[0]);
+        });
 }
 
 function clearFilters() {
@@ -279,26 +330,29 @@ function clearFilters() {
     document.getElementById('dateFromFilter').value = '';
     document.getElementById('dateToFilter').value = '';
     filterTable();
-    loadSalesSummary(); // Reload full summary
 }
 
+// ===== INFINITE SCROLL =====
+document.getElementById('tableContainer').addEventListener('scroll', function() {
+    if (this.scrollTop + this.clientHeight >= this.scrollHeight - 100) {
+        loadSalesBatch();
+    }
+});
+
+// ===== FILTER LISTENERS =====
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('paymentFilter').addEventListener('change', filterTable);
+document.getElementById('categoryFilter').addEventListener('change', filterTable);
+document.getElementById('dateFromFilter').addEventListener('change', filterTable);
+document.getElementById('dateToFilter').addEventListener('change', filterTable);
+
+// ===== SALE ACTIONS =====
 function viewSaleDetails(id) {
-    // Get ALL items from this sale
     fetch(`/api/sales/group/${id}`)
-        .then(r => {
-            if (!r.ok) throw new Error('Venda não encontrada');
-            return r.json();
-        })
+        .then(r => r.json())
         .then(data => {
             if (data.success) {
                 const items = data.data;
-                
-                if (items.length === 0) {
-                    alert('Nenhum item encontrado para esta venda.');
-                    return;
-                }
-                
-                // Use VALOR_TOTAL_VENDA from sale header
                 const total = parseFloat(items[0].VALOR_TOTAL_VENDA || 0);
                 
                 let html = `
@@ -355,17 +409,12 @@ function viewSaleDetails(id) {
                 document.getElementById('saleModalBody').innerHTML = html;
                 new bootstrap.Modal(document.getElementById('saleModal')).show();
             }
-        })
-        .catch(err => {
-            alert('Erro ao carregar detalhes da venda: ' + err.message);
         });
 }
 
 function deleteSale(id) {
-    if (!confirm(`⚠️ Tem certeza que deseja EXCLUIR permanentemente a venda ${id}?\nO estoque será restaurado automaticamente!\nEsta ação não pode ser desfeita!`)) {
-        return;
-    }
-
+    if (!confirm(`⚠️ Tem certeza que deseja EXCLUIR permanentemente a venda ${id}?`)) return;
+    
     fetch('/api/sales/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -379,8 +428,13 @@ function deleteSale(id) {
         } else {
             alert('Erro: ' + data.error);
         }
-    })
-    .catch(() => alert('Erro de conexão'));
+    });
 }
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+    loadSalesSummary();
+    loadSalesBatch();
+});
 </script>
 {% endblock %}

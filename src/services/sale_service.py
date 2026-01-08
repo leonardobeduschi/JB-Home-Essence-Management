@@ -74,9 +74,15 @@ Substitua o método register_sale_multi_item no seu sale_service.py por este:
             existing_ids = [s['ID_VENDA'] for s in self.sale_repository.get_all().to_dict('records')]
             id_venda = IDGenerator.generate_sale_id(existing_ids)
             
-            # Use today's date if not specified
+            # Use provided date or today's date
             if data is None:
                 data = datetime.now().strftime('%d/%m/%Y')
+            else:
+                # Validate date format (DD/MM/YYYY)
+                try:
+                    datetime.strptime(data, '%d/%m/%Y')
+                except ValueError:
+                    raise ValueError("Formato de data inválido. Use DD/MM/YYYY")
             
             # === STEP 3: Validate all items and check stock ===
             validated_items = []
@@ -119,7 +125,7 @@ Substitua o método register_sale_multi_item no seu sale_service.py por este:
                     'current_stock': current_stock
                 })
             
-            # === STEP 4: Create Sale header (NEW: only header fields) ===
+            # === STEP 4: Create Sale header ===
             from src.models.sale import Sale
             
             sale = Sale(
@@ -128,7 +134,7 @@ Substitua o método register_sale_multi_item no seu sale_service.py por este:
                 cliente=client['CLIENTE'],
                 meio=meio,
                 data=data,
-                valor_total_venda=total_venda  # ← Total calculado
+                valor_total_venda=total_venda
             )
             
             # === STEP 5: Create SaleItem instances ===
@@ -170,8 +176,9 @@ Substitua o método register_sale_multi_item no seu sale_service.py por este:
             # === SUCCESS ===
             total_items = sum(item['quantidade'] for item in validated_items)
             
-            print(f"✅ Venda registrada com sucesso!")
+            print("✅ Venda registrada com sucesso!")
             print(f"  ID: {id_venda}")
+            print(f"  Data: {data}")
             print(f"  Cliente: {client['CLIENTE']}")
             print(f"  Produtos: {len(sale_items)} diferentes")
             print(f"  Total de itens: {total_items} unidade(s)")

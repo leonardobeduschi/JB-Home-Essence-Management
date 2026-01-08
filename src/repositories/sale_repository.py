@@ -10,175 +10,151 @@ from src.models.sale import Sale, SALE_SCHEMA
 
 
 class SaleRepository(BaseRepository):
-    """Repository for sale data persistence."""
-    
+    """Repository for sale data persistence using SQLite via BaseRepository."""
+
     def __init__(self, filepath: str = 'data/sales.csv'):
         super().__init__(filepath, SALE_SCHEMA)
-    
+
     def exists(self, id_venda: str) -> bool:
-        df = self._read_csv()
-        return id_venda.upper() in df['ID_VENDA'].str.upper().values
-    
+        if not id_venda:
+            return False
+        with self.get_conn() as conn:
+            cur = conn.execute('SELECT 1 FROM sales WHERE ID_VENDA = ? COLLATE NOCASE LIMIT 1', (id_venda,))
+            return cur.fetchone() is not None
+
     def get_by_id(self, id_venda: str) -> Optional[Dict]:
-        df = self._read_csv()
-        mask = df['ID_VENDA'].str.upper() == id_venda.upper()
-        result = df[mask]
-        
-        if result.empty:
+        if not id_venda:
             return None
-        
-        return result.iloc[0].to_dict()
-    
+        with self.get_conn() as conn:
+            cur = conn.execute('SELECT * FROM sales WHERE ID_VENDA = ? COLLATE NOCASE LIMIT 1', (id_venda,))
+            row = cur.fetchone()
+            return dict(row) if row else None
+
     def save(self, sale: Sale) -> bool:
         if self.exists(sale.id_venda):
             raise ValueError(f"Venda com ID '{sale.id_venda}' já existe")
-        
         try:
-            df = self._read_csv()
-            new_row = pd.DataFrame([sale.to_dict()])
-            df = pd.concat([df, new_row], ignore_index=True)
-            self._write_csv(df)
+            data = sale.to_dict()
+            # Normalize date to ISO if possible, prefer YYYY-MM-DD in DB
+            def to_iso_str(s):
+                if not s:
+                    return None
+                s_str = str(s).strip()
+                from datetime import datetime
+                for fmt in ('%d/%m/%Y', '%Y-%m-%d'):
+                    try:
+                        return datetime.strptime(s_str, fmt).date().isoformat()
+                    except Exception:
+                        continue
+                return None
+
+            iso = to_iso_str(data.get('DATA'))
+            if iso:
+                data['DATA'] = iso
+
+            self.insert(data)
             return True
+        except ValueError:
+            raise
         except Exception as e:
             raise Exception(f"Erro ao salvar venda: {str(e)}")
-    
+
     def get_by_client(self, id_cliente: str) -> List[Dict]:
-        df = self._read_csv()
-        mask = df['ID_CLIENTE'].str.upper() == id_cliente.upper()
-        result = df[mask]
-        return result.to_dict('records')
-    
+        with self.get_conn() as conn:
+            cur = conn.execute('SELECT * FROM sales WHERE ID_CLIENTE = ? COLLATE NOCASE', (id_cliente,))
+            return [dict(r) for r in cur.fetchall()]
+
     def get_by_date_range(self, start_date: str, end_date: str) -> List[Dict]:
-        df = self._read_csv()
-        
-        if df.empty:
+        # Accept dates in dd/mm/YYYY or ISO YYYY-MM-DD and convert to ISO
+        def to_iso(s):
+            if not s:
+                return None
+            s_str = str(s).strip()
+            for fmt in ('%d/%m/%Y', '%Y-%m-%d'):
+                try:
+                    from datetime import datetime
+                    return datetime.strptime(s_str, fmt).date().isoformat()
+                except Exception:
+                    continue
+            return None
+
+        s_iso = to_iso(start_date)
+        e_iso = to_iso(end_date)
+        if not s_iso or not e_iso:
             return []
-        
-        df['DATA_DT'] = pd.to_datetime(df['DATA'], format='%d/%m/%Y', errors='coerce')
-        start_dt = datetime.strptime(start_date, '%d/%m/%Y')
-        end_dt = datetime.strptime(end_date, '%d/%m/%Y')
-        
-        mask = (df['DATA_DT'] >= start_dt) & (df['DATA_DT'] <= end_dt)
-        result = df[mask].drop('DATA_DT', axis=1)
-        
-        return result.to_dict('records')
-    
+        with self.get_conn() as conn:
+            cur = conn.execute('SELECT * FROM sales WHERE DATA >= ? AND DATA <= ? ORDER BY DATA', (s_iso, e_iso))
+            return [dict(r) for r in cur.fetchall()]
+
     def get_by_payment_method(self, meio: str) -> List[Dict]:
-        df = self._read_csv()
-        mask = df['MEIO'].str.lower() == meio.lower()
-        result = df[mask]
-        return result.to_dict('records')
-    
+        with self.get_conn() as conn:
+            cur = conn.execute('SELECT * FROM sales WHERE LOWER(MEIO) = LOWER(?)', (meio,))
+            return [dict(r) for r in cur.fetchall()]
+
     def get_sales_summary(self) -> Dict:
-        """Get comprehensive sales summary - FIXED for new structure."""
         from src.repositories.sale_item_repository import SaleItemRepository
-        
-        df = self._read_csv()
-        
-        if df.empty:
-            return {
-                'total_sales': 0,
-                'total_revenue': 0.0,
-                'total_items_sold': 0,
-                'average_sale_value': 0.0,
-                'by_payment_method': {},
-                'by_category': {}
-            }
-        
-        # Convert columns
-        df['VALOR_TOTAL_VENDA'] = pd.to_numeric(df['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
-        df['MEIO_NORM'] = df['MEIO'].fillna('').astype(str).str.strip().str.title()
-        
-        # Get items data for total_items_sold and by_category
+        with self.get_conn() as conn:
+            cur = conn.execute('SELECT COUNT(*) as total, SUM(COALESCE(VALOR_TOTAL_VENDA,0)) as total_revenue, AVG(COALESCE(VALOR_TOTAL_VENDA,0)) as avg_sale FROM sales')
+            row = cur.fetchone()
+            total_sales = int(row['total'] or 0)
+            total_revenue = float(row['total_revenue'] or 0)
+            average_sale_value = float(row['avg_sale'] or 0)
+
+        # Total items
         item_repo = SaleItemRepository()
-        items_df = item_repo._read_csv()
-        
-        total_items = 0
-        if not items_df.empty:
-            items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
-            total_items = int(items_df['QUANTIDADE'].sum())
-        
-        # Get category stats
+        with item_repo.get_conn() as conn:
+            cur = conn.execute('SELECT SUM(COALESCE(QUANTIDADE,0)) as total_items FROM sales_items')
+            total_items = int(cur.fetchone()['total_items'] or 0)
+
+        # By payment method
+        with self.get_conn() as conn:
+            cur = conn.execute("SELECT MEIO, SUM(COALESCE(VALOR_TOTAL_VENDA,0)) as total FROM sales GROUP BY MEIO")
+            by_payment = {row['MEIO']: row['total'] for row in cur.fetchall()}
+
+        # By category
         category_stats = item_repo.get_category_stats()
         by_category = {}
         if not category_stats.empty:
             by_category = category_stats.set_index('CATEGORIA')['RECEITA'].to_dict()
-        
-        summary = {
-            'total_sales': len(df),
-            'total_revenue': float(df['VALOR_TOTAL_VENDA'].sum()),
+
+        return {
+            'total_sales': total_sales,
+            'total_revenue': total_revenue,
             'total_items_sold': total_items,
-            'average_sale_value': float(df['VALOR_TOTAL_VENDA'].mean()),
-            'by_payment_method': df.groupby('MEIO_NORM')['VALOR_TOTAL_VENDA'].sum().to_dict(),
+            'average_sale_value': average_sale_value,
+            'by_payment_method': by_payment,
             'by_category': by_category
         }
-        
-        return summary
-    
+
     def get_top_clients(self, limit: int = 10) -> List[Dict]:
-        df = self._read_csv()
-        
-        if df.empty:
-            return []
-        
-        df['VALOR_TOTAL_VENDA'] = pd.to_numeric(df['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
-        
-        top = df.groupby(['ID_CLIENTE', 'CLIENTE']).agg({
-            'ID_VENDA': 'count',
-            'VALOR_TOTAL_VENDA': 'sum'
-        }).reset_index()
-        
-        top.columns = ['ID_CLIENTE', 'CLIENTE', 'NUM_COMPRAS', 'TOTAL_GASTO']
-        top = top.sort_values('TOTAL_GASTO', ascending=False).head(limit)
-        
-        return top.to_dict('records')
-    
+        with self.get_conn() as conn:
+            cur = conn.execute('SELECT ID_CLIENTE, CLIENTE, COUNT(ID_VENDA) as NUM_COMPRAS, SUM(COALESCE(VALOR_TOTAL_VENDA,0)) as TOTAL_GASTO FROM sales GROUP BY ID_CLIENTE, CLIENTE ORDER BY TOTAL_GASTO DESC LIMIT ?', (limit,))
+            return [dict(r) for r in cur.fetchall()]
+
     def delete(self, id_venda: str) -> bool:
         if not self.exists(id_venda):
             raise ValueError(f"Venda com ID '{id_venda}' não encontrada")
-        
         try:
-            df = self._read_csv()
-            mask = df['ID_VENDA'].str.upper() != id_venda.upper()
-            df = df[mask]
-            self._write_csv(df)
-            return True
+            return super().delete(id_venda)
         except Exception as e:
             raise Exception(f"Erro ao deletar venda: {str(e)}")
-    
+
     def get_sale_with_items(self, id_venda: str) -> Dict:
-        """Get sale header + items (JOIN between sales and sales_items)."""
         from src.repositories.sale_item_repository import SaleItemRepository
-        
         header = self.get_by_id(id_venda)
         if not header:
             return None
-        
         item_repo = SaleItemRepository()
         items = item_repo.get_by_sale_id(id_venda)
-        
         return {
             'header': header,
             'items': items
         }
-    
+
     def get_recent_sales(self, limit: int = 10) -> List[Dict]:
-        """Get recent sales with proper data from new structure."""
-        from src.repositories.sale_item_repository import SaleItemRepository
-        
-        df = self._read_csv()
-        
-        if df.empty:
-            return []
-        
-        # Sort by ID_VENDA (descending) to get most recent
-        df = df.sort_values('ID_VENDA', ascending=False).head(limit)
-        
-        # Convert to list of dicts
-        sales = df.to_dict('records')
-        
-        # Add VALOR_TOTAL_VENDA as VALOR_TOTAL_VENDA for compatibility
-        for sale in sales:
-            sale['VALOR_TOTAL_VENDA'] = sale.get('VALOR_TOTAL_VENDA', 0)
-        
-        return sales
+        with self.get_conn() as conn:
+            cur = conn.execute('SELECT * FROM sales ORDER BY ID_VENDA DESC LIMIT ?', (limit,))
+            sales = [dict(r) for r in cur.fetchall()]
+            for s in sales:
+                s['VALOR_TOTAL_VENDA'] = s.get('VALOR_TOTAL_VENDA', 0)
+            return sales

@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import secrets
 import os
 import pandas as pd
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from src.services.product_service import ProductService
 from src.services.client_service import ClientService
@@ -20,14 +21,31 @@ from src.services.manual_service import ManualService
 from src.services.expense_service import ExpenseService
 
 
+# ========== CONFIGURAÇÃO DO FLASK ==========
+
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
 
-# Jinja filter to format currency in Brazilian style (thousands dot, decimal comma), e.g., 25300.00 -> 25.300,00
+# 🔐 Secret key usando variável de ambiente (mais seguro)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))  # Fallback para desenvolvimento
+
+# 🔒 Configurações de segurança de sessão
+# Tornar secure cookie condicional: habilitar somente em produção/HTTPS para não quebrar sessões em desenvolvimento local
+is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('USE_HTTPS', 'false').lower() in ('1', 'true', 'yes')
+app.config.update(
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=12),
+    SESSION_COOKIE_SECURE=is_production,      # Apenas HTTPS em produção
+    SESSION_COOKIE_HTTPONLY=True,    # Impede acesso via JavaScript
+    SESSION_COOKIE_SAMESITE='Lax'    # Proteção contra CSRF
+)
+# Log (console) para facilitar debug local
+print(f"SESSION_COOKIE_SECURE={app.config['SESSION_COOKIE_SECURE']}; FLASK_ENV={os.getenv('FLASK_ENV')}")
+
+# ========== FILTROS JINJA2 ==========
+
 @app.template_filter('currency')
 def currency_filter(value):
+    """Format currency in Brazilian style (thousands dot, decimal comma)."""
     try:
         v = float(value)
     except (ValueError, TypeError):
@@ -39,8 +57,8 @@ def currency_filter(value):
     s = s.replace(',', 'X').replace('.', ',').replace('X', '.')
     return f"{sign}{s}"
 
+# ========== INICIALIZAÇÃO DE SERVIÇOS ==========
 
-# Initialize services
 product_service = ProductService()
 client_service = ClientService()
 sale_service = SaleService()
@@ -49,23 +67,45 @@ visualization_service = VisualizationService()
 manual_service = ManualService()
 expense_service = ExpenseService()
 
-# Simple user database (in production, use a real database)
-# Password: In production, use proper hashing (bcrypt, argon2)
+# ========== SQLITE INITIALIZATION (ensure tables exist on startup) ==========
+# Read DB path from environment (do not hardcode paths)
+from src.database.connection import init_db, get_db_path
+SQLITE_DB = os.getenv('SQLITE_DB', None)
+try:
+    init_db(db_path=SQLITE_DB)
+    resolved_db = get_db_path(SQLITE_DB)
+    print(f"SQLite DB initialized at: {resolved_db}")
+except Exception as e:
+    # Do not raise to avoid breaking Flask startup; log error for diagnostics
+    print(f"Erro ao inicializar o banco SQLite: {e}")
+
+# ========== BANCO DE DADOS DE USUÁRIOS ==========
+
+# ✅ USUÁRIOS JB HOME ESSENCE COM HASH SEGURO
+# Em produção, use variáveis de ambiente para os hashes
 USERS = {
-    'admin': {
-        'password': 'admin123',  # Change in production!
-        'name': 'Administrator',
+    'Jeanete': {
+        'password_hash': os.getenv('JEANETE_PASSWORD_HASH', 
+            'scrypt:32768:8:1$UhDcxbVruYxivOny$8156fad4525d8951b660ba8c6d06f28c427c19bcbe2ce6a6138ee3b3b9447b30f3216075198a8815236a267150e855d00bfdc373a852fed06fd632d0fec855ae'),
+        'name': 'Jeanete',
         'role': 'admin'
     },
-    'vendedor': {
-        'password': 'vend123',
-        'name': 'Vendedor',
-        'role': 'seller'
+    'Matheus': {
+        'password_hash': os.getenv('MATHEUS_PASSWORD_HASH',
+            'scrypt:32768:8:1$SNBtHaT2Vu5XZVWm$ee4793d4b1db8cb67d22a3ed0d2b7329cc67e77cfaa57bd31dc3d7a8bdfa22f9316aed06a37e67aabb6f7122714dcd7419d2e034159b0c81ba2748d1c747270c'),
+        'name': 'Matheus',
+        'role': 'admin'
+    },
+    'Leonardo': {
+        'password_hash': os.getenv('LEONARDO_PASSWORD_HASH',
+            'scrypt:32768:8:1$PwBIrzKgUaD7EmlO$615ef9b1127cf21a02d662f2a64844931cbdc9ed3bf56fc6601585dd0fb9aec98df1c985b11ad755d1fedcdf81c4c09d4721a9870c32a5573f5a9a595e307aa8'),
+        'name': 'Leonardo',
+        'role': 'admin'
     }
 }
 
+# ========== DECORATORS DE AUTENTICAÇÃO ==========
 
-# Authentication decorator
 def login_required(f):
     """Require login for protected routes."""
     @wraps(f)
@@ -88,7 +128,7 @@ def admin_required(f):
     return decorated_function
 
 
-# ========== AUTHENTICATION ROUTES ==========
+# ========== ROTAS DE AUTENTICAÇÃO ==========
 
 @app.route('/')
 def index():
@@ -105,15 +145,34 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        user = USERS.get(username)
-        if user and user['password'] == password:
-            session.permanent = True
-            session['username'] = username
-            session['name'] = user['name']
-            session['role'] = user['role']
-            return redirect(url_for('dashboard'))
+        # Verifica se o usuário existe
+        if username not in USERS:
+            return render_template('login.html', error='Usuário ou senha inválidos')
         
-        return render_template('login.html', error='Usuário ou senha inválidos')
+        user = USERS[username]
+        
+        # Verifica a senha usando hash seguro
+        try:
+            if check_password_hash(user['password_hash'], password):
+                session.permanent = True
+                session['username'] = username
+                session['name'] = user['name']
+                session['role'] = user['role']
+                # Tentar construir URL do dashboard; se falhar, usar fallback para path absoluto
+                try:
+                    dashboard_url = url_for('dashboard')
+                except Exception as be:
+                    print(f"Erro ao construir URL do dashboard: {be}")
+                    dashboard_url = '/dashboard'
+                return redirect(dashboard_url)
+            else:
+                return render_template('login.html', error='Usuário ou senha inválidos')
+        except Exception as e:
+            # Log do erro (em produção, use logging apropriado) com traceback completo
+            import traceback
+            print("Erro na verificação de senha:")
+            traceback.print_exc()
+            return render_template('login.html', error='Erro no sistema. Tente novamente.')
     
     return render_template('login.html')
 
@@ -125,9 +184,20 @@ def logout():
     return redirect(url_for('login'))
 
 
+# ========== ROTAS DA APLICAÇÃO ==========
+
+# Adicione aqui as outras rotas do seu sistema...
+# Exemplo: (o dashboard completo é definido mais abaixo no arquivo) 
+
+
+# ========== CONFIGURAÇÃO PARA DESENVOLVIMENTO ==========
+
+# NOTE: O `app.run` fica apenas no final do arquivo para garantir que
+# todas as rotas sejam registradas antes de iniciar o servidor.
+# (Removido bloco duplicado que iniciava o servidor prematuramente.)
+
 # ========== DASHBOARD ROUTES ==========
 
-@app.route('/')
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -200,21 +270,30 @@ def dashboard():
         return render_template('error.html', error=str(e))
 
 
-# ========== PRODUCT ROUTES ==========
+# Debug: listar endpoints registrados (útil para troubleshooting)
+print('Rotas registradas:', sorted([r.endpoint for r in app.url_map.iter_rules()]))
+
+# Handler 404 para log detalhado (ajuda a identificar recursos quebrados)
+@app.errorhandler(404)
+def page_not_found(e):
+    try:
+        print(f"404 Not Found -> Method: {request.method}, Path: {request.path}, Referer: {request.headers.get('Referer')}, User-Agent: {request.headers.get('User-Agent')}")
+    except Exception:
+        print("404 Not Found (não foi possível ler os headers)")
+    return render_template('404.html'), 404
 
 @app.route('/products')
 @login_required
 def products():
-    """Products management page with CORRECT profit margins."""
     try:
         # Get all products
         products_list = product_service.list_all_products()
-        
+
         # Calculate CORRECT margins for each product
         for product in products_list:
             custo = float(product.get('CUSTO', 0))
             valor = float(product.get('VALOR', 0))
-            
+
             if valor > 0:
                 # USA O MÉTODO CORRETO (não depende de monthly_sales)
                 margin_data = expense_service.calculate_product_margin(
@@ -223,11 +302,11 @@ def products():
                     quantity=1,
                     payment_method='pix'  # Assume pix por padrão
                 )
-                
+
                 product['gross_margin_pct'] = margin_data['gross_margin_pct']
                 product['contribution_margin_pct'] = margin_data['contribution_margin_pct']
                 product['variable_costs'] = margin_data['variable_costs_total']
-                
+
                 # Para compatibilidade com template antigo
                 product['net_margin_pct'] = margin_data['contribution_margin_pct']
             else:
@@ -235,14 +314,14 @@ def products():
                 product['contribution_margin_pct'] = 0
                 product['net_margin_pct'] = 0
                 product['variable_costs'] = 0
-        
+
         return render_template(
             'products.html', 
             products=products_list,
             total_expenses=expense_service.get_total_monthly_expenses(),
             user=session
         )
-        
+
     except Exception as e:
         print(f"Erro na página de produtos: {e}")
         import traceback
@@ -371,7 +450,7 @@ def sales():
 @app.route('/sales/add', methods=['GET', 'POST'])
 @login_required
 def add_sale():
-    """Add sale page and handler - WITH MULTI-ITEM SUPPORT."""
+    """Add sale page and handler - WITH MULTI-ITEM SUPPORT AND DATE."""
     if request.method == 'POST':
         try:
             import json
@@ -383,21 +462,28 @@ def add_sale():
                 # NEW: Multi-item sale
                 cart_data = json.loads(cart_data_str)
                 
+                # Extract date from cart_data (optional)
+                sale_date = cart_data.get('data')  # Will be None if not provided
+                
                 sales = sale_service.register_sale_multi_item(
                     id_cliente=cart_data['id_cliente'],
                     meio=cart_data['meio'],
-                    items=cart_data['items']
+                    items=cart_data['items'],
+                    data=sale_date  # Pass the date (None = today)
                 )
                 
                 return redirect(url_for('sales'))
             else:
                 # LEGACY: Single item sale (for compatibility)
+                sale_date = request.form.get('data')  # Optional date field
+                
                 sale = sale_service.register_sale(
                     id_cliente=request.form['id_cliente'],
                     codigo=request.form['codigo'],
                     quantidade=int(request.form['quantidade']),
                     meio=request.form['meio'],
-                    preco_unit=float(request.form.get('preco_unit')) if request.form.get('preco_unit') else None
+                    preco_unit=float(request.form.get('preco_unit')) if request.form.get('preco_unit') else None,
+                    data=sale_date if sale_date else None
                 )
                 return redirect(url_for('sales'))
                 
@@ -424,6 +510,7 @@ def add_sale():
                                  clients=clients,
                                  products=products,
                                  payment_methods=sale_service.get_available_payment_methods(),
+                                 now=datetime.now(),  # Para o max date
                                  user=session)
     
     # Método GET - carregamento normal da página
@@ -448,6 +535,7 @@ def add_sale():
                          clients=clients,
                          products=products,
                          payment_methods=sale_service.get_available_payment_methods(),
+                         now=datetime.now(),  # Para o max date
                          user=session)
 
 @app.route('/api/sales/summary', methods=['GET'])
@@ -583,10 +671,27 @@ def api_get_products():
 @app.route('/api/products/<codigo>', methods=['GET'])
 @login_required
 def api_get_product(codigo):
-    """Get product by code."""
+    """Get product by code WITH MARGIN CALCULATIONS."""
     try:
         product = product_service.get_product(codigo)
         if product:
+            # Calcular margens usando o expense_service
+            custo = float(product.get('CUSTO', 0))
+            valor = float(product.get('VALOR', 0))
+            
+            # Calcular margem de contribuição usando o método correto
+            margin_data = expense_service.calculate_product_margin(
+                sale_price=valor,
+                cost_price=custo,
+                quantity=1,
+                payment_method='pix'  # Usa PIX como padrão (taxa de 3.5%)
+            )
+            
+            # Adicionar dados calculados ao produto
+            product['gross_margin_pct'] = margin_data['gross_margin_pct']
+            product['contribution_margin_pct'] = margin_data['contribution_margin_pct']
+            product['variable_costs'] = margin_data['variable_costs_total']
+            
             return jsonify({'success': True, 'data': product})
         return jsonify({'success': False, 'error': 'Produto não encontrado'}), 404
     except Exception as e:
@@ -690,6 +795,33 @@ def api_delete_client():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/clients/paginated', methods=['GET'])
+@login_required
+def api_clients_paginated():
+    """Get paginated clients (50 per page)."""
+    try:
+        offset = int(request.args.get('offset', 0))
+        limit = int(request.args.get('limit', 50))
+        
+        clients = client_service.list_all_clients()
+        
+        # Sort by ID descending
+        clients.sort(key=lambda x: x.get('ID_CLIENTE', ''), reverse=True)
+        
+        total = len(clients)
+        paginated = clients[offset:offset + limit]
+        has_more = (offset + limit) < total
+        
+        return jsonify({
+            'success': True,
+            'data': paginated,
+            'has_more': has_more,
+            'total': total
+        })
+        
+    except Exception as e:
+        print(f"Error in paginated clients: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/sales', methods=['GET'])
 @login_required
@@ -784,6 +916,81 @@ def api_delete_sale():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/sales/paginated', methods=['GET'])
+@login_required
+def api_sales_paginated():
+    """Get paginated sales (50 per page)."""
+    try:
+        offset = int(request.args.get('offset', 0))
+        limit = int(request.args.get('limit', 50))
+        
+        from src.repositories.sale_repository import SaleRepository
+        from src.repositories.sale_item_repository import SaleItemRepository
+        
+        sale_repo = SaleRepository()
+        item_repo = SaleItemRepository()
+        
+        # Get all sales and items
+        sales_df = sale_repo.get_all()
+        items_df = item_repo._read_csv()
+        
+        if items_df.empty:
+            return jsonify({
+                'success': True,
+                'data': [],
+                'has_more': False,
+                'total': 0
+            })
+        
+        # Sort by ID_VENDA descending (most recent first)
+        items_df = items_df.sort_values('ID_VENDA', ascending=False)
+        
+        # Get paginated slice
+        total = len(items_df)
+        paginated_items = items_df.iloc[offset:offset + limit]
+        
+        # Build result
+        results = []
+        for _, item in paginated_items.iterrows():
+            sale_header = sales_df[sales_df['ID_VENDA'] == item['ID_VENDA']]
+            
+            if sale_header.empty:
+                continue
+            
+            sale = sale_header.iloc[0]
+            
+            try:
+                results.append({
+                    'ID_VENDA': sale['ID_VENDA'],
+                    'DATA': sale['DATA'],
+                    'CLIENTE': sale['CLIENTE'],
+                    'ID_CLIENTE': sale['ID_CLIENTE'],
+                    'PRODUTO': str(item.get('PRODUTO', '')).strip().title(),
+                    'CODIGO': item['CODIGO'],
+                    'CATEGORIA': str(item.get('CATEGORIA', '')).strip().title(),
+                    'QUANTIDADE': int(item['QUANTIDADE']),
+                    'PRECO_UNIT': float(item['PRECO_UNIT']),
+                    'PRECO_TOTAL': float(item['PRECO_TOTAL']),
+                    'MEIO': sale['MEIO'],
+                    'VALOR_TOTAL_VENDA': float(sale['VALOR_TOTAL_VENDA'])
+                })
+            except (ValueError, KeyError, TypeError):
+                continue
+        
+        has_more = (offset + limit) < total
+        
+        return jsonify({
+            'success': True,
+            'data': results,
+            'has_more': has_more,
+            'total': total
+        })
+        
+    except Exception as e:
+        print(f"Error in paginated sales: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/analytics/summary', methods=['GET'])
 @login_required
@@ -886,6 +1093,12 @@ def api_categories():
 def api_payment_methods():
     """Get payment methods analysis."""
     try:
+        # Log current counts to ensure fresh data
+        from src.repositories.sale_repository import SaleRepository
+        sale_repo = SaleRepository()
+        sales_df = sale_repo.get_all()
+        print(f"[ANALYTICS] payment_methods: sales rows={len(sales_df)}")
+
         payment_data = analytics_service.get_payment_method_analysis()
         return jsonify({'success': True, 'data': payment_data})
     except Exception as e:
@@ -903,24 +1116,29 @@ def api_monthly_revenue():
         from src.repositories.sale_repository import SaleRepository
         
         sale_repo = SaleRepository()
-        sales = sale_repo.get_all().to_dict('records')
+        sales_df = sale_repo.get_all()
+        print(f"[ANALYTICS] monthly_revenue: sales rows={len(sales_df)}")
+        import pandas as _pd
+        # Flexible date parsing (accept dd/mm/YYYY and ISO YYYY-MM-DD)
+        sales_df['DATA_DT'] = _pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        # Fallback: parse dd/mm/YYYY explicitly for rows not parsed by the vectorized call
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: _pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        sales_df = sales_df[sales_df['DATA_DT'].notna()]
+        sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
+        sales_df['VALOR_TOTAL_VENDA'] = _pd.to_numeric(sales_df['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
         
         # Get last 12 months
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
         
-        # Group by month
         monthly_data = defaultdict(float)
-        
-        for sale in sales:
-            try:
-                sale_date = datetime.strptime(sale['DATA'], '%d/%m/%Y')
-                if sale_date >= start_date:
-                    month_key = sale_date.strftime('%Y-%m')
-                    monthly_data[month_key] += float(sale['VALOR_TOTAL_VENDA'])
-            except Exception as e:
-                print(f"Error processing sale date: {e}")
-                continue
+        recent = sales_df[sales_df['DATA_DT'] >= _pd.Timestamp(start_date)]
+        print(f"[ANALYTICS] monthly_revenue: recent rows={len(recent)}")
+        for _, sale in recent.iterrows():
+            month_key = sale['MONTH_KEY']
+            monthly_data[month_key] += float(sale['VALOR_TOTAL_VENDA'])
         
         # Generate last 12 months with data
         months = []
@@ -962,8 +1180,15 @@ def api_monthly_financial_summary():
         # Pegar vendas do mês atual
         current_month = datetime.now().strftime('%m/%Y')
         sales_df = sale_repo.get_all()
-        sales_df['MONTH'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y').dt.strftime('%m/%Y')
+        print(f"[ANALYTICS] monthly_financial_summary: sales rows={len(sales_df)}")
+        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        sales_df = sales_df[sales_df['DATA_DT'].notna()]
+        sales_df['MONTH'] = sales_df['DATA_DT'].dt.strftime('%m/%Y')
         month_sales = sales_df[sales_df['MONTH'] == current_month]
+        print(f"[ANALYTICS] monthly_financial_summary: month_sales rows={len(month_sales)}")
         
         if month_sales.empty:
             return jsonify({
@@ -982,7 +1207,9 @@ def api_monthly_financial_summary():
         # Pegar itens do mês
         sale_ids = month_sales['ID_VENDA'].tolist()
         items_df = item_repo._read_csv()
+        print(f"[ANALYTICS] monthly_financial_summary: items rows={len(items_df)}")
         month_items = items_df[items_df['ID_VENDA'].isin(sale_ids)]
+        print(f"[ANALYTICS] monthly_financial_summary: month_items rows={len(month_items)}")
         
         # Calcular COGS
         products_df = product_repo.get_all()
@@ -1073,14 +1300,21 @@ def api_monthly_profit_updated():
 
         sales_df['DATA_DT'] = pd.to_datetime(
             sales_df['DATA'],
-            format='%d/%m/%Y',
+            dayfirst=True,
             errors='coerce'
         )
+        # Fallback for mixed formats
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+
+        print(f"[ANALYTICS] monthly_profit: sales rows={len(sales_df)}")
 
         sales_df = sales_df[
             (sales_df['DATA_DT'] >= start_date) &
             (sales_df['DATA_DT'].notna())
         ]
+        print(f"[ANALYTICS] monthly_profit: recent rows={len(sales_df)}")
 
         sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
         sales_df['VALOR_TOTAL_VENDA'] = pd.to_numeric(
@@ -1233,8 +1467,15 @@ def api_cost_breakdown():
         # Mês atual
         current_month = datetime.now().strftime('%m/%Y')
         sales_df = sale_repo.get_all()
-        sales_df['MONTH'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y').dt.strftime('%m/%Y')
+        print(f"[ANALYTICS] cost_breakdown: sales rows={len(sales_df)}")
+        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        sales_df = sales_df[sales_df['DATA_DT'].notna()]
+        sales_df['MONTH'] = sales_df['DATA_DT'].dt.strftime('%m/%Y')
         month_sales = sales_df[sales_df['MONTH'] == current_month]
+        print(f"[ANALYTICS] cost_breakdown: month_sales rows={len(month_sales)}")
         
         if month_sales.empty:
             return jsonify({
@@ -1304,7 +1545,12 @@ def api_breakeven_progress():
         # Mês atual
         current_month = datetime.now().strftime('%m/%Y')
         sales_df = sale_repo.get_all()
-        sales_df['MONTH'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y').dt.strftime('%m/%Y')
+        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        sales_df = sales_df[sales_df['DATA_DT'].notna()]
+        sales_df['MONTH'] = sales_df['DATA_DT'].dt.strftime('%m/%Y')
         month_sales = sales_df[sales_df['MONTH'] == current_month]
         
         # Despesas fixas
@@ -1500,7 +1746,15 @@ def api_sales_overview():
         
         # Converter colunas
         sales_df['VALOR_TOTAL_VENDA'] = pd.to_numeric(sales_df['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y', errors='coerce')
+        print(f"[ANALYTICS] sales_overview: sales rows={len(sales_df)}, items rows={len(items_df)}")
+        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        sales_df = sales_df[sales_df['DATA_DT'].notna()]
         sales_df['MONTH'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
         
         items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
@@ -1550,14 +1804,18 @@ def api_monthly_sales_count():
         if sales_df.empty:
             return jsonify({'success': True, 'data': {'months': [], 'counts': []}})
         
-        # Convert dates
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y', errors='coerce')
+        # Convert dates (flexible parsing)
+        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        sales_df = sales_df[sales_df['DATA_DT'].notna()]
         sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
         
         # Get last 12 months
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
-        sales_df = sales_df[sales_df['DATA_DT'] >= start_date]
+        sales_df = sales_df[sales_df['DATA_DT'] >= pd.Timestamp(start_date)]
         
         # Count sales per month
         monthly_counts = sales_df.groupby('MONTH_KEY').size().to_dict()
@@ -1621,10 +1879,14 @@ def api_monthly_margin():
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
         
-        # Convert dates
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y', errors='coerce')
+        # Convert dates (flexible parsing)
+        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        sales_df = sales_df[sales_df['DATA_DT'].notna()]
         sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
-        sales_df = sales_df[sales_df['DATA_DT'] >= start_date]
+        sales_df = sales_df[sales_df['DATA_DT'] >= pd.Timestamp(start_date)]
         
         # Get product costs
         product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
@@ -1637,6 +1899,7 @@ def api_monthly_margin():
         })
         
         # Revenue and sales count from sales
+        print(f"[ANALYTICS] monthly_margin: sales rows={len(sales_df)}, items rows={len(items_df)}")
         for _, sale in sales_df.iterrows():
             month_key = sale['MONTH_KEY']
             monthly_data[month_key]['revenue'] += float(sale['VALOR_TOTAL_VENDA'])
@@ -1864,8 +2127,13 @@ def api_avg_ticket_trend():
         if sales_df.empty:
             return jsonify({'success': True, 'data': {'months': [], 'tickets': []}})
         
-        # Convert dates
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y', errors='coerce')
+        # Convert dates (flexible parsing)
+        print(f"[ANALYTICS] avg_ticket_trend: sales rows={len(sales_df)}")
+        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        mask = sales_df['DATA_DT'].isna()
+        if mask.any():
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+        sales_df = sales_df[sales_df['DATA_DT'].notna()]
         sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
         sales_df['VALOR_TOTAL_VENDA'] = pd.to_numeric(sales_df['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
         
@@ -1940,17 +2208,18 @@ def api_new_customers():
         # Track first purchase date for each customer
         customer_first_purchase = {}
         
+        import pandas as _pd
         for sale in sales:
-            try:
-                sale_date = datetime.strptime(sale['DATA'], '%d/%m/%Y')
-                customer_id = str(sale['ID_CLIENTE'])
-                
-                if customer_id not in customer_first_purchase:
-                    customer_first_purchase[customer_id] = sale_date
-                elif sale_date < customer_first_purchase[customer_id]:
-                    customer_first_purchase[customer_id] = sale_date
-            except:
+            date_ts = _pd.to_datetime(sale.get('DATA'), dayfirst=True, errors='coerce')
+            if pd.isna(date_ts):
                 continue
+            sale_date = date_ts.to_pydatetime()
+            customer_id = str(sale.get('ID_CLIENTE'))
+
+            if customer_id not in customer_first_purchase:
+                customer_first_purchase[customer_id] = sale_date
+            elif sale_date < customer_first_purchase[customer_id]:
+                customer_first_purchase[customer_id] = sale_date
         
         # Count new customers in period
         new_customers = sum(
