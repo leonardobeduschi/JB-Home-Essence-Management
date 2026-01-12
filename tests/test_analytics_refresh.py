@@ -10,11 +10,11 @@ def compute_recent_revenue(last_days=365):
     df = repo.get_all()
     if df.empty:
         return 0.0
-    df['DATA_DT'] = pd.to_datetime(df['DATA'], dayfirst=True, errors='coerce')
+    df['data_dt'] = pd.to_datetime(df['data'], dayfirst=True, errors='coerce')
     start_date = datetime.now() - timedelta(days=last_days)
-    recent = df[df['DATA_DT'] >= pd.Timestamp(start_date)]
-    recent['VALOR_TOTAL_VENDA'] = pd.to_numeric(recent['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
-    return float(recent['VALOR_TOTAL_VENDA'].sum())
+    recent = df[df['data_dt'] >= pd.Timestamp(start_date)]
+    recent['valor_total_venda'] = pd.to_numeric(recent['valor_total_venda'], errors='coerce').fillna(0)
+    return float(recent['valor_total_venda'].sum())
 
 
 def test_monthly_revenue_reflects_new_sale():

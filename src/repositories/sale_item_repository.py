@@ -1,7 +1,5 @@
 """
-Sale Item repository - NOVO ARQUIVO.
-
-Crie este arquivo em: src/repositories/sale_item_repository.py
+Sale Item repository - PostgreSQL Compatible
 """
 
 import pandas as pd
@@ -11,19 +9,17 @@ from src.models.sale_item import SaleItem, SALE_ITEM_SCHEMA
 
 
 class SaleItemRepository(BaseRepository):
-    """Repository for sale items using SQLite via BaseRepository."""
+    """Repository for sale items."""
 
     def __init__(self, filepath: str = 'data/sales_items.csv'):
-        super().__init__(filepath, SALE_ITEM_SCHEMA)
+        super().__init__(filepath, SALE_ITEM_SCHEMA, table_name='sales_items')
 
     def exists(self, item_id: str) -> bool:
-        # Items don't have natural single-string IDs in CSV; keep interface
         return False
 
     def save(self, item: SaleItem) -> bool:
         try:
             data = item.to_dict()
-            # Normalize numeric fields
             if data.get('QUANTIDADE') is not None:
                 data['QUANTIDADE'] = int(data['QUANTIDADE'])
             if data.get('PRECO_UNIT') is not None:
@@ -45,12 +41,16 @@ class SaleItemRepository(BaseRepository):
                     d.get('CODIGO'), int(d.get('QUANTIDADE') or 0),
                     float(d.get('PRECO_UNIT') or 0), float(d.get('PRECO_TOTAL') or 0)
                 ))
+            
             with self.get_conn() as conn:
-                cur = conn.cursor()
-                cur.executemany(
-                    'INSERT INTO sales_items (ID_VENDA, PRODUTO, CATEGORIA, CODIGO, QUANTIDADE, PRECO_UNIT, PRECO_TOTAL) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                    rows
-                )
+                cur = self._get_cursor(conn)
+                
+                if self.db_type == 'postgresql':
+                    sql = 'INSERT INTO sales_items ("ID_VENDA", "PRODUTO", "CATEGORIA", "CODIGO", "QUANTIDADE", "PRECO_UNIT", "PRECO_TOTAL") VALUES (%s, %s, %s, %s, %s, %s, %s)'
+                else:
+                    sql = 'INSERT INTO sales_items ("ID_VENDA", "PRODUTO", "CATEGORIA", "CODIGO", "QUANTIDADE", "PRECO_UNIT", "PRECO_TOTAL") VALUES (?, ?, ?, ?, ?, ?, ?)'
+                
+                cur.executemany(sql, rows)
                 conn.commit()
             return True
         except Exception as e:
@@ -58,23 +58,39 @@ class SaleItemRepository(BaseRepository):
 
     def get_by_sale_id(self, id_venda: str) -> List[Dict]:
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT * FROM sales_items WHERE ID_VENDA = ? COLLATE NOCASE', (id_venda,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT * FROM sales_items WHERE "ID_VENDA" = %s', (id_venda,))
+            else:
+                cur.execute('SELECT * FROM sales_items WHERE "ID_VENDA" = ? COLLATE NOCASE', (id_venda,))
             return [dict(r) for r in cur.fetchall()]
 
     def get_by_product(self, codigo: str) -> List[Dict]:
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT * FROM sales_items WHERE CODIGO = ? COLLATE NOCASE', (codigo,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT * FROM sales_items WHERE "CODIGO" = %s', (codigo,))
+            else:
+                cur.execute('SELECT * FROM sales_items WHERE "CODIGO" = ? COLLATE NOCASE', (codigo,))
             return [dict(r) for r in cur.fetchall()]
 
     def get_by_category(self, categoria: str) -> List[Dict]:
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT * FROM sales_items WHERE CATEGORIA = ? COLLATE NOCASE', (categoria,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT * FROM sales_items WHERE "CATEGORIA" = %s', (categoria,))
+            else:
+                cur.execute('SELECT * FROM sales_items WHERE "CATEGORIA" = ? COLLATE NOCASE', (categoria,))
             return [dict(r) for r in cur.fetchall()]
 
     def delete_by_sale_id(self, id_venda: str) -> bool:
         try:
             with self.get_conn() as conn:
-                cur = conn.execute('DELETE FROM sales_items WHERE ID_VENDA = ? COLLATE NOCASE', (id_venda,))
+                cur = self._get_cursor(conn)
+                if self.db_type == 'postgresql':
+                    cur.execute('DELETE FROM sales_items WHERE "ID_VENDA" = %s', (id_venda,))
+                else:
+                    cur.execute('DELETE FROM sales_items WHERE "ID_VENDA" = ? COLLATE NOCASE', (id_venda,))
                 conn.commit()
                 return cur.rowcount >= 0
         except Exception as e:
@@ -82,9 +98,15 @@ class SaleItemRepository(BaseRepository):
 
     def get_product_stats(self) -> pd.DataFrame:
         with self.get_conn() as conn:
-            cur = conn.execute(
-                'SELECT CODIGO, PRODUTO, CATEGORIA, SUM(COALESCE(QUANTIDADE,0)) AS QTD_VENDIDA, SUM(COALESCE(PRECO_TOTAL,0)) AS RECEITA, COUNT(ID_VENDA) AS NUM_VENDAS '
-                'FROM sales_items GROUP BY CODIGO, PRODUTO, CATEGORIA ORDER BY RECEITA DESC'
+            cur = self._get_cursor(conn)
+            cur.execute(
+                'SELECT "CODIGO", "PRODUTO", "CATEGORIA", '
+                'SUM(COALESCE("QUANTIDADE",0)) AS "QTD_VENDIDA", '
+                'SUM(COALESCE("PRECO_TOTAL",0)) AS "RECEITA", '
+                'COUNT("ID_VENDA") AS "NUM_VENDAS" '
+                'FROM sales_items '
+                'GROUP BY "CODIGO", "PRODUTO", "CATEGORIA" '
+                'ORDER BY "RECEITA" DESC'
             )
             rows = cur.fetchall()
             if not rows:
@@ -94,9 +116,15 @@ class SaleItemRepository(BaseRepository):
 
     def get_category_stats(self) -> pd.DataFrame:
         with self.get_conn() as conn:
-            cur = conn.execute(
-                'SELECT CATEGORIA, SUM(COALESCE(QUANTIDADE,0)) AS QTD_VENDIDA, SUM(COALESCE(PRECO_TOTAL,0)) AS RECEITA, COUNT(DISTINCT CODIGO) AS PRODUTOS_UNICOS '
-                'FROM sales_items GROUP BY CATEGORIA ORDER BY RECEITA DESC'
+            cur = self._get_cursor(conn)
+            cur.execute(
+                'SELECT "CATEGORIA", '
+                'SUM(COALESCE("QUANTIDADE",0)) AS "QTD_VENDIDA", '
+                'SUM(COALESCE("PRECO_TOTAL",0)) AS "RECEITA", '
+                'COUNT(DISTINCT "CODIGO") AS "PRODUTOS_UNICOS" '
+                'FROM sales_items '
+                'GROUP BY "CATEGORIA" '
+                'ORDER BY "RECEITA" DESC'
             )
             rows = cur.fetchall()
             if not rows:

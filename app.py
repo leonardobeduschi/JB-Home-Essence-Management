@@ -3,7 +3,34 @@ Flask web application for Perfumery Management System.
 
 This module provides the web interface and REST API endpoints.
 """
+from pathlib import Path
+from dotenv import load_dotenv
 
+"""
+Flask web application for Perfumery Management System.
+"""
+
+# ⚠️ CRITICAL: Load .env BEFORE any imports!
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env from project root
+env_path = Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path, override=True)
+
+# Verify DB_TYPE is loaded
+print(f"🔧 DB_TYPE loaded: {os.getenv('DB_TYPE', 'NOT SET')}")
+
+# Load .env from project root
+env_path = Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path, override=True)
+
+# Verify DB_TYPE is loaded
+print(f"🔧 DB_TYPE loaded: {os.getenv('DB_TYPE', 'NOT SET')}")
+
+# Now import Flask and other modules
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from functools import wraps
 from datetime import datetime, timedelta
@@ -67,17 +94,27 @@ visualization_service = VisualizationService()
 manual_service = ManualService()
 expense_service = ExpenseService()
 
-# ========== SQLITE INITIALIZATION (ensure tables exist on startup) ==========
-# Read DB path from environment (do not hardcode paths)
-from src.database.connection import init_db, get_db_path
-SQLITE_DB = os.getenv('SQLITE_DB', None)
-try:
-    init_db(db_path=SQLITE_DB)
-    resolved_db = get_db_path(SQLITE_DB)
-    print(f"SQLite DB initialized at: {resolved_db}")
-except Exception as e:
-    # Do not raise to avoid breaking Flask startup; log error for diagnostics
-    print(f"Erro ao inicializar o banco SQLite: {e}")
+# ========== DATABASE INITIALIZATION ==========
+DB_TYPE = os.getenv('DB_TYPE', 'sqlite').lower()
+
+if DB_TYPE == 'postgresql':
+    print("✅ Using PostgreSQL (Supabase)")
+    try:
+        from src.database.postgres_connection import get_connection
+        with get_connection() as conn:
+            print("✅ PostgreSQL connection successful")
+    except Exception as e:
+        print(f"⚠️ PostgreSQL connection error: {e}")
+else:
+    print("✅ Using SQLite")
+    try:
+        from src.database.connection import init_db, get_db_path
+        SQLITE_DB = os.getenv('SQLITE_DB', None)
+        init_db(db_path=SQLITE_DB)
+        resolved_db = get_db_path(SQLITE_DB)
+        print(f"SQLite DB initialized at: {resolved_db}")
+    except Exception as e:
+        print(f"Erro ao inicializar o banco SQLite: {e}")
 
 # ========== BANCO DE DADOS DE USUÁRIOS ==========
 
@@ -198,42 +235,64 @@ def logout():
 
 # ========== DASHBOARD ROUTES ==========
 
+# ========== DEBUG: Test database connection ==========
+@app.route('/test-db')
+def test_db():
+    """Test database connection."""
+    try:
+        from src.repositories.product_repository import ProductRepository
+        repo = ProductRepository()
+        count = repo.count()
+        return f"✅ Database OK! Products: {count}"
+    except Exception as e:
+        import traceback
+        return f"❌ Database Error: {str(e)}<br><pre>{traceback.format_exc()}</pre>"
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
     """Dashboard route - FIXED for new structure."""
     try:
         import pandas as pd
+        print("[DASHBOARD] Starting dashboard load...")
         
         # Initialize services
         sale_service = SaleService()
         product_service = ProductService()
+        print("[DASHBOARD] Services initialized")
         
-        # Get sales summary (já corrigido no repository)
+        # Get sales summary
+        print("[DASHBOARD] Getting sales summary...")
         summary = sale_service.get_sales_summary()
+        print(f"[DASHBOARD] Summary: {summary}")
         
-        # Get recent sales (agora retorna dados corretos do sales.csv)
+        # Get recent sales
+        print("[DASHBOARD] Getting recent sales...")
         from src.repositories.sale_repository import SaleRepository
         sale_repo = SaleRepository()
         recent_sales = sale_repo.get_recent_sales(limit=10)
+        print(f"[DASHBOARD] Recent sales: {len(recent_sales)}")
         
-        # Get top products (usando sales_items.csv)
+        # Get top products
+        print("[DASHBOARD] Getting top products...")
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
         
         item_repo = SaleItemRepository()
-        product_repo = ProductRepository()  # ← CORRETO: Criar instância direta
+        product_repo = ProductRepository()
         
         product_stats = item_repo.get_product_stats()
+        print(f"[DASHBOARD] Product stats shape: {product_stats.shape if not product_stats.empty else 'empty'}")
         
         top_products = []
         if not product_stats.empty:
             # Get top 5 products
             top_5 = product_stats.head(5)
             
-            for _, row in top_5.iterrows():
+            for idx, row in top_5.iterrows():
+                print(f"[DASHBOARD] Processing product {idx}: {row.get('PRODUTO', 'unknown')}")
                 # Get product details for profit margin
-                product = product_repo.get_by_codigo(row['CODIGO'])  # ← USAR product_repo
+                product = product_repo.get_by_codigo(row['CODIGO'])
                 
                 profit_margin = 0
                 if product:
@@ -250,11 +309,28 @@ def dashboard():
                     'profit_margin': profit_margin
                 })
         
-        # Get low stock products
-        products_df = product_repo.get_all()  # ← USAR product_repo
-        products_df['ESTOQUE'] = pd.to_numeric(products_df['ESTOQUE'], errors='coerce').fillna(0)
-        low_stock = products_df[products_df['ESTOQUE'] <= 1].to_dict('records')
+        print(f"[DASHBOARD] Top products: {len(top_products)}")
         
+        # Get low stock products
+        print("[DASHBOARD] Getting low stock products...")
+        try:
+            products_df = product_repo.get_all()
+            if not products_df.empty:
+                products_df['ESTOQUE'] = pd.to_numeric(products_df['ESTOQUE'], errors='coerce').fillna(0)
+                low_stock_df = products_df[products_df['ESTOQUE'] <= 1]
+                low_stock = low_stock_df.to_dict('records')
+            else:
+                low_stock = []
+            print(f"[DASHBOARD] Low stock: {len(low_stock)}")
+        except Exception as e:
+            print(f"[DASHBOARD] Error getting low stock: {e}")
+            low_stock = []
+
+        # Convert Decimal to float for template compatibility
+        if 'by_category' in summary:
+            summary['by_category'] = {k: float(v) for k, v in summary['by_category'].items()}
+        
+        print("[DASHBOARD] Rendering template...")
         return render_template(
             'dashboard.html',
             summary=summary,
@@ -264,10 +340,10 @@ def dashboard():
         )
         
     except Exception as e:
-        print(f"Erro no dashboard: {str(e)}")
+        print(f"[DASHBOARD] ❌ ERROR: {str(e)}")
         import traceback
         traceback.print_exc()
-        return render_template('error.html', error=str(e))
+        return render_template('error.html', error=str(e)), 500
 
 
 # Debug: listar endpoints registrados (útil para troubleshooting)
@@ -2477,4 +2553,4 @@ if __name__ == '__main__':
     os.makedirs('static/js', exist_ok=True)
     
     # Run the application
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)

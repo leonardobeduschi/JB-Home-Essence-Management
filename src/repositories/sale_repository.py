@@ -1,5 +1,5 @@
 """
-Sale repository for CSV operations - FIXED for new structure.
+Sale repository - PostgreSQL Compatible
 """
 
 import pandas as pd
@@ -10,23 +10,31 @@ from src.models.sale import Sale, SALE_SCHEMA
 
 
 class SaleRepository(BaseRepository):
-    """Repository for sale data persistence using SQLite via BaseRepository."""
+    """Repository for sale data persistence."""
 
     def __init__(self, filepath: str = 'data/sales.csv'):
-        super().__init__(filepath, SALE_SCHEMA)
+        super().__init__(filepath, SALE_SCHEMA, table_name='sales')
 
     def exists(self, id_venda: str) -> bool:
         if not id_venda:
             return False
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT 1 FROM sales WHERE ID_VENDA = ? COLLATE NOCASE LIMIT 1', (id_venda,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT 1 FROM sales WHERE "ID_VENDA" = %s LIMIT 1', (id_venda,))
+            else:
+                cur.execute('SELECT 1 FROM sales WHERE "ID_VENDA" = ? COLLATE NOCASE LIMIT 1', (id_venda,))
             return cur.fetchone() is not None
 
     def get_by_id(self, id_venda: str) -> Optional[Dict]:
         if not id_venda:
             return None
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT * FROM sales WHERE ID_VENDA = ? COLLATE NOCASE LIMIT 1', (id_venda,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT * FROM sales WHERE "ID_VENDA" = %s LIMIT 1', (id_venda,))
+            else:
+                cur.execute('SELECT * FROM sales WHERE "ID_VENDA" = ? COLLATE NOCASE LIMIT 1', (id_venda,))
             row = cur.fetchone()
             return dict(row) if row else None
 
@@ -35,12 +43,11 @@ class SaleRepository(BaseRepository):
             raise ValueError(f"Venda com ID '{sale.id_venda}' já existe")
         try:
             data = sale.to_dict()
-            # Normalize date to ISO if possible, prefer YYYY-MM-DD in DB
+            # Normalize date to ISO if possible
             def to_iso_str(s):
                 if not s:
                     return None
                 s_str = str(s).strip()
-                from datetime import datetime
                 for fmt in ('%d/%m/%Y', '%Y-%m-%d'):
                     try:
                         return datetime.strptime(s_str, fmt).date().isoformat()
@@ -61,18 +68,21 @@ class SaleRepository(BaseRepository):
 
     def get_by_client(self, id_cliente: str) -> List[Dict]:
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT * FROM sales WHERE ID_CLIENTE = ? COLLATE NOCASE', (id_cliente,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT * FROM sales WHERE "ID_CLIENTE" = %s', (id_cliente,))
+            else:
+                cur.execute('SELECT * FROM sales WHERE "ID_CLIENTE" = ? COLLATE NOCASE', (id_cliente,))
             return [dict(r) for r in cur.fetchall()]
 
     def get_by_date_range(self, start_date: str, end_date: str) -> List[Dict]:
-        # Accept dates in dd/mm/YYYY or ISO YYYY-MM-DD and convert to ISO
+        # Accept dates in dd/mm/YYYY or ISO YYYY-MM-DD
         def to_iso(s):
             if not s:
                 return None
             s_str = str(s).strip()
             for fmt in ('%d/%m/%Y', '%Y-%m-%d'):
                 try:
-                    from datetime import datetime
                     return datetime.strptime(s_str, fmt).date().isoformat()
                 except Exception:
                     continue
@@ -82,19 +92,35 @@ class SaleRepository(BaseRepository):
         e_iso = to_iso(end_date)
         if not s_iso or not e_iso:
             return []
+        
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT * FROM sales WHERE DATA >= ? AND DATA <= ? ORDER BY DATA', (s_iso, e_iso))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT * FROM sales WHERE "DATA" >= %s AND "DATA" <= %s ORDER BY "DATA"', (s_iso, e_iso))
+            else:
+                cur.execute('SELECT * FROM sales WHERE "DATA" >= ? AND "DATA" <= ? ORDER BY "DATA"', (s_iso, e_iso))
             return [dict(r) for r in cur.fetchall()]
 
     def get_by_payment_method(self, meio: str) -> List[Dict]:
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT * FROM sales WHERE LOWER(MEIO) = LOWER(?)', (meio,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT * FROM sales WHERE LOWER("MEIO") = LOWER(%s)', (meio,))
+            else:
+                cur.execute('SELECT * FROM sales WHERE LOWER("MEIO") = LOWER(?)', (meio,))
             return [dict(r) for r in cur.fetchall()]
 
     def get_sales_summary(self) -> Dict:
         from src.repositories.sale_item_repository import SaleItemRepository
+        
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT COUNT(*) as total, SUM(COALESCE(VALOR_TOTAL_VENDA,0)) as total_revenue, AVG(COALESCE(VALOR_TOTAL_VENDA,0)) as avg_sale FROM sales')
+            cur = self._get_cursor(conn)
+            cur.execute(
+                'SELECT COUNT(*) as total, '
+                'SUM(COALESCE("VALOR_TOTAL_VENDA",0)) as total_revenue, '
+                'AVG(COALESCE("VALOR_TOTAL_VENDA",0)) as avg_sale '
+                'FROM sales'
+            )
             row = cur.fetchone()
             total_sales = int(row['total'] or 0)
             total_revenue = float(row['total_revenue'] or 0)
@@ -103,13 +129,19 @@ class SaleRepository(BaseRepository):
         # Total items
         item_repo = SaleItemRepository()
         with item_repo.get_conn() as conn:
-            cur = conn.execute('SELECT SUM(COALESCE(QUANTIDADE,0)) as total_items FROM sales_items')
-            total_items = int(cur.fetchone()['total_items'] or 0)
+            cur = item_repo._get_cursor(conn)
+            cur.execute('SELECT SUM(COALESCE("QUANTIDADE",0)) as total_items FROM sales_items')
+            result = cur.fetchone()
+            total_items = int(result['total_items'] or 0) if result else 0
 
         # By payment method
         with self.get_conn() as conn:
-            cur = conn.execute("SELECT MEIO, SUM(COALESCE(VALOR_TOTAL_VENDA,0)) as total FROM sales GROUP BY MEIO")
-            by_payment = {row['MEIO']: row['total'] for row in cur.fetchall()}
+            cur = self._get_cursor(conn)
+            cur.execute(
+                'SELECT "MEIO", SUM(COALESCE("VALOR_TOTAL_VENDA",0)) as total '
+                'FROM sales GROUP BY "MEIO"'
+            )
+            by_payment = {row['MEIO']: float(row['total']) for row in cur.fetchall()}
 
         # By category
         category_stats = item_repo.get_category_stats()
@@ -128,7 +160,27 @@ class SaleRepository(BaseRepository):
 
     def get_top_clients(self, limit: int = 10) -> List[Dict]:
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT ID_CLIENTE, CLIENTE, COUNT(ID_VENDA) as NUM_COMPRAS, SUM(COALESCE(VALOR_TOTAL_VENDA,0)) as TOTAL_GASTO FROM sales GROUP BY ID_CLIENTE, CLIENTE ORDER BY TOTAL_GASTO DESC LIMIT ?', (limit,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute(
+                    'SELECT "ID_CLIENTE", "CLIENTE", '
+                    'COUNT("ID_VENDA") as "NUM_COMPRAS", '
+                    'SUM(COALESCE("VALOR_TOTAL_VENDA",0)) as "TOTAL_GASTO" '
+                    'FROM sales '
+                    'GROUP BY "ID_CLIENTE", "CLIENTE" '
+                    'ORDER BY "TOTAL_GASTO" DESC LIMIT %s',
+                    (limit,)
+                )
+            else:
+                cur.execute(
+                    'SELECT "ID_CLIENTE", "CLIENTE", '
+                    'COUNT("ID_VENDA") as "NUM_COMPRAS", '
+                    'SUM(COALESCE("VALOR_TOTAL_VENDA",0)) as "TOTAL_GASTO" '
+                    'FROM sales '
+                    'GROUP BY "ID_CLIENTE", "CLIENTE" '
+                    'ORDER BY "TOTAL_GASTO" DESC LIMIT ?',
+                    (limit,)
+                )
             return [dict(r) for r in cur.fetchall()]
 
     def delete(self, id_venda: str) -> bool:
@@ -153,7 +205,11 @@ class SaleRepository(BaseRepository):
 
     def get_recent_sales(self, limit: int = 10) -> List[Dict]:
         with self.get_conn() as conn:
-            cur = conn.execute('SELECT * FROM sales ORDER BY ID_VENDA DESC LIMIT ?', (limit,))
+            cur = self._get_cursor(conn)
+            if self.db_type == 'postgresql':
+                cur.execute('SELECT * FROM sales ORDER BY "ID_VENDA" DESC LIMIT %s', (limit,))
+            else:
+                cur.execute('SELECT * FROM sales ORDER BY "ID_VENDA" DESC LIMIT ?', (limit,))
             sales = [dict(r) for r in cur.fetchall()]
             for s in sales:
                 s['VALOR_TOTAL_VENDA'] = s.get('VALOR_TOTAL_VENDA', 0)

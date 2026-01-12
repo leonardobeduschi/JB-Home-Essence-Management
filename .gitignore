@@ -1,4 +1,30 @@
-__pycache__/
+# Environment variables (NUNCA sobe pro GitHub!)
 .env
 *.env
+
+# SQLite backups
+*.sqlite3
+*.sqlite3.backup
+data/backups/
+data/backup_migration/
 data/*.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
