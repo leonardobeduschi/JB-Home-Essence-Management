@@ -2,12 +2,13 @@
 .env
 *.env
 
-# SQLite backups
+# Database files
 *.sqlite3
 *.sqlite3.backup
 data/backups/
 data/backup_migration/
 data/*.csv
+data/expenses_config.json
 
 # Python
 __pycache__/

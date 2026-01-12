@@ -1,0 +1,31 @@
+{
+  "variable_costs": {
+    "payment_fee": {
+      "name": "Taxa de Pagamento",
+      "type": "percentage",
+      "value": 3.5,
+      "description": "EXAMPLE: Taxa de processamento (%)",
+      "applies_to": ["pix", "cartao_credito", "cartao_debito"]
+    },
+    "packaging": {
+      "name": "Embalagem",
+      "type": "fixed_per_unit",
+      "value": 1.0,
+      "description": "EXAMPLE: Custo por produto"
+    },
+    "shipping_materials": {
+      "name": "Material de Envio",
+      "type": "fixed_per_sale",
+      "value": 1.0,
+      "description": "EXAMPLE: Etiquetas, fitas"
+    }
+  },
+  "monthly_fixed_expenses": {
+    "imposto": {"name": "Impostos", "value": 50.00},
+    "transportadora": {"name": "Transportadora", "value": 100.00},
+    "marketing": {"name": "Marketing", "value": 50.00},
+    "tim": {"name": "TIM", "value": 30.00},
+    "celesc": {"name": "CELESC", "value": 20.00},
+    "santho_aroma": {"name": "Fornecedor", "value": 500.00}
+  }
+}

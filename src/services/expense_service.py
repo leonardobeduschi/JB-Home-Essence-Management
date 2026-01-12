@@ -29,35 +29,23 @@ class ExpenseService:
     def _ensure_config_file(self) -> None:
         """Ensure config file exists with default values."""
         if not os.path.exists(self.config_file):
+            # Try to copy from template first
+            template_file = 'data/expenses_config.template.json'
+            
+            if os.path.exists(template_file):
+                import shutil
+                print(f"📋 Creating expenses_config.json from template...")
+                shutil.copy(template_file, self.config_file)
+                return
+            
+            # Fallback: create default config
+            print(f"⚠️  Creating default expenses_config.json...")
             default_config = {
                 "variable_costs": {
-                    "payment_fee": {
-                        "name": "Taxa de Pagamento",
-                        "type": "percentage",
-                        "value": 3.5,
-                        "description": "Taxa de processamento (%)",
-                        "applies_to": ["pix", "cartao_credito", "cartao_debito"]
-                    },
-                    "packaging": {
-                        "name": "Embalagem",
-                        "type": "fixed_per_unit",
-                        "value": 2.00,
-                        "description": "Custo por produto"
-                    },
-                    "shipping_materials": {
-                        "name": "Material de Envio",
-                        "type": "fixed_per_sale",
-                        "value": 1.50,
-                        "description": "Etiquetas, fitas"
-                    }
+                    # ... seu código atual ...
                 },
                 "monthly_fixed_expenses": {
-                    "imposto": {"name": "Impostos", "value": 76.90},
-                    "transportadora": {"name": "Transportadora", "value": 200.00},
-                    "marketing": {"name": "Marketing", "value": 100.00},
-                    "tim": {"name": "TIM", "value": 65.00},
-                    "celesc": {"name": "CELESC", "value": 50.00},
-                    "santho_aroma": {"name": "Santho Aroma", "value": 1500.00}
+                    # ... seu código atual ...
                 }
             }
             os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
