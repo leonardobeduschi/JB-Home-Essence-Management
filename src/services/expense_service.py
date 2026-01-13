@@ -27,30 +27,51 @@ class ExpenseService:
         self._ensure_config_file()
     
     def _ensure_config_file(self) -> None:
-        """Ensure config file exists with default values."""
-        if not os.path.exists(self.config_file):
-            # Try to copy from template first
-            template_file = 'data/expenses_config.template.json'
-            
-            if os.path.exists(template_file):
-                import shutil
-                print(f"📋 Creating expenses_config.json from template...")
-                shutil.copy(template_file, self.config_file)
+        """Ensure config file exists.
+
+        This implementation avoids embedding real default values in code.
+        Priority for creating or loading config:
+         1. If the file already exists, do nothing.
+         2. If environment variable EXPENSES_CONFIG_JSON is set, parse it and write it to the config file.
+         3. If a template file (same path with .template.json) exists, copy it.
+         4. Otherwise create an empty skeleton (no sensitive defaults).
+        """
+        if os.path.exists(self.config_file):
+            return
+
+        # 1) Try environment variable with JSON (useful for CI / container secrets)
+        env_json = os.getenv('EXPENSES_CONFIG_JSON')
+        if env_json:
+            try:
+                parsed = json.loads(env_json)
+                os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
+                with open(self.config_file, 'w', encoding='utf-8') as f:
+                    json.dump(parsed, f, ensure_ascii=False, indent=2)
                 return
-            
-            # Fallback: create default config
-            print(f"⚠️  Creating default expenses_config.json...")
-            default_config = {
-                "variable_costs": {
-                    # ... seu código atual ...
-                },
-                "monthly_fixed_expenses": {
-                    # ... seu código atual ...
-                }
-            }
-            os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
-            with open(self.config_file, 'w', encoding='utf-8') as f:
-                json.dump(default_config, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"Erro ao carregar config do env EXPENSES_CONFIG_JSON: {e}")
+
+        # 2) Try a template file next to the config (e.g., data/expenses_config.template.json)
+        template_path = os.path.splitext(self.config_file)[0] + '.template.json'
+        if os.path.exists(template_path):
+            try:
+                os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
+                with open(template_path, 'r', encoding='utf-8') as src, \
+                     open(self.config_file, 'w', encoding='utf-8') as dst:
+                    dst.write(src.read())
+                return
+            except Exception as e:
+                print(f"Erro ao copiar template de config: {e}")
+
+        # 3) Fallback: create empty skeleton (no business values)
+        skeleton = {
+            "variable_costs": {},
+            "monthly_fixed_expenses": {}
+        }
+        os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
+        with open(self.config_file, 'w', encoding='utf-8') as f:
+            json.dump(skeleton, f, ensure_ascii=False, indent=2)
+        print("Arquivo de configuração criado com valores vazios. Preencha `data/expenses_config.json` localmente (arquivo está no .gitignore).")
     
     # ========== CUSTOS VARIÁVEIS ==========
     
