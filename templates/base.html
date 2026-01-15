@@ -190,6 +190,9 @@
                     <a class="nav-link {% if request.endpoint == 'manuals' %}active{% endif %}" href="{{ url_for('manuals') }}">
                         <i class="bi bi-book"></i> Manuais
                     </a>
+                    <a class="nav-link {% if request.endpoint == 'budgets' %}active{% endif %}" href="{{ url_for('budgets') }}">
+                        <i class="bi bi-file-earmark-text"></i> Orçamentos
+                    </a>
                     
                     <hr style="border-color: rgba(255,255,255,0.2); margin: 20px;">
                     

@@ -46,6 +46,7 @@ from src.services.analytics_service import AnalyticsService
 from src.services.visualization_service import VisualizationService
 from src.services.manual_service import ManualService
 from src.services.expense_service import ExpenseService
+from src.services.budget_service import BudgetService
 
 
 # ========== CONFIGURAÇÃO DO FLASK ==========
@@ -93,6 +94,7 @@ analytics_service = AnalyticsService()
 visualization_service = VisualizationService()
 manual_service = ManualService()
 expense_service = ExpenseService()
+budget_service = BudgetService()
 
 # ========== DATABASE INITIALIZATION ==========
 DB_TYPE = os.getenv('DB_TYPE', 'sqlite').lower()
@@ -2527,7 +2529,94 @@ def api_top_clients_full():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# ========== BUDGET ROUTES ==========
 
+@app.route('/budgets')
+@login_required
+def budgets():
+    """Budgets (Orçamentos) page."""
+    clients = client_service.list_all_clients()
+    products = product_service.list_all_products()
+    return render_template('budgets.html', 
+                         clients=clients, 
+                         products=products,
+                         user=session)
+
+
+@app.route('/api/budgets/generate', methods=['POST'])
+@login_required
+def api_generate_budget():
+    """Generate budget PDF."""
+    try:
+        data = request.get_json()
+        
+        # Generate PDF as bytes
+        pdf_buffer = budget_service.generate_budget_pdf(data, return_bytes=True)
+        
+        # Return PDF file
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f"orcamento_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        )
+        
+    except Exception as e:
+        print(f"Error generating budget: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/budgets/preview', methods=['POST'])
+@login_required
+def api_preview_budget():
+    """Preview budget data."""
+    try:
+        data = request.get_json()
+        
+        # Validate data
+        client = budget_service.get_client_data(data['id_cliente'])
+        if not client:
+            return jsonify({'success': False, 'error': 'Cliente não encontrado'}), 404
+        
+        items = []
+        total = 0.0
+        
+        for item in data['items']:
+            product = budget_service.get_product_data(item['codigo'])
+            if not product:
+                return jsonify({'success': False, 'error': f"Produto não encontrado: {item['codigo']}"}), 404
+            
+            quantidade = int(item['quantidade'])
+            valor_unit = float(product['VALOR'])
+            valor_total = quantidade * valor_unit
+            total += valor_total
+            
+            items.append({
+                'produto': product['PRODUTO'],
+                'categoria': product['CATEGORIA'],
+                'quantidade': quantidade,
+                'valor_unit': valor_unit,
+                'valor_total': valor_total
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'client': {
+                    'name': client['CLIENTE'],
+                    'phone': client.get('TELEFONE', ''),
+                    'address': client.get('ENDERECO', '')
+                },
+                'items': items,
+                'total': total
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error previewing budget: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # ========== ERROR HANDLERS ==========
