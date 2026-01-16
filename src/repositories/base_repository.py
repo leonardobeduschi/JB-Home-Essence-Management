@@ -63,10 +63,10 @@ class BaseRepository:
     def _placeholder(self, n: int = 1) -> str:
         """Get SQL placeholder for parameters."""
         if self.db_type == 'postgresql':
-            # PostgreSQL uses $1, $2, $3...
-            return ', '.join([f'${i}' for i in range(1, n + 1)])
+            # PostgreSQL usa %s (psycopg2), NÃO $1, $2, $3
+            return ', '.join(['%s'] * n)
         else:
-            # SQLite uses ?
+            # SQLite usa ?
             return ', '.join(['?'] * n)
 
     def _quote_identifier(self, name: str) -> str:
@@ -161,11 +161,14 @@ class BaseRepository:
             cur = self._get_cursor(conn)
             
             if self.db_type == 'postgresql':
-                # PostgreSQL UPSERT
                 pk_col = self._guess_pk_column()
-                placeholders = ','.join([f'${i+1}' for i in range(len(cols))])
+                placeholders = ','.join(['%s' for _ in range(len(cols))])
                 
-                # ON CONFLICT DO UPDATE
+                # 🔍 DEBUG - ADICIONE ISSO
+                print(f"DEBUG: placeholders = {placeholders}")
+                print(f"DEBUG: db_type = {self.db_type}")
+                print(f"DEBUG: len(cols) = {len(cols)}")
+                
                 update_cols = [c for c in cols if c != pk_col]
                 update_clause = ','.join([f'{self._quote_identifier(c)} = EXCLUDED.{self._quote_identifier(c)}' for c in update_cols])
                 
@@ -175,16 +178,13 @@ class BaseRepository:
                     ON CONFLICT ({self._quote_identifier(pk_col)}) DO UPDATE SET {update_clause}
                     RETURNING *
                 '''
+                
+                # 🔍 DEBUG - ADICIONE ISSO TAMBÉM
+                print(f"DEBUG SQL: {sql}")
+                
                 cur.execute(sql, values)
                 conn.commit()
                 return 1
-            else:
-                # SQLite INSERT OR REPLACE
-                placeholders = ','.join(['?'] * len(cols))
-                sql = f'INSERT OR REPLACE INTO {self._quote_identifier(self.table_name)} ({cols_quoted}) VALUES ({placeholders})'
-                cur.execute(sql, values)
-                conn.commit()
-                return cur.lastrowid or 0
 
     def update(self, pk_value: Any, updates: Dict[str, Any]) -> bool:
         """Update columns for row identified by primary key."""
