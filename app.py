@@ -47,6 +47,7 @@ from src.services.visualization_service import VisualizationService
 from src.services.manual_service import ManualService
 from src.services.expense_service import ExpenseService
 from src.services.budget_service import BudgetService
+from src.services.notification_service import NotificationService
 
 
 # ========== CONFIGURAÇÃO DO FLASK ==========
@@ -95,6 +96,29 @@ visualization_service = VisualizationService()
 manual_service = ManualService()
 expense_service = ExpenseService()
 budget_service = BudgetService()
+notification_service = NotificationService()
+
+# ========== CACHE DE NOTIFICAÇÕES ==========
+notification_cache = {
+    'data': None,
+    'timestamp': None,
+    'ttl': 300  # 5 minutos
+}
+
+def get_cached_notifications():
+    """Get notifications with 5-minute cache."""
+    import time
+    now = time.time()
+    
+    if (notification_cache['data'] is None or 
+        notification_cache['timestamp'] is None or 
+        (now - notification_cache['timestamp']) > notification_cache['ttl']):
+        
+        # Refresh cache
+        notification_cache['data'] = notification_service.get_all_notifications()
+        notification_cache['timestamp'] = now
+    
+    return notification_cache['data']
 
 # ========== DATABASE INITIALIZATION ==========
 DB_TYPE = os.getenv('DB_TYPE', 'sqlite').lower()
@@ -2617,6 +2641,135 @@ def api_preview_budget():
     except Exception as e:
         print(f"Error previewing budget: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+
+@app.route('/notifications')
+@login_required
+def notifications():
+    """Notifications page."""
+    return render_template('notifications.html', user=session)
+
+
+@app.route('/api/notifications', methods=['GET'])
+@login_required
+def api_get_notifications():
+    """Get all notifications (with cache)."""
+    try:
+        notifications = get_cached_notifications()
+        return jsonify({'success': True, 'data': notifications})
+    except Exception as e:
+        print(f"[API] Error getting notifications: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/notifications/count', methods=['GET'])
+@login_required
+def api_get_notification_count():
+    """Get notification count (with cache)."""
+    try:
+        notifications = get_cached_notifications()
+        return jsonify({
+            'success': True,
+            'data': {
+                'total_count': notifications['total_count'],
+                'low_stock_count': len(notifications['low_stock']),
+                'repurchase_pessoa_count': len(notifications['repurchase_pessoa']),
+                'repurchase_empresa_count': len(notifications['repurchase_empresa'])
+            }
+        })
+    except Exception as e:
+        print(f"[API] Error getting notification count: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/notifications/dismiss', methods=['POST'])
+@login_required
+def api_dismiss_notification():
+    """Dismiss a notification."""
+    try:
+        data = request.get_json()
+        notification_type = data.get('notification_type')
+        notification_id = data.get('notification_id')
+        
+        if not notification_type or not notification_id:
+            return jsonify({'success': False, 'error': 'Dados inválidos'}), 400
+        
+        success = notification_service.dismiss_notification(notification_type, notification_id)
+        
+        if success:
+            # Invalidate cache
+            notification_cache['data'] = None
+            return jsonify({'success': True, 'message': 'Notificação marcada como lida'})
+        else:
+            return jsonify({'success': False, 'error': 'Erro ao marcar notificação'}), 500
+            
+    except Exception as e:
+        print(f"[API] Error dismissing notification: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/notifications/undismiss', methods=['POST'])
+@login_required
+def api_undismiss_notification():
+    """Restore a dismissed notification."""
+    try:
+        data = request.get_json()
+        notification_type = data.get('notification_type')
+        notification_id = data.get('notification_id')
+        
+        if not notification_type or not notification_id:
+            return jsonify({'success': False, 'error': 'Dados inválidos'}), 400
+        
+        success = notification_service.undismiss_notification(notification_type, notification_id)
+        
+        if success:
+            # Invalidate cache
+            notification_cache['data'] = None
+            return jsonify({'success': True, 'message': 'Notificação restaurada'})
+        else:
+            return jsonify({'success': False, 'error': 'Erro ao restaurar notificação'}), 500
+            
+    except Exception as e:
+        print(f"[API] Error undismissing notification: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/test-notifications')
+@login_required
+def test_notifications():
+    """Test notifications (TEMPORARY)."""
+    try:
+        # Force refresh
+        notification_cache['data'] = None
+        
+        notifications = notification_service.get_all_notifications()
+        
+        return jsonify({
+            'success': True,
+            'data': notifications,
+            'debug': {
+                'low_stock_count': len(notifications['low_stock']),
+                'repurchase_pessoa_count': len(notifications['repurchase_pessoa']),
+                'repurchase_empresa_count': len(notifications['repurchase_empresa']),
+                'sample_low_stock': notifications['low_stock'][:3] if notifications['low_stock'] else [],
+                'sample_repurchase': (notifications['repurchase_pessoa'][:1] if notifications['repurchase_pessoa'] else [])
+            }
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        })
 
 
 # ========== ERROR HANDLERS ==========

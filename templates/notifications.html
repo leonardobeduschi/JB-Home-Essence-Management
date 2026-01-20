@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações - Sistema de Gestão{% endblock %}
+{% block page_title %}Central de Notificações{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-bell-fill"></i> Todas as Notificações</h5>
+                <span class="badge bg-primary" id="totalNotifications">0</span>
+            </div>
+            <div class="card-body">
+                <div id="notificationsContainer">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allNotifications = [];
+
+function loadNotifications() {
+    fetch('/api/notifications')
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                allNotifications = result.data;
+                renderNotifications();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading notifications:', error);
+            document.getElementById('notificationsContainer').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Erro ao carregar notificações
+                </div>
+            `;
+        });
+}
+
+function renderNotifications() {
+    const container = document.getElementById('notificationsContainer');
+    const totalBadge = document.getElementById('totalNotifications');
+    
+    const lowStock = allNotifications.low_stock || [];
+    const repurchasePessoa = allNotifications.repurchase_pessoa || [];
+    const repurchaseEmpresa = allNotifications.repurchase_empresa || [];
+    
+    const total = lowStock.length + repurchasePessoa.length + repurchaseEmpresa.length;
+    totalBadge.textContent = total;
+    
+    if (total === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">Nenhuma notificação pendente</h5>
+                <p class="text-muted">Tudo está em ordem! 🎉</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    // Low Stock Section
+    if (lowStock.length > 0) {
+        html += `
+            <div class="notification-section mb-4">
+                <h6 class="text-danger mb-3">
+                    <i class="bi bi-exclamation-triangle-fill"></i> 
+                    Estoque Crítico (${lowStock.length})
+                </h6>
+                ${lowStock.map(n => renderNotificationCard(n)).join('')}
+            </div>
+        `;
+    }
+    
+    // Repurchase Pessoa Física
+    if (repurchasePessoa.length > 0) {
+        html += `
+            <div class="notification-section mb-4">
+                <h6 class="text-warning mb-3">
+                    <i class="bi bi-clock-history"></i> 
+                    Lembretes de Recompra - Pessoa Física (${repurchasePessoa.length})
+                </h6>
+                ${repurchasePessoa.map(n => renderNotificationCard(n)).join('')}
+            </div>
+        `;
+    }
+    
+    // Repurchase Empresa
+    if (repurchaseEmpresa.length > 0) {
+        html += `
+            <div class="notification-section mb-4">
+                <h6 class="text-info mb-3">
+                    <i class="bi bi-building"></i> 
+                    Lembretes de Recompra - Empresa (${repurchaseEmpresa.length})
+                </h6>
+                ${repurchaseEmpresa.map(n => renderNotificationCard(n)).join('')}
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function renderNotificationCard(notification) {
+    const severityColors = {
+        'critical': 'danger',
+        'warning': 'warning',
+        'info': 'info'
+    };
+    
+    const color = severityColors[notification.severity] || 'secondary';
+    
+    let detailHtml = `<p class="mb-2">${notification.detail}</p>`;
+    
+    // Add extra details for repurchase notifications
+    if (notification.type === 'repurchase' && notification.data) {
+        const data = notification.data;
+        detailHtml += `
+            <small class="text-muted">
+                <i class="bi bi-calendar"></i> Última compra: ${data.last_purchase}<br>
+                <i class="bi bi-calendar-check"></i> Recompra prevista: ${data.expected_repurchase}
+                ${data.phone ? `<br><i class="bi bi-telephone"></i> ${data.phone}` : ''}
+            </small>
+        `;
+    }
+    
+    return `
+        <div class="card mb-2 notification-card" data-id="${notification.id}" data-type="${notification.type}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi ${notification.icon} text-${color} me-2" style="font-size: 1.2rem;"></i>
+                            <h6 class="mb-0">${notification.title}</h6>
+                        </div>
+                        <div class="mb-2">
+                            <strong>${notification.message}</strong>
+                        </div>
+                        ${detailHtml}
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input dismiss-checkbox" 
+                               type="checkbox" 
+                               id="dismiss_${notification.id}"
+                               data-id="${notification.id}"
+                               data-type="${notification.type}"
+                               onchange="dismissNotification(this)">
+                        <label class="form-check-label" for="dismiss_${notification.id}">
+                            <small>Marcar como lida</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function dismissNotification(checkbox) {
+    const notificationId = checkbox.dataset.id;
+    const notificationType = checkbox.dataset.type;
+    
+    if (checkbox.checked) {
+        // Dismiss notification
+        fetch('/api/notifications/dismiss', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                notification_type: notificationType,
+                notification_id: notificationId
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Fade out the card
+                const card = checkbox.closest('.notification-card');
+                card.style.transition = 'opacity 0.3s';
+                card.style.opacity = '0.5';
+                
+                // Remove after animation
+                setTimeout(() => {
+                    card.remove();
+                    
+                    // Reload if no notifications left in section
+                    const section = card.closest('.notification-section');
+                    if (section && section.querySelectorAll('.notification-card').length === 0) {
+                        loadNotifications();
+                    }
+                }, 300);
+            } else {
+                checkbox.checked = false;
+                alert('Erro ao marcar notificação: ' + result.error);
+            }
+        })
+        .catch(error => {
+            checkbox.checked = false;
+            console.error('Error dismissing notification:', error);
+            alert('Erro ao marcar notificação');
+        });
+    }
+}
+
+// Load notifications on page load
+document.addEventListener('DOMContentLoaded', loadNotifications);
+</script>
+
+<style>
+.notification-section {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.notification-card {
+    border-left: 4px solid #80a58d;
+    transition: all 0.3s;
+}
+
+.notification-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateX(5px);
+}
+
+.dismiss-checkbox {
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+}
+</style>
+{% endblock %}

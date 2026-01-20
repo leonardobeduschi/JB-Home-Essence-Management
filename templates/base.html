@@ -208,13 +208,24 @@
                 <div class="topbar">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">{% block page_title %}Dashboard{% endblock %}</h5>
-                        <div class="user-info">
-                            <div class="user-avatar">
-                                {{ user.name[0] if user else 'U' }}
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- Notification Bell -->
+                            <div class="position-relative">
+                                <a href="{{ url_for('notifications') }}" class="notification-bell" id="notificationBell">
+                                    <i class="bi bi-bell-fill" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                                    <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+                                </a>
                             </div>
-                            <div>
-                                <div><strong>{{ user.name if user else 'Usuário' }}</strong></div>
-                                <small class="text-muted">{{ user.role|title if user else 'Role' }}</small>
+                            
+                            <!-- User Info -->
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    {{ user.name[0] if user else 'U' }}
+                                </div>
+                                <div>
+                                    <div><strong>{{ user.name if user else 'Usuário' }}</strong></div>
+                                    <small class="text-muted">{{ user.role|title if user else 'Role' }}</small>
+                                </div>
                             </div>
                         </div>
                     </div>
