@@ -102,7 +102,7 @@ notification_service = NotificationService()
 notification_cache = {
     'data': None,
     'timestamp': None,
-    'ttl': 300  # 5 minutos
+    'ttl': 3 * 3600  # 5 minutos
 }
 
 def get_cached_notifications():
@@ -274,99 +274,113 @@ def test_db():
         import traceback
         return f"❌ Database Error: {str(e)}<br><pre>{traceback.format_exc()}</pre>"
 
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    """Dashboard route - FIXED for new structure."""
+    """Dashboard route - OTIMIZADO."""
+    import time
+    
+    overall_start = time.perf_counter()
+    
     try:
-        import pandas as pd
-        print("[DASHBOARD] Starting dashboard load...")
+        print("[DASHBOARD] Iniciando carregamento...")
         
-        # Initialize services
-        sale_service = SaleService()
-        product_service = ProductService()
-        print("[DASHBOARD] Services initialized")
-        
-        # Get sales summary
-        print("[DASHBOARD] Getting sales summary...")
+        # ── Etapa 1: Resumo de vendas (1 query otimizada)
+        step_start = time.perf_counter()
         summary = sale_service.get_sales_summary()
-        print(f"[DASHBOARD] Summary: {summary}")
+        print(f"[DASHBOARD] get_sales_summary() → {time.perf_counter() - step_start:.4f}s")
         
-        # Get recent sales
-        print("[DASHBOARD] Getting recent sales...")
+        # ── Etapa 2: Vendas recentes (1 query com LIMIT)
+        step_start = time.perf_counter()
         from src.repositories.sale_repository import SaleRepository
         sale_repo = SaleRepository()
         recent_sales = sale_repo.get_recent_sales(limit=10)
-        print(f"[DASHBOARD] Recent sales: {len(recent_sales)}")
+        print(f"[DASHBOARD] get_recent_sales() → {time.perf_counter() - step_start:.4f}s | {len(recent_sales)} registros")
         
-        # Get top products
-        print("[DASHBOARD] Getting top products...")
+        # ── Etapa 3: Top 5 produtos com JOIN (1 query!)
+        step_start = time.perf_counter()
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
         
         item_repo = SaleItemRepository()
         product_repo = ProductRepository()
         
-        product_stats = item_repo.get_product_stats()
-        print(f"[DASHBOARD] Product stats shape: {product_stats.shape if not product_stats.empty else 'empty'}")
+        # OTIMIZADO: Pega stats + custos em 1 query com JOIN
+        with item_repo.get_conn() as conn:
+            cur = item_repo._get_cursor(conn)
+            
+            cur.execute('''
+                SELECT 
+                    si."CODIGO",
+                    si."PRODUTO",
+                    si."CATEGORIA",
+                    SUM(COALESCE(si."QUANTIDADE", 0)) AS qtd_vendida,
+                    SUM(COALESCE(si."PRECO_TOTAL", 0)) AS receita,
+                    COALESCE(p."CUSTO", 0) AS custo,
+                    COALESCE(p."VALOR", 0) AS valor
+                FROM sales_items si
+                LEFT JOIN products p ON si."CODIGO" = p."CODIGO"
+                GROUP BY si."CODIGO", si."PRODUTO", si."CATEGORIA", p."CUSTO", p."VALOR"
+                ORDER BY receita DESC
+                LIMIT 5
+            ''')
+            
+            top_5_rows = cur.fetchall()
         
         top_products = []
-        if not product_stats.empty:
-            # Get top 5 products
-            top_5 = product_stats.head(5)
+        for row in top_5_rows:
+            custo = float(row['custo'] or 0)
+            valor = float(row['valor'] or 0)
+            profit_margin = 0
             
-            for idx, row in top_5.iterrows():
-                print(f"[DASHBOARD] Processing product {idx}: {row.get('PRODUTO', 'unknown')}")
-                # Get product details for profit margin
-                product = product_repo.get_by_codigo(row['CODIGO'])
-                
-                profit_margin = 0
-                if product:
-                    custo = float(product.get('CUSTO', 0))
-                    valor = float(product.get('VALOR', 0))
-                    if valor > 0:
-                        profit_margin = ((valor - custo) / valor) * 100
-                
-                top_products.append({
-                    'produto': row['PRODUTO'],
-                    'categoria': row['CATEGORIA'],
-                    'quantity_sold': int(row['QTD_VENDIDA']),
-                    'revenue': float(row['RECEITA']),
-                    'profit_margin': profit_margin
-                })
+            if valor > 0:
+                profit_margin = ((valor - custo) / valor) * 100
+            
+            top_products.append({
+                'produto': row['PRODUTO'],
+                'categoria': row['CATEGORIA'],
+                'quantity_sold': int(row['qtd_vendida']),
+                'revenue': float(row['receita']),
+                'profit_margin': profit_margin
+            })
         
-        print(f"[DASHBOARD] Top products: {len(top_products)}")
+        print(f"[DASHBOARD] Top 5 products (JOIN) → {time.perf_counter() - step_start:.4f}s | {len(top_products)} itens")
         
-        # Get low stock products
-        print("[DASHBOARD] Getting low stock products...")
+        # ── Etapa 4: Produtos com estoque baixo (1 query otimizada)
+        step_start = time.perf_counter()
         try:
-            products_df = product_repo.get_all()
-            if not products_df.empty:
-                products_df['ESTOQUE'] = pd.to_numeric(products_df['ESTOQUE'], errors='coerce').fillna(0)
-                low_stock_df = products_df[products_df['ESTOQUE'] <= 1]
-                low_stock = low_stock_df.to_dict('records')
-            else:
-                low_stock = []
-            print(f"[DASHBOARD] Low stock: {len(low_stock)}")
+            low_stock = product_repo.get_low_stock(threshold=1)
+            print(f"[DASHBOARD] get_low_stock() → {time.perf_counter() - step_start:.4f}s | {len(low_stock)} itens")
         except Exception as e:
-            print(f"[DASHBOARD] Error getting low stock: {e}")
+            print(f"[DASHBOARD] Erro low stock: {e}")
             low_stock = []
-
-        # Convert Decimal to float for template compatibility
+        
+        # Conversão de tipos (compatibilidade com template)
         if 'by_category' in summary:
             summary['by_category'] = {k: float(v) for k, v in summary['by_category'].items()}
         
-        print("[DASHBOARD] Rendering template...")
-        return render_template(
+        # ── Renderização final
+        render_start = time.perf_counter()
+        response = render_template(
             'dashboard.html',
             summary=summary,
             recent_sales=recent_sales,
             top_products=top_products,
             low_stock=low_stock
         )
+        render_time = time.perf_counter() - render_start
+        
+        total_time = time.perf_counter() - overall_start
+        
+        print(f"[DASHBOARD] render_template() → {render_time:.4f}s")
+        print(f"[DASHBOARD] ⏱ TEMPO TOTAL DA ROTA: {total_time:.4f}s")
+        
+        return response
         
     except Exception as e:
-        print(f"[DASHBOARD] ❌ ERROR: {str(e)}")
+        total_time = time.perf_counter() - overall_start
+        print(f"[DASHBOARD] ❌ ERRO após {total_time:.4f}s → {str(e)}")
         import traceback
         traceback.print_exc()
         return render_template('error.html', error=str(e)), 500
@@ -676,7 +690,7 @@ def api_sales_summary():
         ).fillna(0)
         
         # Get items for total quantity
-        items_df = item_repo._read_csv()
+        items_df = item_repo.get_all()
         items_df['QUANTIDADE'] = pd.to_numeric(
             items_df['QUANTIDADE'], 
             errors='coerce'
@@ -1034,7 +1048,7 @@ def api_sales_paginated():
         
         # Get all sales and items
         sales_df = sale_repo.get_all()
-        items_df = item_repo._read_csv()
+        items_df = item_repo.get_all()
         
         if items_df.empty:
             return jsonify({
@@ -1134,53 +1148,17 @@ def api_customer_segments():
 @app.route('/api/analytics/categories', methods=['GET'])
 @login_required
 def api_categories():
-    """Get category analysis - FIXED com normalização."""
+    """Get category analysis - OTIMIZADO."""
     try:
-        from src.repositories.sale_item_repository import SaleItemRepository
-        import pandas as pd
+        # OTIMIZADO: get_category_stats() agora retorna List[Dict]
+        category_stats = analytics_service.get_category_analysis()
         
-        item_repo = SaleItemRepository()
-        items_df = item_repo._read_csv()
-        
-        if items_df.empty:
+        if not category_stats or not category_stats.get('categories'):
             return jsonify({'success': True, 'data': {'categories': []}})
-        
-        # NORMALIZAR categorias (Title Case)
-        items_df['CATEGORIA'] = items_df['CATEGORIA'].str.strip().str.title()
-        items_df['PRECO_TOTAL'] = pd.to_numeric(items_df['PRECO_TOTAL'], errors='coerce').fillna(0)
-        items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
-        
-        # Agrupar por categoria normalizada
-        category_stats = items_df.groupby('CATEGORIA').agg({
-            'PRECO_TOTAL': 'sum',
-            'QUANTIDADE': 'sum',
-            'CODIGO': 'nunique'
-        }).reset_index()
-        
-        category_stats.columns = ['CATEGORIA', 'RECEITA', 'QTD_VENDIDA', 'PRODUTOS_UNICOS']
-        category_stats = category_stats.sort_values('RECEITA', ascending=False)
-        
-        total_revenue = category_stats['RECEITA'].sum()
-        
-        results = []
-        for _, row in category_stats.iterrows():
-            receita = float(row['RECEITA'])
-            revenue_share = (receita / total_revenue * 100) if total_revenue > 0 else 0
-            
-            results.append({
-                'category': row['CATEGORIA'],
-                'revenue': receita,
-                'revenue_share': revenue_share,
-                'items_sold': int(row['QTD_VENDIDA']),
-                'unique_products': int(row['PRODUTOS_UNICOS'])
-            })
         
         return jsonify({
             'success': True,
-            'data': {
-                'categories': results,
-                'total_revenue': float(total_revenue)
-            }
+            'data': category_stats
         })
         
     except Exception as e:
@@ -1193,17 +1171,23 @@ def api_categories():
 @app.route('/api/analytics/payment-methods', methods=['GET'])
 @login_required
 def api_payment_methods():
-    """Get payment methods analysis."""
+    """Get payment methods analysis - FIXED."""
     try:
-        # Log current counts to ensure fresh data
+        # Log para debug
         from src.repositories.sale_repository import SaleRepository
         sale_repo = SaleRepository()
-        sales_df = sale_repo.get_all()
-        print(f"[ANALYTICS] payment_methods: sales rows={len(sales_df)}")
-
+        sales_count = sale_repo.count()
+        print(f"[ANALYTICS] payment_methods: total sales={sales_count}")
+        
+        # Usa analytics_service que já retorna dados corretos
         payment_data = analytics_service.get_payment_method_analysis()
+        
         return jsonify({'success': True, 'data': payment_data})
+        
     except Exception as e:
+        print(f"Error in payment methods: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1218,33 +1202,51 @@ def api_monthly_revenue():
         from src.repositories.sale_repository import SaleRepository
         
         sale_repo = SaleRepository()
-        sales_df = sale_repo.get_all()
-        print(f"[ANALYTICS] monthly_revenue: sales rows={len(sales_df)}")
-        import pandas as _pd
-        # Flexible date parsing (accept dd/mm/YYYY and ISO YYYY-MM-DD)
-        sales_df['DATA_DT'] = _pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
-        # Fallback: parse dd/mm/YYYY explicitly for rows not parsed by the vectorized call
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: _pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-        sales_df = sales_df[sales_df['DATA_DT'].notna()]
-        sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
-        sales_df['VALOR_TOTAL_VENDA'] = _pd.to_numeric(sales_df['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
+        
+        # OTIMIZADO: Pega apenas colunas necessárias
+        sales = sale_repo.find_all(columns=['ID_VENDA', 'DATA', 'VALOR_TOTAL_VENDA'])
+        
+        print(f"[ANALYTICS] monthly_revenue: sales rows={len(sales)}")
+        
+        if not sales:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'months': [],
+                    'revenues': []
+                }
+            })
+        
+        # Parse dates
+        def parse_date(date_str):
+            if not date_str:
+                return None
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%d/%m/%Y')
+                except ValueError:
+                    return None
         
         # Get last 12 months
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
         
         monthly_data = defaultdict(float)
-        recent = sales_df[sales_df['DATA_DT'] >= _pd.Timestamp(start_date)]
-        print(f"[ANALYTICS] monthly_revenue: recent rows={len(recent)}")
-        for _, sale in recent.iterrows():
-            month_key = sale['MONTH_KEY']
-            monthly_data[month_key] += float(sale['VALOR_TOTAL_VENDA'])
+        
+        for sale in sales:
+            sale_date = parse_date(sale.get('DATA'))
+            if not sale_date or sale_date < start_date:
+                continue
+            
+            month_key = sale_date.strftime('%Y-%m')
+            monthly_data[month_key] += float(sale.get('VALOR_TOTAL_VENDA', 0))
         
         # Generate last 12 months with data
         months = []
         revenues = []
+        
         for i in range(11, -1, -1):
             month_date = end_date - timedelta(days=30*i)
             month_key = month_date.strftime('%Y-%m')
@@ -1262,40 +1264,56 @@ def api_monthly_revenue():
         })
     except Exception as e:
         print(f"Error in monthly revenue: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
     
 @app.route('/api/analytics/monthly-financial-summary', methods=['GET'])
 @login_required
 def api_monthly_financial_summary():
-    """Resumo financeiro do mês atual."""
+    """Resumo financeiro do mês atual - FIXED."""
     try:
         from src.repositories.sale_repository import SaleRepository
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
-        import pandas as pd
-        from datetime import datetime
+        from datetime import datetime, timedelta
         
         sale_repo = SaleRepository()
         item_repo = SaleItemRepository()
         product_repo = ProductRepository()
         
-        # Pegar vendas do mês atual
+        # Mês atual
         current_month = datetime.now().strftime('%m/%Y')
-        sales_df = sale_repo.get_all()
-        print(f"[ANALYTICS] monthly_financial_summary: sales rows={len(sales_df)}")
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-        sales_df = sales_df[sales_df['DATA_DT'].notna()]
-        sales_df['MONTH'] = sales_df['DATA_DT'].dt.strftime('%m/%Y')
-        month_sales = sales_df[sales_df['MONTH'] == current_month]
-        print(f"[ANALYTICS] monthly_financial_summary: month_sales rows={len(month_sales)}")
         
-        if month_sales.empty:
+        # Pegar vendas do mês com SQL direto
+        with sale_repo.get_conn() as conn:
+            cur = sale_repo._get_cursor(conn)
+            cur.execute('SELECT "ID_VENDA", "DATA", "VALOR_TOTAL_VENDA" FROM sales')
+            all_sales = cur.fetchall()
+        
+        # Filtrar vendas do mês atual em Python
+        def parse_date(date_str):
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%d/%m/%Y')
+                except ValueError:
+                    return None
+        
+        month_sales = []
+        for sale in all_sales:
+            sale_date = parse_date(sale['DATA'])
+            if sale_date and sale_date.strftime('%m/%Y') == current_month:
+                month_sales.append(sale)
+        
+        print(f"[ANALYTICS] monthly_financial_summary: month_sales count={len(month_sales)}")
+        
+        if not month_sales:
             return jsonify({
                 'success': True,
                 'data': {
+                    'total_revenue': 0,
                     'gross_margin_pct': 0,
                     'contribution_margin_pct': 0,
                     'fixed_expenses': expense_service.get_total_monthly_expenses(),
@@ -1303,31 +1321,49 @@ def api_monthly_financial_summary():
                 }
             })
         
-        # Calcular métricas do mês
-        total_revenue = month_sales['VALOR_TOTAL_VENDA'].astype(float).sum()
+        # Calcular receita total
+        total_revenue = sum(float(s['VALOR_TOTAL_VENDA'] or 0) for s in month_sales)
+        sale_ids = [s['ID_VENDA'] for s in month_sales]
         
-        # Pegar itens do mês
-        sale_ids = month_sales['ID_VENDA'].tolist()
-        items_df = item_repo._read_csv()
-        print(f"[ANALYTICS] monthly_financial_summary: items rows={len(items_df)}")
-        month_items = items_df[items_df['ID_VENDA'].isin(sale_ids)]
-        print(f"[ANALYTICS] monthly_financial_summary: month_items rows={len(month_items)}")
+        # Pegar itens do mês (SQL direto)
+        with item_repo.get_conn() as conn:
+            cur = item_repo._get_cursor(conn)
+            
+            placeholders = ','.join(['%s' if item_repo.db_type == 'postgresql' else '?' for _ in sale_ids])
+            
+            cur.execute(f'''
+                SELECT 
+                    "CODIGO",
+                    "QUANTIDADE"
+                FROM sales_items
+                WHERE "ID_VENDA" IN ({placeholders})
+            ''', sale_ids)
+            
+            month_items = cur.fetchall()
+        
+        print(f"[ANALYTICS] monthly_financial_summary: month_items count={len(month_items)}")
+        
+        # Pegar custos dos produtos (JOIN SQL)
+        with product_repo.get_conn() as conn:
+            cur = product_repo._get_cursor(conn)
+            cur.execute('SELECT "CODIGO", "CUSTO" FROM products')
+            product_costs = {row['CODIGO']: float(row['CUSTO'] or 0) for row in cur.fetchall()}
         
         # Calcular COGS
-        products_df = product_repo.get_all()
-        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
-        
         total_cogs = 0
-        for _, item in month_items.iterrows():
-            codigo = str(item['CODIGO'])
-            quantidade = int(item.get('QUANTIDADE', 0))
-            custo = float(product_costs.get(codigo, 0))
-            total_cogs += custo * quantidade
+        total_units = 0
         
-        # Calcular custos variáveis (estimativa: 3.5% taxa + R$ 3/unidade embalagem)
-        total_units = month_items['QUANTIDADE'].astype(int).sum()
-        payment_fees = total_revenue * 0.035  # 3.5% taxa média
-        packaging_costs = total_units * 3.0   # R$ 3 por unidade (embalagem + materiais)
+        for item in month_items:
+            codigo = item['CODIGO']
+            quantidade = int(item['QUANTIDADE'] or 0)
+            custo = product_costs.get(codigo, 0)
+            
+            total_cogs += custo * quantidade
+            total_units += quantidade
+        
+        # Calcular custos variáveis (IGUAL À VERSÃO ANTES)
+        payment_fees = total_revenue * 0.035
+        packaging_costs = total_units * 3.0
         total_variable_costs = payment_fees + packaging_costs
         
         # Margens
@@ -1368,24 +1404,22 @@ def api_monthly_financial_summary():
 @app.route('/api/analytics/monthly-profit', methods=['GET'])
 @login_required
 def api_monthly_profit_updated():
-    """Lucro líquido mensal (12 meses) - MODELO FINANCEIRO CORRETO"""
+    """Lucro líquido mensal (12 meses) - FIXED."""
     try:
         from collections import defaultdict
         from src.repositories.sale_repository import SaleRepository
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
-        import pandas as pd
         from datetime import datetime, timedelta
 
         sale_repo = SaleRepository()
         item_repo = SaleItemRepository()
         product_repo = ProductRepository()
 
-        sales_df = sale_repo.get_all()
-        items_df = item_repo._read_csv()
-        products_df = product_repo.get_all()
-
-        if sales_df.empty:
+        # Pega todas as vendas
+        sales = sale_repo.find_all(columns=['ID_VENDA', 'DATA', 'VALOR_TOTAL_VENDA'])
+        
+        if not sales:
             return jsonify({
                 'success': True,
                 'data': {
@@ -1396,92 +1430,68 @@ def api_monthly_profit_updated():
                 }
             })
 
-        # === Datas ===
+        # Parse dates
+        def parse_date(date_str):
+            if not date_str:
+                return None
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%d/%m/%Y')
+                except ValueError:
+                    return None
+
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
 
-        sales_df['DATA_DT'] = pd.to_datetime(
-            sales_df['DATA'],
-            dayfirst=True,
-            errors='coerce'
-        )
-        # Fallback for mixed formats
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-
-        print(f"[ANALYTICS] monthly_profit: sales rows={len(sales_df)}")
-
-        sales_df = sales_df[
-            (sales_df['DATA_DT'] >= start_date) &
-            (sales_df['DATA_DT'].notna())
-        ]
-        print(f"[ANALYTICS] monthly_profit: recent rows={len(sales_df)}")
-
-        sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
-        sales_df['VALOR_TOTAL_VENDA'] = pd.to_numeric(
-            sales_df['VALOR_TOTAL_VENDA'],
-            errors='coerce'
-        ).fillna(0)
-
-        # === Custo dos produtos (COGS) ===
-        product_costs = (
-            products_df
-            .assign(CODIGO=products_df['CODIGO'].astype(str))
-            .set_index('CODIGO')['CUSTO']
-            .to_dict()
-        )
-
-        # === Estrutura mensal ===
+        # Filtra últimos 12 meses e agrupa por mês
         monthly_data = defaultdict(lambda: {
             'revenue': 0.0,
-            'cogs': 0.0,
-            'units': 0,
-            'sales_count': 0
+            'sale_ids': []
         })
 
-        # Receita por mês
-        for _, sale in sales_df.iterrows():
-            month_key = sale['MONTH_KEY']
-            monthly_data[month_key]['revenue'] += float(sale['VALOR_TOTAL_VENDA'])
-            monthly_data[month_key]['sales_count'] += 1
+        for sale in sales:
+            sale_date = parse_date(sale.get('DATA'))
+            if not sale_date or sale_date < start_date:
+                continue
+            
+            month_key = sale_date.strftime('%Y-%m')
+            monthly_data[month_key]['revenue'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
+            monthly_data[month_key]['sale_ids'].append(sale['ID_VENDA'])
 
-        # Itens vendidos → COGS
-        if not items_df.empty:
-            items_df['CODIGO'] = items_df['CODIGO'].astype(str)
-            items_df['QUANTIDADE'] = pd.to_numeric(
-                items_df['QUANTIDADE'],
-                errors='coerce'
-            ).fillna(0)
+        print(f"[ANALYTICS] monthly_profit: processing {len(monthly_data)} months")
 
-            sales_month_map = (
-                sales_df[['ID_VENDA', 'MONTH_KEY']]
-                .set_index('ID_VENDA')['MONTH_KEY']
-                .to_dict()
-            )
+        # Pega TODOS os itens de uma vez
+        all_items = item_repo.find_all(columns=['ID_VENDA', 'CODIGO', 'QUANTIDADE'])
+        
+        # Pega TODOS os custos de produtos
+        products = product_repo.find_all(columns=['CODIGO', 'CUSTO'])
+        product_costs = {p['CODIGO']: float(p['CUSTO'] or 0) for p in products}
 
-            for _, item in items_df.iterrows():
-                sale_id = item['ID_VENDA']
-                month_key = sales_month_map.get(sale_id)
+        # Calcula COGS e unidades por mês
+        for month_key, data in monthly_data.items():
+            sale_ids_set = set(data['sale_ids'])
+            
+            cogs = 0.0
+            units = 0
+            
+            for item in all_items:
+                if item['ID_VENDA'] in sale_ids_set:
+                    codigo = item['CODIGO']
+                    quantidade = int(item['QUANTIDADE'] or 0)
+                    custo = product_costs.get(codigo, 0)
+                    
+                    cogs += custo * quantidade
+                    units += quantidade
+            
+            data['cogs'] = cogs
+            data['units'] = units
 
-                if not month_key:
-                    continue
+        # Despesas fixas
+        fixed_expenses = expense_service.get_total_monthly_expenses()
 
-                quantidade = int(item['QUANTIDADE'])
-                custo_unit = float(product_costs.get(item['CODIGO'], 0))
-
-                monthly_data[month_key]['cogs'] += custo_unit * quantidade
-                monthly_data[month_key]['units'] += quantidade
-
-        # === DESPESAS FIXAS REAIS (SEM ESTOQUE) ===
-        fixed_expenses = (
-            76.90 +   # Impostos
-            200.00 +  # Transportadora
-            100.00 +  # Marketing
-            65.00 +   # Telefonia
-            50.00     # Energia
-        )
-
+        # Gera resultados para últimos 12 meses
         months = []
         net_profits = []
         gross_margins = []
@@ -1494,39 +1504,26 @@ def api_monthly_profit_updated():
 
             months.append(month_label)
 
-            data = monthly_data.get(month_key, {
-                'revenue': 0,
-                'cogs': 0,
-                'units': 0,
-                'sales_count': 0
-            })
+            data = monthly_data.get(month_key, {'revenue': 0, 'cogs': 0, 'units': 0})
 
             revenue = data['revenue']
             cogs = data['cogs']
             units = data['units']
-            sales_count = data['sales_count']
 
-            # === Custos variáveis CORRETOS ===
-            payment_fee = revenue * 0.035          # 3,5%
-            packaging = units * 2.00               # embalagem por unidade
-            cards = units * 1.00                   # cartões por unidade
-            shipping_materials = sales_count * 1.50  # por venda
+            # Custos variáveis
+            payment_fee = revenue * 0.035
+            packaging = units * 2.0
+            cards = units * 1.0
+            shipping = len(data.get('sale_ids', [])) * 1.50
 
-            variable_costs = (
-                payment_fee +
-                packaging +
-                cards +
-                shipping_materials
-            )
+            variable_costs = payment_fee + packaging + cards + shipping
 
-            # === Margens ===
+            # Margens
             gross_profit = revenue - cogs
             gross_margin = (gross_profit / revenue * 100) if revenue > 0 else 0
 
             contribution = gross_profit - variable_costs
-            contribution_margin = (
-                contribution / revenue * 100
-            ) if revenue > 0 else 0
+            contribution_margin = (contribution / revenue * 100) if revenue > 0 else 0
 
             net_profit = contribution - fixed_expenses
 
@@ -1545,6 +1542,7 @@ def api_monthly_profit_updated():
         })
 
     except Exception as e:
+        print(f"Error in monthly profit: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1554,12 +1552,11 @@ def api_monthly_profit_updated():
 @app.route('/api/analytics/cost-breakdown', methods=['GET'])
 @login_required
 def api_cost_breakdown():
-    """Breakdown de custos do mês atual."""
+    """Breakdown de custos do mês atual - FIXED."""
     try:
         from src.repositories.sale_repository import SaleRepository
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
-        import pandas as pd
         from datetime import datetime
         
         sale_repo = SaleRepository()
@@ -1568,18 +1565,31 @@ def api_cost_breakdown():
         
         # Mês atual
         current_month = datetime.now().strftime('%m/%Y')
-        sales_df = sale_repo.get_all()
-        print(f"[ANALYTICS] cost_breakdown: sales rows={len(sales_df)}")
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-        sales_df = sales_df[sales_df['DATA_DT'].notna()]
-        sales_df['MONTH'] = sales_df['DATA_DT'].dt.strftime('%m/%Y')
-        month_sales = sales_df[sales_df['MONTH'] == current_month]
-        print(f"[ANALYTICS] cost_breakdown: month_sales rows={len(month_sales)}")
         
-        if month_sales.empty:
+        # Pegar vendas do mês
+        def parse_date(date_str):
+            if not date_str:
+                return None
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%d/%m/%Y')
+                except ValueError:
+                    return None
+        
+        sales = sale_repo.find_all(columns=['ID_VENDA', 'DATA', 'VALOR_TOTAL_VENDA'])
+        
+        # Filtra mês atual
+        month_sales = []
+        for sale in sales:
+            sale_date = parse_date(sale.get('DATA'))
+            if sale_date and sale_date.strftime('%m/%Y') == current_month:
+                month_sales.append(sale)
+        
+        print(f"[ANALYTICS] cost_breakdown: month_sales count={len(month_sales)}")
+        
+        if not month_sales:
             return jsonify({
                 'success': True,
                 'data': {
@@ -1590,24 +1600,25 @@ def api_cost_breakdown():
             })
         
         # COGS
-        sale_ids = month_sales['ID_VENDA'].tolist()
-        items_df = item_repo._read_csv()
-        month_items = items_df[items_df['ID_VENDA'].isin(sale_ids)]
+        sale_ids = [s['ID_VENDA'] for s in month_sales]
+        sale_ids_set = set(sale_ids)
         
-        products_df = product_repo.get_all()
-        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
+        all_items = item_repo.find_all(columns=['ID_VENDA', 'CODIGO', 'QUANTIDADE'])
+        products = product_repo.find_all(columns=['CODIGO', 'CUSTO'])
+        product_costs = {p['CODIGO']: float(p['CUSTO'] or 0) for p in products}
         
         total_cogs = 0
         total_units = 0
-        for _, item in month_items.iterrows():
-            codigo = str(item['CODIGO'])
-            quantidade = int(item.get('QUANTIDADE', 0))
-            custo = float(product_costs.get(codigo, 0))
-            total_cogs += custo * quantidade
-            total_units += quantidade
+        
+        for item in all_items:
+            if item['ID_VENDA'] in sale_ids_set:
+                quantidade = int(item['QUANTIDADE'] or 0)
+                custo = product_costs.get(item['CODIGO'], 0)
+                total_cogs += custo * quantidade
+                total_units += quantidade
         
         # Variable costs
-        total_revenue = month_sales['VALOR_TOTAL_VENDA'].astype(float).sum()
+        total_revenue = sum(float(s['VALOR_TOTAL_VENDA'] or 0) for s in month_sales)
         payment_fees = total_revenue * 0.035
         packaging = total_units * 3.0
         total_variable_costs = payment_fees + packaging
@@ -1626,19 +1637,20 @@ def api_cost_breakdown():
         
     except Exception as e:
         print(f"Error in cost breakdown: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/api/analytics/breakeven-progress', methods=['GET'])
 @login_required
 def api_breakeven_progress():
-    """Progresso de break-even do mês atual."""
+    """Progresso de break-even - FIXED."""
     try:
         from src.repositories.sale_repository import SaleRepository
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
-        import pandas as pd
-        from datetime import datetime
+        from datetime import datetime, timedelta
         
         sale_repo = SaleRepository()
         item_repo = SaleItemRepository()
@@ -1646,19 +1658,33 @@ def api_breakeven_progress():
         
         # Mês atual
         current_month = datetime.now().strftime('%m/%Y')
-        sales_df = sale_repo.get_all()
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-        sales_df = sales_df[sales_df['DATA_DT'].notna()]
-        sales_df['MONTH'] = sales_df['DATA_DT'].dt.strftime('%m/%Y')
-        month_sales = sales_df[sales_df['MONTH'] == current_month]
+        
+        # Pegar vendas do mês
+        with sale_repo.get_conn() as conn:
+            cur = sale_repo._get_cursor(conn)
+            cur.execute('SELECT "ID_VENDA", "DATA", "VALOR_TOTAL_VENDA" FROM sales')
+            all_sales = cur.fetchall()
+        
+        # Filtrar vendas do mês atual em Python
+        def parse_date(date_str):
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%d/%m/%Y')
+                except ValueError:
+                    return None
+        
+        month_sales = []
+        for sale in all_sales:
+            sale_date = parse_date(sale['DATA'])
+            if sale_date and sale_date.strftime('%m/%Y') == current_month:
+                month_sales.append(sale)
         
         # Despesas fixas
         fixed_expenses = expense_service.get_total_monthly_expenses()
         
-        if month_sales.empty:
+        if not month_sales:
             return jsonify({
                 'success': True,
                 'data': {
@@ -1671,44 +1697,57 @@ def api_breakeven_progress():
                 }
             })
         
-        # Calcular contribuição total
-        sale_ids = month_sales['ID_VENDA'].tolist()
-        items_df = item_repo._read_csv()
-        month_items = items_df[items_df['ID_VENDA'].isin(sale_ids)]
+        # Calcular contribuição
+        total_revenue = sum(float(s['VALOR_TOTAL_VENDA'] or 0) for s in month_sales)
+        sale_ids = [s['ID_VENDA'] for s in month_sales]
         
-        products_df = product_repo.get_all()
-        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
+        # Pegar itens + custos
+        with item_repo.get_conn() as conn:
+            cur = item_repo._get_cursor(conn)
+            placeholders = ','.join(['%s' if item_repo.db_type == 'postgresql' else '?' for _ in sale_ids])
+            
+            cur.execute(f'''
+                SELECT 
+                    si."CODIGO",
+                    si."QUANTIDADE",
+                    COALESCE(p."CUSTO", 0) AS custo
+                FROM sales_items si
+                LEFT JOIN products p ON si."CODIGO" = p."CODIGO"
+                WHERE si."ID_VENDA" IN ({placeholders})
+            ''', sale_ids)
+            
+            month_items = cur.fetchall()
         
-        total_revenue = month_sales['VALOR_TOTAL_VENDA'].astype(float).sum()
         total_cogs = 0
         total_units = 0
         
-        for _, item in month_items.iterrows():
-            codigo = str(item['CODIGO'])
-            quantidade = int(item.get('QUANTIDADE', 0))
-            custo = float(product_costs.get(codigo, 0))
+        for item in month_items:
+            quantidade = int(item['QUANTIDADE'] or 0)
+            custo = float(item['custo'] or 0)
             total_cogs += custo * quantidade
             total_units += quantidade
         
-        # Variable costs
+        # Custos variáveis
         payment_fees = total_revenue * 0.035
-        packaging = total_units * 3.0
-        total_variable_costs = payment_fees + packaging
+        packaging = total_units * 2.0
+        cards = total_units * 1.0
+        shipping = len(month_sales) * 1.50
+        total_variable_costs = payment_fees + packaging + cards + shipping
         
-        # Contribution margin
+        # Contribuição
         gross_profit = total_revenue - total_cogs
         contribution_total = gross_profit - total_variable_costs
         
-        # Current sales count
+        # Vendas atuais
         current_sales = len(month_sales)
         
-        # Average contribution per sale
+        # Contribuição média por venda
         avg_contribution = contribution_total / current_sales if current_sales > 0 else 0
         
-        # Break-even sales
+        # Break-even
         breakeven_sales = fixed_expenses / avg_contribution if avg_contribution > 0 else float('inf')
         
-        # Progress
+        # Progresso
         progress_pct = (current_sales / breakeven_sales * 100) if breakeven_sales > 0 and breakeven_sales != float('inf') else 0
         remaining_sales = max(0, breakeven_sales - current_sales)
         
@@ -1726,7 +1765,7 @@ def api_breakeven_progress():
         })
         
     except Exception as e:
-        print(f"Error in breakeven progress: {e}")
+        print(f"Error in breakeven: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1734,50 +1773,20 @@ def api_breakeven_progress():
 @app.route('/api/analytics/products-performance', methods=['GET'])
 @login_required
 def api_products_performance():
-    """Análise detalhada de produtos."""
+    """Análise detalhada de produtos - OTIMIZADO."""
     try:
-        from src.repositories.sale_item_repository import SaleItemRepository
-        from src.repositories.product_repository import ProductRepository
-        import pandas as pd
+        # OTIMIZADO: Usa get_product_performance() que já faz JOIN
+        performance = analytics_service.get_product_performance(top_n=20)
         
-        item_repo = SaleItemRepository()
-        product_repo = ProductRepository()
-        
-        # Estatísticas de produtos
-        product_stats = item_repo.get_product_stats()
-        
-        if product_stats.empty:
-            return jsonify({'success': True, 'data': []})
-        
-        # Enriquecer com dados de custo
-        products_df = product_repo.get_all()
-        
-        results = []
-        for _, row in product_stats.head(20).iterrows():  # Top 20
-            codigo = row['CODIGO']
-            product = products_df[products_df['CODIGO'] == codigo]
-            
-            custo = float(product['CUSTO'].iloc[0]) if not product.empty else 0
-            receita = float(row['RECEITA'])
-            qtd_vendida = int(row['QTD_VENDIDA'])
-            
-            profit = receita - (custo * qtd_vendida)
-            profit_margin = (profit / receita * 100) if receita > 0 else 0
-            
-            results.append({
-                'codigo': codigo,
-                'produto': row['PRODUTO'],
-                'categoria': row['CATEGORIA'],
-                'quantity_sold': qtd_vendida,
-                'revenue': receita,
-                'profit': profit,
-                'profit_margin': profit_margin,
-                'transactions': int(row['NUM_VENDAS'])
-            })
-        
-        return jsonify({'success': True, 'data': results})
+        return jsonify({
+            'success': True,
+            'data': performance['top_products']
+        })
         
     except Exception as e:
+        print(f"Error in products performance: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/analytics/clients-performance', methods=['GET'])
@@ -1824,55 +1833,30 @@ def api_clients_performance():
 @app.route('/api/analytics/sales-overview', methods=['GET'])
 @login_required
 def api_sales_overview():
-    """Visão geral de vendas."""
+    """Visão geral de vendas - FIXED."""
     try:
         from src.repositories.sale_repository import SaleRepository
         from src.repositories.sale_item_repository import SaleItemRepository
-        import pandas as pd
         
         sale_repo = SaleRepository()
         item_repo = SaleItemRepository()
         
-        sales_df = sale_repo.get_all()
-        items_df = item_repo._read_csv()
+        # Get summary (já otimizado)
+        summary = sale_repo.get_sales_summary()
         
-        if sales_df.empty:
-            return jsonify({'success': True, 'data': {
-                'total_vendas': 0,
-                'total_receita': 0,
-                'total_itens': 0,
-                'ticket_medio': 0,
-                'by_payment': {},
-                'by_month': {}
-            }})
+        print(f"[ANALYTICS] sales_overview: summary={summary}")
         
-        # Converter colunas
-        sales_df['VALOR_TOTAL_VENDA'] = pd.to_numeric(sales_df['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
-        print(f"[ANALYTICS] sales_overview: sales rows={len(sales_df)}, items rows={len(items_df)}")
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-        sales_df = sales_df[sales_df['DATA_DT'].notna()]
-        sales_df['MONTH'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
-        
-        items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
-        
-        # Métricas gerais
-        total_vendas = len(sales_df)
-        total_receita = float(sales_df['VALOR_TOTAL_VENDA'].sum())
-        total_itens = int(items_df['QUANTIDADE'].sum())
-        ticket_medio = total_receita / total_vendas if total_vendas > 0 else 0
+        # Total de transações únicas (vendas)
+        total_vendas = summary['total_sales']
+        total_receita = summary['total_revenue']
+        total_itens = summary['total_items_sold']
+        ticket_medio = summary['average_sale_value']
         
         # Por meio de pagamento
-        by_payment = sales_df.groupby('MEIO')['VALOR_TOTAL_VENDA'].sum().to_dict()
-        by_payment = {k.title(): float(v) for k, v in by_payment.items()}
+        by_payment = summary['by_payment_method']
         
-        # Por mês (últimos 6 meses)
-        by_month = sales_df.groupby('MONTH')['VALOR_TOTAL_VENDA'].sum().sort_index().tail(6).to_dict()
+        # Por categoria
+        by_category = summary['by_category']
         
         return jsonify({
             'success': True,
@@ -1882,45 +1866,55 @@ def api_sales_overview():
                 'total_itens': total_itens,
                 'ticket_medio': ticket_medio,
                 'by_payment': by_payment,
-                'by_month': {k: float(v) for k, v in by_month.items()}
+                'by_month': {}  # Opcional
             }
         })
         
     except Exception as e:
+        print(f"Error in sales overview: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-    
-# Adicione estes endpoints no seu app.py
 
 @app.route('/api/analytics/monthly-sales-count', methods=['GET'])
 @login_required
 def api_monthly_sales_count():
-    """Quantidade de vendas por mês (últimos 12 meses)."""
+    """Quantidade de vendas por mês - FIXED."""
     try:
         from collections import defaultdict
         from src.repositories.sale_repository import SaleRepository
-        import pandas as pd
         
         sale_repo = SaleRepository()
-        sales_df = sale_repo.get_all()
+        sales = sale_repo.find_all(columns=['DATA'])
         
-        if sales_df.empty:
+        if not sales:
             return jsonify({'success': True, 'data': {'months': [], 'counts': []}})
         
-        # Convert dates (flexible parsing)
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-        sales_df = sales_df[sales_df['DATA_DT'].notna()]
-        sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
+        # Parse dates
+        def parse_date(date_str):
+            if not date_str:
+                return None
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%d/%m/%Y')
+                except ValueError:
+                    return None
         
         # Get last 12 months
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
-        sales_df = sales_df[sales_df['DATA_DT'] >= pd.Timestamp(start_date)]
         
-        # Count sales per month
-        monthly_counts = sales_df.groupby('MONTH_KEY').size().to_dict()
+        monthly_counts = defaultdict(int)
+        
+        for sale in sales:
+            sale_date = parse_date(sale.get('DATA'))
+            if not sale_date or sale_date < start_date:
+                continue
+            
+            month_key = sale_date.strftime('%Y-%m')
+            monthly_counts[month_key] += 1
         
         # Generate last 12 months
         months = []
@@ -1941,6 +1935,7 @@ def api_monthly_sales_count():
                 'counts': counts
             }
         })
+        
     except Exception as e:
         print(f"Error in monthly sales count: {e}")
         import traceback
@@ -1951,23 +1946,21 @@ def api_monthly_sales_count():
 @app.route('/api/analytics/monthly-margin', methods=['GET'])
 @login_required
 def api_monthly_margin():
-    """Margem bruta e líquida por mês."""
+    """Margem bruta e líquida por mês - FIXED."""
     try:
         from collections import defaultdict
         from src.repositories.sale_repository import SaleRepository
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
-        import pandas as pd
+        from datetime import datetime, timedelta
         
         sale_repo = SaleRepository()
         item_repo = SaleItemRepository()
         product_repo = ProductRepository()
         
-        sales_df = sale_repo.get_all()
-        items_df = item_repo._read_csv()
-        products_df = product_repo.get_all()
+        sales = sale_repo.find_all(columns=['ID_VENDA', 'DATA', 'VALOR_TOTAL_VENDA'])
         
-        if sales_df.empty or items_df.empty:
+        if not sales:
             return jsonify({
                 'success': True,
                 'data': {
@@ -1977,56 +1970,55 @@ def api_monthly_margin():
                 }
             })
         
-        # Get last 12 months
+        # Parse dates
+        def parse_date(date_str):
+            if not date_str:
+                return None
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                try:
+                    return datetime.strptime(date_str, '%d/%m/%Y')
+                except ValueError:
+                    return None
+        
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
         
-        # Convert dates (flexible parsing)
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
-        mask = sales_df['DATA_DT'].isna()
-        if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
-        sales_df = sales_df[sales_df['DATA_DT'].notna()]
-        sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
-        sales_df = sales_df[sales_df['DATA_DT'] >= pd.Timestamp(start_date)]
+        # Agrupa vendas por mês
+        monthly_data = defaultdict(lambda: {'revenue': 0, 'sale_ids': []})
         
-        # Get product costs
-        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
-        
-        # Calculate monthly margins
-        monthly_data = defaultdict(lambda: {
-            'revenue': 0,
-            'cost': 0,
-            'sales_count': 0
-        })
-        
-        # Revenue and sales count from sales
-        print(f"[ANALYTICS] monthly_margin: sales rows={len(sales_df)}, items rows={len(items_df)}")
-        for _, sale in sales_df.iterrows():
-            month_key = sale['MONTH_KEY']
-            monthly_data[month_key]['revenue'] += float(sale['VALOR_TOTAL_VENDA'])
-            monthly_data[month_key]['sales_count'] += 1
-        
-        # Costs from items
-        items_df['CODIGO'] = items_df['CODIGO'].astype(str)
-        items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
-        
-        for _, item in items_df.iterrows():
-            sale_id = item['ID_VENDA']
-            sale_month = sales_df[sales_df['ID_VENDA'] == sale_id]
+        for sale in sales:
+            sale_date = parse_date(sale.get('DATA'))
+            if not sale_date or sale_date < start_date:
+                continue
             
-            if not sale_month.empty:
-                month_key = sale_month.iloc[0]['MONTH_KEY']
-                codigo = str(item['CODIGO'])
-                quantidade = int(item['QUANTIDADE'])
-                custo = float(product_costs.get(codigo, 0))
-                
-                monthly_data[month_key]['cost'] += custo * quantidade
+            month_key = sale_date.strftime('%Y-%m')
+            monthly_data[month_key]['revenue'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
+            monthly_data[month_key]['sale_ids'].append(sale['ID_VENDA'])
         
-        # Get monthly expenses
+        # Pega itens e custos
+        all_items = item_repo.find_all(columns=['ID_VENDA', 'CODIGO', 'QUANTIDADE'])
+        products = product_repo.find_all(columns=['CODIGO', 'CUSTO'])
+        product_costs = {p['CODIGO']: float(p['CUSTO'] or 0) for p in products}
+        
+        # Calcula custos por mês
+        for month_key, data in monthly_data.items():
+            sale_ids_set = set(data['sale_ids'])
+            
+            cogs = 0.0
+            for item in all_items:
+                if item['ID_VENDA'] in sale_ids_set:
+                    quantidade = int(item['QUANTIDADE'] or 0)
+                    custo = product_costs.get(item['CODIGO'], 0)
+                    cogs += custo * quantidade
+            
+            data['cogs'] = cogs
+        
+        # Despesas fixas mensais
         monthly_expenses = expense_service.get_total_monthly_expenses()
         
-        # Generate results
+        # Gera resultados
         months = []
         gross_margins = []
         net_margins = []
@@ -2038,12 +2030,12 @@ def api_monthly_margin():
             
             months.append(month_label)
             
-            data = monthly_data.get(month_key, {'revenue': 0, 'cost': 0, 'sales_count': 0})
+            data = monthly_data.get(month_key, {'revenue': 0, 'cogs': 0})
             
-            # Calculate margins
             revenue = data['revenue']
-            cost = data['cost']
-            gross_profit = revenue - cost
+            cogs = data['cogs']
+            
+            gross_profit = revenue - cogs
             net_profit = gross_profit - monthly_expenses
             
             gross_margin = (gross_profit / revenue * 100) if revenue > 0 else 0
@@ -2071,76 +2063,38 @@ def api_monthly_margin():
 @app.route('/api/analytics/products-with-margin', methods=['GET'])
 @login_required
 def api_products_with_margin():
-    """Top produtos com nome + categoria, margem bruta e de contribuição."""
+    """Top produtos com nome + categoria, margem - FIXED."""
     try:
-        from src.repositories.sale_item_repository import SaleItemRepository
-        from src.repositories.product_repository import ProductRepository
-        import pandas as pd
-        
-        item_repo = SaleItemRepository()
-        product_repo = ProductRepository()
-        
-        items_df = item_repo._read_csv()
-        products_df = product_repo.get_all()
-        
-        if items_df.empty:
-            return jsonify({'success': True, 'data': []})
-        
-        # Convert numeric columns
-        items_df['PRECO_TOTAL'] = pd.to_numeric(items_df['PRECO_TOTAL'], errors='coerce').fillna(0)
-        items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
-        
-        # Group by product + category
-        product_stats = items_df.groupby(['CODIGO', 'PRODUTO', 'CATEGORIA']).agg({
-            'PRECO_TOTAL': 'sum',
-            'QUANTIDADE': 'sum'
-        }).reset_index()
-        
-        product_stats.columns = ['CODIGO', 'PRODUTO', 'CATEGORIA', 'RECEITA', 'QTD_VENDIDA']
-        
-        # Get costs
-        product_costs = products_df.set_index('CODIGO')[['CUSTO', 'VALOR']].to_dict('index')
+        # OTIMIZADO: Usa get_product_performance() que já faz JOIN
+        performance = analytics_service.get_product_performance(top_n=20)
         
         results = []
-        for _, row in product_stats.iterrows():
-            codigo = row['CODIGO']
-            receita = float(row['RECEITA'])
-            qtd = int(row['QTD_VENDIDA'])
+        for product in performance['top_products']:
+            # Calcula custos variáveis
+            revenue = product['revenue']
+            quantity = product['quantity_sold']
             
-            # Get cost and price
-            product_data = product_costs.get(codigo, {'CUSTO': 0, 'VALOR': 0})
-            custo = float(product_data['CUSTO'])
-            
-            # Gross margin
-            cost_total = custo * qtd
-            gross_profit = receita - cost_total
-            gross_margin = (gross_profit / receita * 100) if receita > 0 else 0
-            
-            # Variable costs (taxa 3.5% + embalagem R$ 3/un)
-            payment_fee = receita * 0.035
-            packaging = qtd * 3.0
+            payment_fee = revenue * 0.035
+            packaging = quantity * 3.0
             variable_costs = payment_fee + packaging
             
-            # Contribution margin
+            gross_profit = product['profit']
             contribution = gross_profit - variable_costs
-            contribution_margin = (contribution / receita * 100) if receita > 0 else 0
+            contribution_margin = (contribution / revenue * 100) if revenue > 0 else 0
             
             results.append({
-                'codigo': codigo,
-                'produto': row['PRODUTO'],
-                'categoria': row['CATEGORIA'],
-                'label': f"{row['PRODUTO']} - {row['CATEGORIA']}",
-                'quantity_sold': qtd,
-                'revenue': receita,
-                'gross_margin': round(gross_margin, 2),
+                'codigo': product['codigo'],
+                'produto': product['produto'],
+                'categoria': product['categoria'],
+                'label': f"{product['produto']} - {product['categoria']}",
+                'quantity_sold': quantity,
+                'revenue': revenue,
+                'gross_margin': product['profit_margin'],
                 'contribution_margin': round(contribution_margin, 2),
-                'net_margin': round(contribution_margin, 2)  # Compatibilidade
+                'net_margin': round(contribution_margin, 2)
             })
         
-        # Sort by revenue
-        results.sort(key=lambda x: x['revenue'], reverse=True)
-        
-        return jsonify({'success': True, 'data': results[:20]})
+        return jsonify({'success': True, 'data': results})
         
     except Exception as e:
         print(f"Error in products with margin: {e}")
@@ -2149,50 +2103,38 @@ def api_products_with_margin():
         return jsonify({'success': False, 'error': str(e)}), 500
     
 
-
-
 @app.route('/api/analytics/category-margin', methods=['GET'])
 @login_required
 def api_category_margin():
-    """Margem por categoria."""
+    """Margem por categoria - FIXED."""
     try:
         from src.repositories.sale_item_repository import SaleItemRepository
         from src.repositories.product_repository import ProductRepository
-        import pandas as pd
         
         item_repo = SaleItemRepository()
         product_repo = ProductRepository()
         
-        items_df = item_repo._read_csv()
-        products_df = product_repo.get_all()
-        
-        if items_df.empty:
-            return jsonify({'success': True, 'data': []})
-        
-        # Normalize categories
-        items_df['CATEGORIA'] = items_df['CATEGORIA'].str.strip().str.title()
-        items_df['PRECO_TOTAL'] = pd.to_numeric(items_df['PRECO_TOTAL'], errors='coerce').fillna(0)
-        items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
-        
-        # Get costs
-        product_costs = products_df.set_index('CODIGO')['CUSTO'].to_dict()
-        
-        # Calculate cost for each item
-        items_df['CUSTO_TOTAL'] = items_df.apply(
-            lambda row: float(product_costs.get(row['CODIGO'], 0)) * int(row['QUANTIDADE']),
-            axis=1
-        )
-        
-        # Group by category
-        category_stats = items_df.groupby('CATEGORIA').agg({
-            'PRECO_TOTAL': 'sum',
-            'CUSTO_TOTAL': 'sum'
-        }).reset_index()
+        # JOIN SQL para pegar receita + custo por categoria
+        with item_repo.get_conn() as conn:
+            cur = item_repo._get_cursor(conn)
+            
+            cur.execute('''
+                SELECT 
+                    si."CATEGORIA",
+                    SUM(COALESCE(si."PRECO_TOTAL", 0)) AS receita,
+                    SUM(COALESCE(p."CUSTO", 0) * COALESCE(si."QUANTIDADE", 0)) AS custo
+                FROM sales_items si
+                LEFT JOIN products p ON si."CODIGO" = p."CODIGO"
+                GROUP BY si."CATEGORIA"
+                ORDER BY receita DESC
+            ''')
+            
+            category_stats = cur.fetchall()
         
         results = []
-        for _, row in category_stats.iterrows():
-            receita = float(row['PRECO_TOTAL'])
-            custo = float(row['CUSTO_TOTAL'])
+        for row in category_stats:
+            receita = float(row['receita'] or 0)
+            custo = float(row['custo'] or 0)
             gross_profit = receita - custo
             gross_margin = (gross_profit / receita * 100) if receita > 0 else 0
             
@@ -2203,8 +2145,6 @@ def api_category_margin():
                 'gross_profit': gross_profit,
                 'gross_margin': round(gross_margin, 2)
             })
-        
-        results.sort(key=lambda x: x['revenue'], reverse=True)
         
         return jsonify({'success': True, 'data': results})
         
@@ -2231,10 +2171,10 @@ def api_avg_ticket_trend():
         
         # Convert dates (flexible parsing)
         print(f"[ANALYTICS] avg_ticket_trend: sales rows={len(sales_df)}")
-        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], dayfirst=True, errors='coerce')
+        sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], format='%d/%m/%Y', errors='coerce')
         mask = sales_df['DATA_DT'].isna()
         if mask.any():
-            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%d/%m/%Y', errors='coerce'))
+            sales_df.loc[mask, 'DATA_DT'] = sales_df.loc[mask, 'DATA'].apply(lambda s: pd.to_datetime(s, format='%Y-%m-%d', errors='coerce'))
         sales_df = sales_df[sales_df['DATA_DT'].notna()]
         sales_df['MONTH_KEY'] = sales_df['DATA_DT'].dt.strftime('%Y-%m')
         sales_df['VALOR_TOTAL_VENDA'] = pd.to_numeric(sales_df['VALOR_TOTAL_VENDA'], errors='coerce').fillna(0)
@@ -2370,33 +2310,24 @@ def api_return_rate():
 def api_top_category():
     """Get top selling category - FIXED."""
     try:
-        from collections import defaultdict
-        from src.repositories.sale_item_repository import SaleItemRepository
+        # Usa get_category_analysis() que já faz agregação SQL
+        category_data = analytics_service.get_category_analysis()
         
-        item_repo = SaleItemRepository()
-        items_df = item_repo._read_csv()
-        
-        if items_df.empty:
+        if not category_data or not category_data.get('categories'):
             return jsonify({'success': True, 'data': {'category': '-'}})
         
-        # Convert numeric columns
-        items_df['PRECO_TOTAL'] = pd.to_numeric(items_df['PRECO_TOTAL'], errors='coerce').fillna(0)
-        
-        # Group by category
-        category_revenue = items_df.groupby('CATEGORIA')['PRECO_TOTAL'].sum().to_dict()
-        
-        if category_revenue:
-            top_category = max(category_revenue.items(), key=lambda x: x[1])
-            return jsonify({
-                'success': True,
-                'data': {'category': top_category[0]}
-            })
+        # Pega categoria com maior receita
+        top_category = category_data['categories'][0]['category']
         
         return jsonify({
             'success': True,
-            'data': {'category': '-'}
+            'data': {'category': top_category}
         })
+        
     except Exception as e:
+        print(f"Error in top category: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -2467,40 +2398,23 @@ def api_top_products_full():
     """Get top 10 products with product+category - FIXED."""
     try:
         limit = int(request.args.get('limit', 10))
-        from collections import defaultdict
-        from src.repositories.sale_item_repository import SaleItemRepository
         
-        item_repo = SaleItemRepository()
-        items_df = item_repo._read_csv()
-        
-        if items_df.empty:
-            return jsonify({'success': True, 'data': []})
-        
-        # Convert numeric columns
-        items_df['PRECO_TOTAL'] = pd.to_numeric(items_df['PRECO_TOTAL'], errors='coerce').fillna(0)
-        items_df['QUANTIDADE'] = pd.to_numeric(items_df['QUANTIDADE'], errors='coerce').fillna(0)
-        
-        # Group by product
-        product_data = items_df.groupby(['CODIGO', 'PRODUTO', 'CATEGORIA']).agg({
-            'PRECO_TOTAL': 'sum',
-            'QUANTIDADE': 'sum'
-        }).reset_index()
-        
-        # Sort by revenue
-        product_data = product_data.sort_values('PRECO_TOTAL', ascending=False).head(limit)
+        # OTIMIZADO: Usa analytics_service que já faz JOIN
+        performance = analytics_service.get_product_performance(top_n=limit)
         
         result = []
-        for _, row in product_data.iterrows():
+        for product in performance['top_products']:
             result.append({
-                'codigo': row['CODIGO'],
-                'label': f"{row['PRODUTO']} - {row['CATEGORIA']}",
-                'produto': row['PRODUTO'],
-                'categoria': row['CATEGORIA'],
-                'revenue': float(row['PRECO_TOTAL']),
-                'quantity': int(row['QUANTIDADE'])
+                'codigo': product['codigo'],
+                'label': f"{product['produto']} - {product['categoria']}",
+                'produto': product['produto'],
+                'categoria': product['categoria'],
+                'revenue': product['revenue'],
+                'quantity': product['quantity_sold']
             })
         
         return jsonify({'success': True, 'data': result})
+        
     except Exception as e:
         print(f"Error in top products: {e}")
         import traceback
@@ -2514,42 +2428,28 @@ def api_top_clients_full():
     """Get top 10 clients - FIXED."""
     try:
         limit = int(request.args.get('limit', 10))
-        from collections import defaultdict
+        
+        # OTIMIZADO: Usa sale_repo.get_top_clients() que já faz GROUP BY
         from src.repositories.sale_repository import SaleRepository
-        
         sale_repo = SaleRepository()
-        sales = sale_repo.get_all().to_dict('records')
         
-        client_revenue = defaultdict(lambda: {
-            'name': '',
-            'revenue': 0,
-            'purchases': 0
-        })
-        
-        for sale in sales:
-            client_id = str(sale['ID_CLIENTE'])
-            client_revenue[client_id]['name'] = sale['CLIENTE']
-            client_revenue[client_id]['revenue'] += float(sale['VALOR_TOTAL_VENDA'])
-            client_revenue[client_id]['purchases'] += 1
-        
-        # Sort by revenue
-        sorted_clients = sorted(
-            client_revenue.items(),
-            key=lambda x: x[1]['revenue'],
-            reverse=True
-        )[:limit]
+        top_clients = sale_repo.get_top_clients(limit=limit)
         
         result = []
-        for client_id, data in sorted_clients:
+        for client in top_clients:
             result.append({
-                'id': client_id,
-                'name': data['name'],
-                'revenue': data['revenue'],
-                'purchases': data['purchases']
+                'id': client['ID_CLIENTE'],
+                'name': client['CLIENTE'],
+                'revenue': float(client['TOTAL_GASTO']),
+                'purchases': int(client['NUM_COMPRAS'])
             })
         
         return jsonify({'success': True, 'data': result})
+        
     except Exception as e:
+        print(f"Error in top clients: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

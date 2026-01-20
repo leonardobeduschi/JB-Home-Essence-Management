@@ -1,10 +1,16 @@
 """
-Analytics service for advanced reporting and insights - FIXED for new structure.
+Analytics Service - OTIMIZADO PARA PERFORMANCE
+
+Mudanças críticas:
+1. Eliminado uso de Pandas onde possível
+2. Agregações movidas para SQL (SUM, COUNT, GROUP BY, ORDER BY)
+3. JOINs para reduzir número de queries
+4. Processamento de datas otimizado
+5. Queries com projeção de colunas específicas
 """
 
-import pandas as pd
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from collections import defaultdict
 from src.repositories.sale_repository import SaleRepository
 from src.repositories.product_repository import ProductRepository
@@ -13,7 +19,7 @@ from src.repositories.sale_item_repository import SaleItemRepository
 
 
 class AnalyticsService:
-    """Service for advanced analytics and business intelligence."""
+    """Service para analytics com performance otimizada."""
     
     def __init__(
         self,
@@ -22,62 +28,90 @@ class AnalyticsService:
         product_repository: Optional[ProductRepository] = None,
         client_repository: Optional[ClientRepository] = None
     ):
-        """Initialize analytics service."""
         self.sale_repo = sale_repository or SaleRepository()
         self.item_repo = sale_item_repository or SaleItemRepository()
         self.product_repo = product_repository or ProductRepository()
         self.client_repo = client_repository or ClientRepository()
 
-    def _parse_date_str(self, s: str):
-        """Parse a date string flexibly, supporting dd/mm/YYYY and ISO.
-        Returns a datetime.datetime or None if it cannot be parsed."""
-        try:
-            ts = pd.to_datetime(s, dayfirst=True, errors='coerce')
-            if pd.isna(ts):
-                return None
-            return ts.to_pydatetime()
-        except Exception:
-            return None    
+    def _parse_date_str(self, s: str) -> Optional[datetime]:
+        """Parse flexível de datas (dd/mm/YYYY ou ISO)."""
+        if not s:
+            return None
+        
+        s_str = str(s).strip()
+        
+        # Tenta formatos comuns
+        for fmt in ('%Y-%m-%d', '%d/%m/%Y'):
+            try:
+                return datetime.strptime(s_str, fmt)
+            except ValueError:
+                continue
+        
+        return None
+    
     # ========== SALES ANALYTICS ==========
     
     def get_sales_trend(self, days: int = 30) -> Dict:
-        """Get sales trend for the last N days."""
+        """
+        OTIMIZADO: Tendência de vendas com agregação SQL.
+        
+        Antes: 3-4 queries + processamento Pandas
+        Depois: 2 queries SQL com GROUP BY
+        """
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
         
-        # Get sales headers
+        # Query 1: Vendas no período
         sales = self.sale_repo.get_by_date_range(
             start_date.strftime('%d/%m/%Y'),
             end_date.strftime('%d/%m/%Y')
         )
         
-        # Group by date (flexible parsing)
-        daily_sales = defaultdict(lambda: {'count': 0, 'revenue': 0.0})
-        print(f"[ANALYTICS] get_sales_trend: sales rows={len(sales)}")
+        # Agrupa por data em Python (otimizado com defaultdict)
+        daily_sales = defaultdict(lambda: {'count': 0, 'revenue': 0.0, 'items': 0})
+        
+        sale_ids = []
         for sale in sales:
             date_obj = self._parse_date_str(sale.get('DATA'))
             if not date_obj:
                 continue
+            
             date_key = date_obj.strftime('%d/%m/%Y')
             daily_sales[date_key]['count'] += 1
             daily_sales[date_key]['revenue'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
+            sale_ids.append(sale['ID_VENDA'])
         
-        # Get total items from sale_items
-        items_df = self.item_repo._read_csv()
-        sale_ids = [s['ID_VENDA'] for s in sales]
-        items_in_period = items_df[items_df['ID_VENDA'].isin(sale_ids)]
+        # Query 2: Total de itens vendidos no período (agregação SQL)
+        if sale_ids:
+            with self.item_repo.get_conn() as conn:
+                cur = self.item_repo._get_cursor(conn)
+                
+                # Monta placeholders dinamicamente
+                placeholders = ','.join(['%s'] * len(sale_ids)) if self.item_repo.db_type == 'postgresql' else ','.join(['?'] * len(sale_ids))
+                
+                cur.execute(f'''
+                    SELECT 
+                        "ID_VENDA",
+                        SUM(COALESCE("QUANTIDADE", 0)) as total_items
+                    FROM sales_items
+                    WHERE "ID_VENDA" IN ({placeholders})
+                    GROUP BY "ID_VENDA"
+                ''', sale_ids)
+                
+                items_by_sale = {row['ID_VENDA']: int(row['total_items']) for row in cur.fetchall()}
+        else:
+            items_by_sale = {}
         
-        for _, item in items_in_period.iterrows():
-            # Find corresponding sale date (parsed)
-            sale = next((s for s in sales if s['ID_VENDA'] == item['ID_VENDA']), None)
-            if sale:
-                date_obj = self._parse_date_str(sale.get('DATA'))
-                if not date_obj:
-                    continue
-                date_key = date_obj.strftime('%d/%m/%Y')
-                daily_sales[date_key]['items'] = daily_sales[date_key].get('items', 0) + int(item['QUANTIDADE'])
+        # Adiciona itens às vendas diárias
+        for sale in sales:
+            date_obj = self._parse_date_str(sale.get('DATA'))
+            if not date_obj:
+                continue
+            
+            date_key = date_obj.strftime('%d/%m/%Y')
+            daily_sales[date_key]['items'] += items_by_sale.get(sale['ID_VENDA'], 0)
         
-        # Convert to sorted list
+        # Converte para lista ordenada
         trend = []
         for date_str in sorted(daily_sales.keys(), key=lambda x: datetime.strptime(x, '%d/%m/%Y')):
             data = daily_sales[date_str]
@@ -85,7 +119,7 @@ class AnalyticsService:
                 'date': date_str,
                 'sales_count': data['count'],
                 'revenue': data['revenue'],
-                'items_sold': data.get('items', 0),
+                'items_sold': data['items'],
                 'avg_ticket': data['revenue'] / data['count'] if data['count'] > 0 else 0
             })
         
@@ -100,8 +134,9 @@ class AnalyticsService:
         }
     
     def get_period_comparison(self, period1_days: int, period2_days: int) -> Dict:
-        """Compare two time periods."""
-        # Recent period
+        """
+        OTIMIZADO: Comparação de períodos com agregação SQL.
+        """
         end_date = datetime.now()
         start_date1 = end_date - timedelta(days=period1_days)
         
@@ -110,7 +145,6 @@ class AnalyticsService:
             end_date.strftime('%d/%m/%Y')
         )
         
-        # Previous period
         start_date2 = start_date1 - timedelta(days=period2_days)
         end_date2 = start_date1
         
@@ -119,19 +153,35 @@ class AnalyticsService:
             end_date2.strftime('%d/%m/%Y')
         )
         
-        # Calculate metrics
+        # Calcula métricas
         revenue1 = sum(float(s['VALOR_TOTAL_VENDA']) for s in sales1)
         revenue2 = sum(float(s['VALOR_TOTAL_VENDA']) for s in sales2)
         
-        # Get items for periods
-        items_df = self.item_repo._read_csv()
+        # Total de itens (agregação SQL)
         sale_ids1 = [s['ID_VENDA'] for s in sales1]
         sale_ids2 = [s['ID_VENDA'] for s in sales2]
         
-        items1 = int(items_df[items_df['ID_VENDA'].isin(sale_ids1)]['QUANTIDADE'].sum())
-        items2 = int(items_df[items_df['ID_VENDA'].isin(sale_ids2)]['QUANTIDADE'].sum())
+        def get_items_count(sale_ids):
+            if not sale_ids:
+                return 0
+            
+            with self.item_repo.get_conn() as conn:
+                cur = self.item_repo._get_cursor(conn)
+                placeholders = ','.join(['%s'] * len(sale_ids)) if self.item_repo.db_type == 'postgresql' else ','.join(['?'] * len(sale_ids))
+                
+                cur.execute(f'''
+                    SELECT SUM(COALESCE("QUANTIDADE", 0)) as total
+                    FROM sales_items
+                    WHERE "ID_VENDA" IN ({placeholders})
+                ''', sale_ids)
+                
+                result = cur.fetchone()
+                return int(result['total'] or 0)
         
-        # Calculate changes
+        items1 = get_items_count(sale_ids1)
+        items2 = get_items_count(sale_ids2)
+        
+        # Calcula variações
         revenue_change = ((revenue1 - revenue2) / revenue2 * 100) if revenue2 > 0 else 0
         items_change = ((items1 - items2) / items2 * 100) if items2 > 0 else 0
         sales_change = ((len(sales1) - len(sales2)) / len(sales2) * 100) if len(sales2) > 0 else 0
@@ -158,63 +208,55 @@ class AnalyticsService:
             }
         }
     
-    def get_hourly_sales_pattern(self) -> Dict:
-        """Analyze sales patterns by day of week."""
-        sales = self.sale_repo.get_all().to_dict('records')
-        
-        # Group by day of week
-        dow_sales = defaultdict(lambda: {'count': 0, 'revenue': 0.0})
-        
-        for sale in sales:
-            date_obj = self._parse_date_str(sale.get('DATA'))
-            if not date_obj:
-                continue
-            dow = date_obj.strftime('%A')
-            dow_sales[dow]['count'] += 1
-            dow_sales[dow]['revenue'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
-        
-        return dict(dow_sales)
-    
     # ========== PRODUCT ANALYTICS ==========
     
     def get_product_performance(self, top_n: int = 10) -> Dict:
-        """Get product performance using sales_items."""
-        item_stats = self.item_repo.get_product_stats()
-        print(f"[ANALYTICS] get_product_performance: item_stats rows={0 if item_stats is None else (0 if getattr(item_stats, 'empty', False) else len(item_stats))}")
+        """
+        OTIMIZADO: Performance de produtos com JOIN SQL.
         
-        if item_stats.empty:
-            return {'top_products': [], 'all_products': [], 'total_revenue': 0}
-        
-        # Enrich with cost data
-        products_df = self.product_repo.get_all()
-        print(f"[ANALYTICS] get_product_performance: products rows={len(products_df)}")
+        Antes: 2 queries + loop + Pandas
+        Depois: 1 query com JOIN
+        """
+        with self.item_repo.get_conn() as conn:
+            cur = self.item_repo._get_cursor(conn)
+            
+            # JOIN para pegar stats + custo em 1 query
+            cur.execute('''
+                SELECT 
+                    si."CODIGO",
+                    si."PRODUTO",
+                    si."CATEGORIA",
+                    SUM(COALESCE(si."QUANTIDADE", 0)) AS qtd_vendida,
+                    SUM(COALESCE(si."PRECO_TOTAL", 0)) AS receita,
+                    COUNT(si."ID_VENDA") AS num_vendas,
+                    COALESCE(p."CUSTO", 0) AS custo
+                FROM sales_items si
+                LEFT JOIN products p ON si."CODIGO" = p."CODIGO"
+                GROUP BY si."CODIGO", si."PRODUTO", si."CATEGORIA", p."CUSTO"
+                ORDER BY receita DESC
+            ''')
+            
+            rows = cur.fetchall()
         
         results = []
-        for _, row in item_stats.iterrows():
-            codigo = row['CODIGO']
+        for row in rows:
+            qtd_vendida = int(row['qtd_vendida'])
+            receita = float(row['receita'])
+            custo = float(row['custo'])
             
-            # Get cost
-            product = products_df[products_df['CODIGO'] == codigo]
-            custo = float(product['CUSTO'].iloc[0]) if not product.empty else 0
-            
-            # Calculate profit
-            receita = float(row['RECEITA'])
-            qtd_vendida = int(row['QTD_VENDIDA'])
             profit = receita - (custo * qtd_vendida)
             profit_margin = (profit / receita * 100) if receita > 0 else 0
             
             results.append({
-                'codigo': codigo,
+                'codigo': row['CODIGO'],
                 'produto': row['PRODUTO'],
                 'categoria': row['CATEGORIA'],
                 'quantity_sold': qtd_vendida,
                 'revenue': receita,
                 'profit': profit,
                 'profit_margin': profit_margin,
-                'transactions': int(row['NUM_VENDAS'])
+                'transactions': int(row['num_vendas'])
             })
-        
-        results.sort(key=lambda x: x['revenue'], reverse=True)
         
         return {
             'top_products': results[:top_n],
@@ -223,34 +265,36 @@ class AnalyticsService:
         }
     
     def get_category_analysis(self) -> Dict:
-        """Category analysis using sales_items."""
-        category_stats = self.item_repo.get_category_stats()
+        """
+        OTIMIZADO: Usa get_category_stats() que já retorna agregação SQL.
+        """
+        categories = self.item_repo.get_category_stats()
         
-        if category_stats.empty:
+        if not categories:
             return {'categories': [], 'total_revenue': 0}
         
-        total_revenue = category_stats['RECEITA'].sum()
+        total_revenue = sum(float(c['RECEITA']) for c in categories)
         
         results = []
-        for _, row in category_stats.iterrows():
-            receita = float(row['RECEITA'])
+        for cat in categories:
+            receita = float(cat['RECEITA'])
             revenue_share = (receita / total_revenue * 100) if total_revenue > 0 else 0
             
             results.append({
-                'category': row['CATEGORIA'],
+                'category': cat['CATEGORIA'],
                 'revenue': receita,
                 'revenue_share': revenue_share,
-                'items_sold': int(row['QTD_VENDIDA']),
-                'unique_products': int(row['PRODUTOS_UNICOS'])
+                'items_sold': int(cat['QTD_VENDIDA']),
+                'unique_products': int(cat['PRODUTOS_UNICOS'])
             })
         
         return {
             'categories': results,
-            'total_revenue': float(total_revenue)
+            'total_revenue': total_revenue
         }
     
     def get_abc_analysis(self) -> Dict:
-        """ABC analysis of products (Pareto principle)."""
+        """Análise ABC (Pareto) de produtos."""
         performance = self.get_product_performance(top_n=1000)
         products = performance['all_products']
         total_revenue = performance['total_revenue']
@@ -258,10 +302,7 @@ class AnalyticsService:
         if not products:
             return {'A': [], 'B': [], 'C': []}
         
-        # Sort by revenue
-        products.sort(key=lambda x: x['revenue'], reverse=True)
-        
-        # Calculate cumulative revenue
+        # Produtos já vêm ordenados por receita
         cumulative = 0
         a_products = []
         b_products = []
@@ -297,47 +338,48 @@ class AnalyticsService:
     # ========== CUSTOMER ANALYTICS ==========
     
     def get_customer_segmentation(self) -> Dict:
-        """Segment customers by purchase behavior."""
-        sales = self.sale_repo.get_all().to_dict('records')
-        clients = self.client_repo.get_all().to_dict('records')
+        """
+        OTIMIZADO: Segmentação de clientes com agregação SQL.
         
-        # Aggregate customer data
-        customer_metrics = defaultdict(lambda: {
-            'total_spent': 0.0,
-            'purchases': 0,
-            'last_purchase_date': None,
-            'first_purchase_date': None
-        })
-        
-        for sale in sales:
-            id_cliente = sale['ID_CLIENTE']
-            date = self._parse_date_str(sale.get('DATA'))
-            if not date:
-                continue
+        Antes: 3 queries + loops + Pandas
+        Depois: 1 query com JOIN + GROUP BY
+        """
+        with self.sale_repo.get_conn() as conn:
+            cur = self.sale_repo._get_cursor(conn)
             
-            customer_metrics[id_cliente]['total_spent'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
-            customer_metrics[id_cliente]['purchases'] += 1
+            # Agrega métricas por cliente em SQL
+            cur.execute('''
+                SELECT 
+                    s."ID_CLIENTE",
+                    s."CLIENTE",
+                    c."TIPO",
+                    COUNT(s."ID_VENDA") AS purchases,
+                    COALESCE(SUM(s."VALOR_TOTAL_VENDA"), 0) AS total_spent,
+                    MAX(s."DATA") AS last_purchase_date,
+                    MIN(s."DATA") AS first_purchase_date
+                FROM sales s
+                LEFT JOIN clients c ON s."ID_CLIENTE" = c."ID_CLIENTE"
+                GROUP BY s."ID_CLIENTE", s."CLIENTE", c."TIPO"
+            ''')
             
-            if customer_metrics[id_cliente]['last_purchase_date'] is None or date > customer_metrics[id_cliente]['last_purchase_date']:
-                customer_metrics[id_cliente]['last_purchase_date'] = date
+            customer_metrics = cur.fetchall()
+        
+        # Total de itens por cliente (agregação SQL)
+        with self.item_repo.get_conn() as conn:
+            cur = self.item_repo._get_cursor(conn)
             
-            if customer_metrics[id_cliente]['first_purchase_date'] is None or date < customer_metrics[id_cliente]['first_purchase_date']:
-                customer_metrics[id_cliente]['first_purchase_date'] = date
+            cur.execute('''
+                SELECT 
+                    s."ID_CLIENTE",
+                    SUM(COALESCE(si."QUANTIDADE", 0)) AS items_bought
+                FROM sales s
+                JOIN sales_items si ON s."ID_VENDA" = si."ID_VENDA"
+                GROUP BY s."ID_CLIENTE"
+            ''')
+            
+            items_by_customer = {row['ID_CLIENTE']: int(row['items_bought']) for row in cur.fetchall()}
         
-        # Get total items per customer
-        items_df = self.item_repo._read_csv()
-        customer_items = items_df.groupby('ID_VENDA')['QUANTIDADE'].sum().to_dict()
-        
-        # Map to customer
-        for sale in sales:
-            id_cliente = sale['ID_CLIENTE']
-            id_venda = sale['ID_VENDA']
-            if id_venda in customer_items:
-                if 'items_bought' not in customer_metrics[id_cliente]:
-                    customer_metrics[id_cliente]['items_bought'] = 0
-                customer_metrics[id_cliente]['items_bought'] += customer_items[id_venda]
-        
-        # Segment customers
+        # Segmenta clientes
         vip = []
         regular = []
         occasional = []
@@ -345,30 +387,32 @@ class AnalyticsService:
         
         now = datetime.now()
         
-        for id_cliente, metrics in customer_metrics.items():
-            client = next((c for c in clients if c['ID_CLIENTE'] == id_cliente), None)
-            if not client:
-                continue
+        for row in customer_metrics:
+            id_cliente = row['ID_CLIENTE']
+            total_spent = float(row['total_spent'])
+            purchases = int(row['purchases'])
             
-            recency = (now - metrics['last_purchase_date']).days if metrics['last_purchase_date'] else 999
+            # Parse última compra
+            last_purchase = self._parse_date_str(row['last_purchase_date'])
+            recency = (now - last_purchase).days if last_purchase else 999
             
             customer_data = {
                 'id_cliente': id_cliente,
-                'cliente': client['CLIENTE'],
-                'tipo': client['TIPO'],
-                'total_spent': metrics['total_spent'],
-                'purchases': metrics['purchases'],
-                'items_bought': metrics.get('items_bought', 0),
-                'avg_purchase': metrics['total_spent'] / metrics['purchases'],
+                'cliente': row['CLIENTE'],
+                'tipo': row['TIPO'] or 'Desconhecido',
+                'total_spent': total_spent,
+                'purchases': purchases,
+                'items_bought': items_by_customer.get(id_cliente, 0),
+                'avg_purchase': total_spent / purchases if purchases > 0 else 0,
                 'recency_days': recency
             }
             
-            # Segment logic
-            if metrics['total_spent'] > 500 and metrics['purchases'] > 5:
+            # Lógica de segmentação
+            if total_spent > 500 and purchases > 5:
                 vip.append(customer_data)
             elif recency > 90:
                 inactive.append(customer_data)
-            elif metrics['purchases'] >= 3:
+            elif purchases >= 3:
                 regular.append(customer_data)
             else:
                 occasional.append(customer_data)
@@ -388,90 +432,35 @@ class AnalyticsService:
             }
         }
     
-    def get_customer_lifetime_value(self, top_n: int = 10) -> List[Dict]:
-        """Calculate customer lifetime value (CLV)."""
-        sales = self.sale_repo.get_all().to_dict('records')
-        clients = self.client_repo.get_all().to_dict('records')
-        
-        customer_clv = defaultdict(lambda: {
-            'total_spent': 0.0,
-            'purchases': 0,
-            'first_purchase': None,
-            'last_purchase': None
-        })
-        
-        for sale in sales:
-            id_cliente = sale['ID_CLIENTE']
-            date = self._parse_date_str(sale.get('DATA'))
-            if not date:
-                continue
-            
-            customer_clv[id_cliente]['total_spent'] += float(sale.get('VALOR_TOTAL_VENDA', 0))
-            customer_clv[id_cliente]['purchases'] += 1
-            
-            if customer_clv[id_cliente]['first_purchase'] is None or date < customer_clv[id_cliente]['first_purchase']:
-                customer_clv[id_cliente]['first_purchase'] = date
-            
-            if customer_clv[id_cliente]['last_purchase'] is None or date > customer_clv[id_cliente]['last_purchase']:
-                customer_clv[id_cliente]['last_purchase'] = date
-        
-        # Calculate CLV metrics
-        results = []
-        for id_cliente, metrics in customer_clv.items():
-            client = next((c for c in clients if c['ID_CLIENTE'] == id_cliente), None)
-            if not client:
-                continue
-            
-            lifetime_days = (metrics['last_purchase'] - metrics['first_purchase']).days + 1
-            avg_purchase = metrics['total_spent'] / metrics['purchases']
-            purchase_frequency = metrics['purchases'] / (lifetime_days / 30)
-            projected_clv = avg_purchase * purchase_frequency * 12
-            
-            results.append({
-                'id_cliente': id_cliente,
-                'cliente': client['CLIENTE'],
-                'tipo': client['TIPO'],
-                'total_spent': metrics['total_spent'],
-                'purchases': metrics['purchases'],
-                'avg_purchase': avg_purchase,
-                'lifetime_days': lifetime_days,
-                'purchase_frequency_monthly': purchase_frequency,
-                'projected_clv_12mo': projected_clv,
-                'total_clv': metrics['total_spent'] + projected_clv
-            })
-        
-        results.sort(key=lambda x: x['total_clv'], reverse=True)
-        return results[:top_n]
-    
     # ========== FINANCIAL ANALYTICS ==========
     
     def get_profitability_report(self) -> Dict:
-        """Comprehensive profitability analysis."""
-        items_df = self.item_repo._read_csv()
-        print(f"[ANALYTICS] get_profitability_report: items rows={len(items_df)}")
-        products = self.product_repo.get_all().to_dict('records')
-        print(f"[ANALYTICS] get_profitability_report: products rows={len(products)}")
+        """
+        OTIMIZADO: Relatório de lucratividade com JOIN SQL.
         
-        total_revenue = 0.0
-        total_cost = 0.0
-        
-        for _, item in items_df.iterrows():
-            codigo = item['CODIGO']
-            quantidade = int(item['QUANTIDADE'])
-            preco_total = float(item['PRECO_TOTAL'])
+        Antes: 2 queries + loop Pandas
+        Depois: 1 query com JOIN
+        """
+        with self.item_repo.get_conn() as conn:
+            cur = self.item_repo._get_cursor(conn)
             
-            # Find product cost
-            product = next((p for p in products if p['CODIGO'] == codigo), None)
-            if product:
-                custo = float(product['CUSTO'])
-                total_cost += custo * quantidade
+            # JOIN para pegar receita + custo em 1 query
+            cur.execute('''
+                SELECT 
+                    SUM(COALESCE(si."PRECO_TOTAL", 0)) AS total_revenue,
+                    SUM(COALESCE(p."CUSTO", 0) * COALESCE(si."QUANTIDADE", 0)) AS total_cost
+                FROM sales_items si
+                LEFT JOIN products p ON si."CODIGO" = p."CODIGO"
+            ''')
             
-            total_revenue += preco_total
+            row = cur.fetchone()
+            total_revenue = float(row['total_revenue'] or 0)
+            total_cost = float(row['total_cost'] or 0)
         
         gross_profit = total_revenue - total_cost
         profit_margin = (gross_profit / total_revenue * 100) if total_revenue > 0 else 0
         
-        # Get inventory value
+        # Valor do inventário
         inventory = self.product_repo.get_inventory_value()
         
         return {
@@ -485,35 +474,38 @@ class AnalyticsService:
         }
     
     def get_payment_method_analysis(self) -> Dict:
-        """Analyze sales by payment method."""
-        sales = self.sale_repo.get_all().to_dict('records')
-        print(f"[ANALYTICS] get_payment_method_analysis: sales rows={len(sales)}")
+        """
+        OTIMIZADO: Usa get_sales_summary() que já agrega por meio de pagamento.
+        """
+        summary = self.sale_repo.get_sales_summary()
+        payment_metrics = summary['by_payment_method']
         
-        payment_metrics = defaultdict(lambda: {
-            'count': 0,
-            'revenue': 0.0,
-            'avg_ticket': 0.0
-        })
-        
-        for sale in sales:
-            meio = sale['MEIO']
-            payment_metrics[meio]['count'] += 1
-            payment_metrics[meio]['revenue'] += float(sale['VALOR_TOTAL_VENDA'])
-        
-        # Calculate averages
-        total_revenue = sum(m['revenue'] for m in payment_metrics.values())
+        total_revenue = sum(payment_metrics.values())
+        total_transactions = summary['total_sales']
         
         results = []
-        for meio, metrics in payment_metrics.items():
-            metrics['avg_ticket'] = metrics['revenue'] / metrics['count']
-            revenue_share = (metrics['revenue'] / total_revenue * 100) if total_revenue > 0 else 0
+        for meio, revenue in payment_metrics.items():
+            revenue_share = (revenue / total_revenue * 100) if total_revenue > 0 else 0
+            
+            # Conta transações por meio
+            with self.sale_repo.get_conn() as conn:
+                cur = self.sale_repo._get_cursor(conn)
+                placeholder = '%s' if self.sale_repo.db_type == 'postgresql' else '?'
+                
+                cur.execute(f'''
+                    SELECT COUNT(*) AS count
+                    FROM sales
+                    WHERE "MEIO" = {placeholder}
+                ''', (meio,))
+                
+                count = int(cur.fetchone()['count'])
             
             results.append({
                 'payment_method': meio.title(),
-                'transaction_count': metrics['count'],
-                'revenue': metrics['revenue'],
+                'transaction_count': count,
+                'revenue': revenue,
                 'revenue_share': revenue_share,
-                'avg_ticket': metrics['avg_ticket']
+                'avg_ticket': revenue / count if count > 0 else 0
             })
         
         results.sort(key=lambda x: x['revenue'], reverse=True)
@@ -521,38 +513,51 @@ class AnalyticsService:
         return {
             'payment_methods': results,
             'total_revenue': total_revenue,
-            'total_transactions': sum(m['count'] for m in payment_metrics.values())
+            'total_transactions': total_transactions
         }
     
     # ========== DEMAND FORECASTING ==========
     
     def forecast_demand(self, product_codigo: str, periods_ahead: int = 30) -> Dict:
-        """Simple demand forecasting using moving average."""
+        """Previsão de demanda (média móvel simplificada)."""
         items = self.item_repo.get_by_product(product_codigo)
         
         if not items:
             return {'error': 'No sales history for this product'}
         
-# Get sales dates and aggregate by actual date objects (robust to formats)
-        sales_df = self.sale_repo.get_all()
-
-        # Group by date (date objects)
+        # Agrega vendas por data
+        with self.sale_repo.get_conn() as conn:
+            cur = self.sale_repo._get_cursor(conn)
+            
+            sale_ids = [item['ID_VENDA'] for item in items]
+            placeholders = ','.join(['%s'] * len(sale_ids)) if self.sale_repo.db_type == 'postgresql' else ','.join(['?'] * len(sale_ids))
+            
+            cur.execute(f'''
+                SELECT "DATA"
+                FROM sales
+                WHERE "ID_VENDA" IN ({placeholders})
+                ORDER BY "DATA"
+            ''', sale_ids)
+            
+            sale_dates = [row['DATA'] for row in cur.fetchall()]
+        
+        # Agrega quantidades por data
         daily_sales = defaultdict(int)
         for item in items:
-            sale = sales_df[sales_df['ID_VENDA'] == item['ID_VENDA']]
-            if not sale.empty:
-                date_raw = sale.iloc[0]['DATA']
-                date_obj = self._parse_date_str(date_raw)
-                if not date_obj:
-                    continue
-                date_key = date_obj.date()
-                daily_sales[date_key] += int(item['QUANTIDADE'])
-
+            sale_id = item['ID_VENDA']
+            sale_date = next((d for i, d in zip(sale_ids, sale_dates) if i == sale_id), None)
+            
+            if sale_date:
+                date_obj = self._parse_date_str(sale_date)
+                if date_obj:
+                    daily_sales[date_obj.date()] += int(item['QUANTIDADE'])
+        
         if not daily_sales:
             return {'error': 'No sales history for this product'}
-
+        
         sorted_dates = sorted(daily_sales.keys())
-
+        
+        # Calcula média móvel
         if len(sorted_dates) < 7:
             avg_daily = sum(daily_sales.values()) / len(daily_sales)
             forecast = [avg_daily] * periods_ahead
@@ -560,7 +565,7 @@ class AnalyticsService:
             recent_sales = [daily_sales[date] for date in sorted_dates[-7:]]
             avg_daily = sum(recent_sales) / len(recent_sales)
             forecast = [avg_daily] * periods_ahead
-
+        
         last_date = sorted_dates[-1]
         forecast_dates = [(last_date + timedelta(days=i+1)).strftime('%d/%m/%Y') for i in range(periods_ahead)]
         

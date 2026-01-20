@@ -1,10 +1,14 @@
 """
-Notification Service - Sistema de alertas inteligente (CORRIGIDO)
+Notification Service - OTIMIZADO
+
+Principais otimizações:
+1. Removido uso de Pandas onde possível
+2. Agregações em SQL
+3. Cache de dados para evitar múltiplas queries
 """
 
 from typing import List, Dict
 from datetime import datetime, timedelta
-import pandas as pd
 from src.repositories.product_repository import ProductRepository
 from src.repositories.client_repository import ClientRepository
 from src.repositories.sale_repository import SaleRepository
@@ -28,7 +32,7 @@ PRODUCT_DURATION = {
 
 
 class NotificationService:
-    """Service for managing notifications."""
+    """Service para gerenciar notificações - OTIMIZADO."""
 
     def __init__(self):
         self.product_repo = ProductRepository()
@@ -38,11 +42,10 @@ class NotificationService:
         self.notification_repo = NotificationRepository()
 
     def _normalize_product_type(self, produto: str) -> str:
-        """Normalize product type for matching (usa campo PRODUTO, não CATEGORIA)."""
+        """Normaliza tipo de produto para matching."""
         if not produto:
             return ''
         
-        # Remove espaços extras e capitaliza
         normalized = str(produto).strip().title()
         
         # Mapeamento de variações para nomes padrão
@@ -65,7 +68,7 @@ class NotificationService:
                 if variation.lower() == normalized.lower():
                     return standard
         
-        # Se não encontrou correspondência exata, tenta match parcial
+        # Match parcial
         produto_lower = normalized.lower()
         if 'home spray' in produto_lower or 'homespray' in produto_lower:
             return 'Home Spray 300Ml'
@@ -91,7 +94,7 @@ class NotificationService:
         return normalized
 
     def get_low_stock_notifications(self) -> List[Dict]:
-        """Get products with critically low stock (≤1)."""
+        """Produtos com estoque crítico (≤1)."""
         notifications = []
         
         try:
@@ -123,89 +126,107 @@ class NotificationService:
         return notifications
 
     def get_repurchase_reminders(self) -> List[Dict]:
-        """Get repurchase reminders based on product duration (CORRIGIDO - usa PRODUTO)."""
+        """
+        Lembretes de recompra - OTIMIZADO.
+        
+        Usa SQL direto em vez de Pandas.
+        """
         notifications = []
         
         try:
             print("[NOTIFICATIONS] Starting repurchase reminders calculation...")
             
-            # Get all data at once (OPTIMIZED)
-            sales_df = self.sale_repo.get_all()
-            items_df = self.item_repo._read_csv()
-            clients_df = self.client_repo.get_all()
+            # OTIMIZADO: Pega dados com JOIN SQL
+            with self.sale_repo.get_conn() as conn:
+                cur = self.sale_repo._get_cursor(conn)
+                
+                # JOIN para pegar vendas + itens + clientes em 1 query
+                cur.execute('''
+                    SELECT 
+                        s."ID_VENDA",
+                        s."ID_CLIENTE",
+                        s."DATA",
+                        c."CLIENTE",
+                        c."TIPO",
+                        c."TELEFONE",
+                        si."PRODUTO",
+                        si."CATEGORIA",
+                        si."CODIGO"
+                    FROM sales s
+                    JOIN sales_items si ON s."ID_VENDA" = si."ID_VENDA"
+                    LEFT JOIN clients c ON s."ID_CLIENTE" = c."ID_CLIENTE"
+                    WHERE c."TIPO" IS NOT NULL
+                    ORDER BY s."DATA" DESC
+                ''')
+                
+                rows = cur.fetchall()
             
-            print(f"[NOTIFICATIONS] Loaded {len(sales_df)} sales, {len(items_df)} items, {len(clients_df)} clients")
+            print(f"[NOTIFICATIONS] Loaded {len(rows)} sale items with client data")
             
-            if sales_df.empty or items_df.empty or clients_df.empty:
-                print("[NOTIFICATIONS] Empty data, skipping repurchase reminders")
+            if not rows:
+                print("[NOTIFICATIONS] No data, skipping repurchase reminders")
                 return []
             
-            # Convert to dict for fast lookup
-            clients = clients_df.set_index('ID_CLIENTE').to_dict('index')
+            # Parse dates e agrupa por cliente + produto
+            from collections import defaultdict
             
-            # Parse dates in sales
-            sales_df['DATA_DT'] = pd.to_datetime(sales_df['DATA'], format='%Y-%m-%d', errors='coerce')
-            # Fallback para formato brasileiro
-            mask = sales_df['DATA_DT'].isna()
-            if mask.any():
-                sales_df.loc[mask, 'DATA_DT'] = pd.to_datetime(
-                    sales_df.loc[mask, 'DATA'], 
-                    format='%d/%m/%Y', 
-                    errors='coerce'
-                )
+            def parse_date(date_str):
+                """Parse flexível de datas."""
+                if not date_str:
+                    return None
+                
+                try:
+                    # Tenta ISO primeiro
+                    return datetime.strptime(date_str, '%Y-%m-%d')
+                except ValueError:
+                    try:
+                        # Tenta formato brasileiro
+                        return datetime.strptime(date_str, '%d/%m/%Y')
+                    except ValueError:
+                        return None
             
-            sales_df = sales_df[sales_df['DATA_DT'].notna()]
-            
-            # Merge sales with items
-            merged = items_df.merge(
-                sales_df[['ID_VENDA', 'ID_CLIENTE', 'DATA_DT']], 
-                on='ID_VENDA', 
-                how='left'
-            )
-            
-            # ⚠️ CORREÇÃO: Usa coluna PRODUTO (tipo do produto), não CATEGORIA (fragrância)
-            merged['PRODUTO_NORM'] = merged['PRODUTO'].apply(self._normalize_product_type)
-            
-            print(f"[NOTIFICATIONS] Merged data: {len(merged)} rows")
-            print(f"[NOTIFICATIONS] Sample normalized products: {merged['PRODUTO_NORM'].value_counts().head(10).to_dict()}")
-            
-            # Track last purchase per client and product type
+            # Rastreia última compra por cliente + tipo de produto + fragrância
             client_purchases = {}
             
-            for _, row in merged.iterrows():
+            for row in rows:
                 client_id = row['ID_CLIENTE']
-                produto_norm = row['PRODUTO_NORM']
-                sale_date = row['DATA_DT']
-                categoria_fragrancia = row['CATEGORIA']  # Nome da fragrância (ex: Havana)
+                produto = row['PRODUTO']
+                categoria_fragrancia = row['CATEGORIA']
+                date_str = row['DATA']
                 
-                if pd.isna(client_id) or pd.isna(sale_date):
+                if not client_id or not date_str:
                     continue
                 
-                client = clients.get(client_id)
-                if not client:
+                sale_date = parse_date(date_str)
+                if not sale_date:
                     continue
                 
-                client_type = str(client.get('TIPO', '')).lower()
+                client_type = str(row['TIPO']).lower()
                 if client_type not in ['pessoa', 'empresa']:
                     continue
                 
-                # Check if we have duration data for this product type
+                # Normaliza tipo de produto
+                produto_norm = self._normalize_product_type(produto)
+                
+                # Verifica se temos config de duração
                 if produto_norm not in PRODUCT_DURATION:
-                    print(f"[NOTIFICATIONS] No duration config for product type: {produto_norm}")
                     continue
                 
                 duration_config = PRODUCT_DURATION[produto_norm]
                 expected_duration = duration_config.get(client_type)
                 
-                # Skip if this product is not sold to this client type
                 if expected_duration is None:
                     continue
                 
-                # Track this purchase (keep most recent per client + product type + fragrance)
+                # Rastreia compra (mantém mais recente)
                 key = (client_id, produto_norm, categoria_fragrancia)
+                
                 if key not in client_purchases:
                     client_purchases[key] = {
-                        'client': client,
+                        'client_id': client_id,
+                        'client_name': row['CLIENTE'],
+                        'client_type': row['TIPO'],
+                        'phone': row['TELEFONE'] or '',
                         'produto_tipo': produto_norm,
                         'fragrancia': categoria_fragrancia,
                         'last_purchase': sale_date,
@@ -217,24 +238,23 @@ class NotificationService:
             
             print(f"[NOTIFICATIONS] Found {len(client_purchases)} unique client-product combinations")
             
-            # Generate notifications
-            today = pd.Timestamp.now()
+            # Gera notificações
+            today = datetime.now()
             
-            for (client_id, produto_tipo, fragrancia), data in client_purchases.items():
+            for key, data in client_purchases.items():
                 last_purchase = data['last_purchase']
                 expected_duration = data['expected_duration']
-                client = data['client']
                 
-                # Calculate expected repurchase date
-                repurchase_date = last_purchase + pd.Timedelta(days=expected_duration * 30)
+                # Calcula data de recompra esperada
+                repurchase_date = last_purchase + timedelta(days=expected_duration * 30)
                 days_until_repurchase = (repurchase_date - today).days
                 
-                # Show notification if within 7 days or overdue
+                # Mostra notificação se dentro de 7 dias ou atrasado
                 if days_until_repurchase <= 7:
-                    notif_key = f"repurchase_{client_id}_{produto_tipo}_{fragrancia}"
+                    notif_key = f"repurchase_{data['client_id']}_{data['produto_tipo']}_{data['fragrancia']}"
                     
                     if not self.notification_repo.is_dismissed('repurchase', notif_key):
-                        client_type_label = 'Pessoa Física' if client['TIPO'].lower() == 'pessoa' else 'Empresa'
+                        client_type_label = 'Pessoa Física' if data['client_type'].lower() == 'pessoa' else 'Empresa'
                         
                         if days_until_repurchase < 0:
                             severity = 'warning'
@@ -252,18 +272,18 @@ class NotificationService:
                             'severity': severity,
                             'icon': 'bi-clock-history',
                             'title': f'Lembrete de Recompra ({client_type_label})',
-                            'message': f"{client['CLIENTE']} - {produto_tipo} ({fragrancia})",
+                            'message': f"{data['client_name']} - {data['produto_tipo']} ({data['fragrancia']})",
                             'detail': detail,
                             'data': {
-                                'client_id': client_id,
-                                'client_name': client['CLIENTE'],
-                                'client_type': client['TIPO'],
-                                'produto_tipo': produto_tipo,
-                                'fragrancia': fragrancia,
+                                'client_id': data['client_id'],
+                                'client_name': data['client_name'],
+                                'client_type': data['client_type'],
+                                'produto_tipo': data['produto_tipo'],
+                                'fragrancia': data['fragrancia'],
                                 'last_purchase': last_purchase.strftime('%d/%m/%Y'),
                                 'expected_repurchase': repurchase_date.strftime('%d/%m/%Y'),
                                 'days_until': int(days_until_repurchase),
-                                'phone': client.get('TELEFONE', '')
+                                'phone': data['phone']
                             }
                         })
         
@@ -276,13 +296,13 @@ class NotificationService:
         return notifications
 
     def get_all_notifications(self) -> Dict:
-        """Get all notifications grouped by type."""
+        """Retorna todas as notificações agrupadas por tipo."""
         print("[NOTIFICATIONS] Getting all notifications...")
         
         low_stock = self.get_low_stock_notifications()
         repurchase = self.get_repurchase_reminders()
         
-        # Separate repurchase by client type
+        # Separa recompra por tipo de cliente
         repurchase_pessoa = [n for n in repurchase if n['data']['client_type'].lower() == 'pessoa']
         repurchase_empresa = [n for n in repurchase if n['data']['client_type'].lower() == 'empresa']
         
@@ -298,9 +318,9 @@ class NotificationService:
         }
 
     def dismiss_notification(self, notification_type: str, notification_id: str) -> bool:
-        """Dismiss a notification."""
+        """Marca notificação como lida."""
         return self.notification_repo.dismiss(notification_type, notification_id)
 
     def undismiss_notification(self, notification_type: str, notification_id: str) -> bool:
-        """Restore a dismissed notification."""
+        """Restaura notificação."""
         return self.notification_repo.undismiss(notification_type, notification_id)

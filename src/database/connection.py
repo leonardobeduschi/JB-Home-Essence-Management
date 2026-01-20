@@ -13,6 +13,8 @@ import sqlite3
 from pathlib import Path
 from typing import Optional
 
+print(">>> SQLITE CONNECTION LOADED <<<")
+
 # Default DB path (can be overridden with SQLITE_DB env var)
 DEFAULT_DB = Path(os.getenv('SQLITE_DB', 'data/database.sqlite3'))
 DEFAULT_SCHEMA = Path(__file__).resolve().parent / 'schema.sql'

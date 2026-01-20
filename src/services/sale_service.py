@@ -262,36 +262,35 @@ Substitua o método register_sale (legacy - single item) no seu sale_service.py:
     
     def list_all_sales(self) -> List[SaleRecord]:
         """
-        List all sales as objects - FIXED for new structure.
+        List all sales as objects - FIXED.
         
         Returns a FLAT list where each line represents one ITEM sold.
-        This maintains compatibility with existing templates.
         """
         from src.repositories.sale_item_repository import SaleItemRepository
         
-        # Get all sale headers (sales.csv)
-        sales_df = self.sale_repository.get_all()
+        # OTIMIZADO: Usa find_all() em vez de get_all()/_read_csv()
+        sales = self.sale_repository.find_all()
         
-        # Get all sale items (sales_items.csv)
         item_repo = SaleItemRepository()
-        items_df = item_repo._read_csv()
+        items = item_repo.find_all()
         
-        if items_df.empty:
+        if not items:
             return []
+        
+        # Cria map de vendas por ID para lookup rápido
+        sales_map = {sale['ID_VENDA']: sale for sale in sales}
         
         # Convert to list
         converted_sales = []
         
-        for _, item in items_df.iterrows():
+        for item in items:
             # Find corresponding sale header
-            sale_header = sales_df[sales_df['ID_VENDA'] == item['ID_VENDA']]
+            sale = sales_map.get(item['ID_VENDA'])
             
-            if sale_header.empty:
+            if not sale:
                 continue  # Skip orphan items
             
-            sale = sale_header.iloc[0]
-            
-            # Create SaleRecord with data from BOTH files
+            # Create SaleRecord with data from BOTH sources
             try:
                 preco_total = float(item['PRECO_TOTAL'])
                 quantidade = int(item['QUANTIDADE'])
@@ -311,9 +310,9 @@ Substitua o método register_sale (legacy - single item) no seu sale_service.py:
                     CATEGORIA=categoria_norm,
                     QUANTIDADE=quantidade,
                     PRECO_UNIT=preco_unit,
-                    PRECO_TOTAL=preco_total,  # From items
+                    PRECO_TOTAL=preco_total,
                     MEIO=sale['MEIO'],
-                    VALOR_TOTAL_VENDA=valor_total_venda  # From header
+                    VALOR_TOTAL_VENDA=valor_total_venda
                 )
                 converted_sales.append(sale_record)
                 
