@@ -1,3 +1,5 @@
+# client_service:
+
 """
 Client service for business logic.
 
@@ -64,6 +66,12 @@ class ClientService:
         Raises:
             ValueError: If validation fails or business rules are violated
         """
+        # Normalize tipo
+        tipo = tipo.lower().strip()
+        
+        # [DEBUG] Log registration attempt
+        print(f"DEBUG: Tentando cadastrar cliente. Tipo: {tipo}, CPF/CNPJ: '{cpf_cnpj}'")
+        
         try:
             # Generate unique ID
             existing_ids = [c['ID_CLIENTE'] for c in self.repository.get_all().to_dict('records')]
@@ -72,6 +80,7 @@ class ClientService:
             # Validate and format CPF/CNPJ if provided
             if cpf_cnpj and cpf_cnpj.strip():
                 is_valid, error_msg = self.validator.validate_cpf_cnpj(cpf_cnpj, tipo)
+                print(f"DEBUG: Validação de CPF/CNPJ. Valido: {is_valid}, Erro: '{error_msg}'")
                 if not is_valid:
                     raise ValueError(error_msg)
                 
@@ -80,6 +89,7 @@ class ClientService:
                     cpf_cnpj = self.validator.format_cpf(cpf_cnpj)
                 elif tipo == 'empresa':
                     cpf_cnpj = self.validator.format_cnpj(cpf_cnpj)
+                print(f"DEBUG: CPF/CNPJ formatado: '{cpf_cnpj}'")
             
             # Validate and format phone if provided
             if telefone and telefone.strip():
@@ -117,7 +127,10 @@ class ClientService:
             
         except ValueError as e:
             # Re-raise validation errors with context
-            raise ValueError(f"Erro ao cadastrar cliente: {str(e)}")
+            error_msg = str(e)
+            if "CNPJ inválido" in error_msg or "CNPJ deve ter" in error_msg:
+                 error_msg += f" (O valor recebido foi '{cpf_cnpj}')"
+            raise ValueError(f"Erro ao cadastrar cliente: {error_msg}")
         except Exception as e:
             raise Exception(f"Erro inesperado ao cadastrar cliente: {str(e)}")
     
@@ -196,7 +209,10 @@ class ClientService:
             return True
             
         except ValueError as e:
-            raise e
+            error_msg = str(e)
+            if "CNPJ inválido" in error_msg or "CNPJ deve ter" in error_msg:
+                 error_msg += f" (O valor recebido foi '{updates.get('cpf_cnpj', 'N/A')}')"
+            raise ValueError(f"Erro ao atualizar cliente: {error_msg}")
         except Exception as e:
             raise Exception(f"Erro ao atualizar cliente: {str(e)}")
     

@@ -27,7 +27,7 @@
                             <label class="btn btn-outline-primary" for="tipoPessoa">
                                 <i class="bi bi-person"></i> Pessoa Física
                             </label>
-                            
+
                             <input type="radio" class="btn-check" name="tipo" id="tipoEmpresa" value="Empresa">
                             <label class="btn btn-outline-success" for="tipoEmpresa">
                                 <i class="bi bi-building"></i> Empresa
@@ -39,12 +39,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label"><i class="bi bi-person-badge"></i> Nome/Razão Social *</label>
-                            <input type="text" name="cliente" class="form-control" required placeholder="Nome do cliente">
+                            <input type="text" name="cliente" class="form-control" required
+                                placeholder="Nome do cliente">
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label"><i class="bi bi-person-workspace"></i> Vendedor</label>
-                            <input type="text" name="vendedor" class="form-control" placeholder="Nome do vendedor (opcional)">
+                            <input type="text" name="vendedor" class="form-control"
+                                placeholder="Nome do vendedor (opcional)">
                         </div>
                     </div>
 
@@ -84,8 +86,8 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">CPF</label>
-                                <input type="text" name="cpf_cnpj" class="form-control" id="cpfInput" 
-                                       placeholder="000.000.000-00" maxlength="14">
+                                <input type="text" name="cpf_cnpj" class="form-control" id="cpfInput"
+                                    placeholder="000.000.000-00" maxlength="14">
                                 <small class="text-muted">Opcional para pessoa física</small>
                             </div>
                         </div>
@@ -97,14 +99,14 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">CNPJ *</label>
-                                <input type="text" name="cpf_cnpj_empresa" class="form-control" id="cnpjInput" 
-                                       placeholder="00.000.000/0000-00" maxlength="18">
+                                <input type="text" name="cpf_cnpj_empresa" class="form-control" id="cnpjInput"
+                                    placeholder="00.000.000/0000-00" maxlength="18">
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Endereço *</label>
                                 <input type="text" name="endereco_empresa" class="form-control" id="enderecoEmpresa"
-                                       placeholder="Rua, número, bairro, cidade">
+                                    placeholder="Rua, número, bairro, cidade">
                             </div>
                         </div>
                     </div>
@@ -115,13 +117,13 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Telefone</label>
                             <input type="text" name="telefone" class="form-control" id="telefoneInput"
-                                   placeholder="(00) 00000-0000" maxlength="15">
+                                placeholder="(00) 00000-0000" maxlength="15">
                         </div>
 
                         <div class="col-md-6 mb-3" id="enderecoPessoaDiv">
                             <label class="form-label">Endereço</label>
                             <input type="text" name="endereco" class="form-control" id="enderecoPessoa"
-                                   placeholder="Rua, número, bairro, cidade">
+                                placeholder="Rua, número, bairro, cidade">
                         </div>
                     </div>
 
@@ -169,114 +171,115 @@
 
 {% block extra_js %}
 <script>
-// Toggle fields based on client type
-function toggleFields() {
-    const isPessoa = document.getElementById('tipoPessoa').checked;
-    const pessoaFields = document.getElementById('pessoaFields');
-    const empresaFields = document.getElementById('empresaFields');
-    const enderecoPessoaDiv = document.getElementById('enderecoPessoaDiv');
-    
-    if (isPessoa) {
-        pessoaFields.style.display = 'block';
-        empresaFields.style.display = 'none';
-        enderecoPessoaDiv.style.display = 'block';
-        
-        // Make pessoa fields required
-        document.getElementById('idadeSelect').required = true;
-        document.getElementById('generoSelect').required = true;
-        
-        // Make empresa fields not required
-        document.getElementById('cnpjInput').required = false;
-        document.getElementById('enderecoEmpresa').required = false;
-    } else {
-        pessoaFields.style.display = 'none';
-        empresaFields.style.display = 'block';
-        enderecoPessoaDiv.style.display = 'none';
-        
-        // Make pessoa fields not required
-        document.getElementById('idadeSelect').required = false;
-        document.getElementById('generoSelect').required = false;
-        
-        // Make empresa fields required
-        document.getElementById('cnpjInput').required = true;
-        document.getElementById('enderecoEmpresa').required = true;
-    }
-}
+    // Toggle fields based on client type
+    function toggleFields() {
+        const isPessoa = document.getElementById('tipoPessoa').checked;
+        const pessoaFields = document.getElementById('pessoaFields');
+        const empresaFields = document.getElementById('empresaFields');
+        const enderecoPessoaDiv = document.getElementById('enderecoPessoaDiv');
 
-// Event listeners for type change
-document.getElementById('tipoPessoa').addEventListener('change', toggleFields);
-document.getElementById('tipoEmpresa').addEventListener('change', toggleFields);
+        // Inputs
+        const cpfInput = document.getElementById('cpfInput');
+        const cnpjInput = document.getElementById('cnpjInput');
+        const enderecoPessoa = document.getElementById('enderecoPessoa');
+        const enderecoEmpresa = document.getElementById('enderecoEmpresa');
 
-// CPF Mask
-document.getElementById('cpfInput').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        e.target.value = value;
-    }
-});
+        if (isPessoa) {
+            pessoaFields.style.display = 'block';
+            empresaFields.style.display = 'none';
+            enderecoPessoaDiv.style.display = 'block';
 
-// CNPJ Mask
-document.getElementById('cnpjInput').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 14) {
-        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
-        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
-        value = value.replace(/(\d{4})(\d)/, '$1-$2');
-        e.target.value = value;
-    }
-});
+            // Settings for Pessoa
+            document.getElementById('idadeSelect').required = true;
+            document.getElementById('generoSelect').required = true;
 
-// Phone Mask
-document.getElementById('telefoneInput').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-        if (value.length <= 10) {
-            value = value.replace(/^(\d{2})(\d)/, '($1) $2');
-            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            // Important: Only fields with name 'cpf_cnpj' and 'endereco' that are NOT disabled are sent
+            cpfInput.disabled = false;
+            cpfInput.name = 'cpf_cnpj';
+
+            cnpjInput.disabled = true;
+            cnpjInput.name = 'cpf_cnpj_ignore';
+
+            enderecoPessoa.disabled = false;
+            enderecoPessoa.name = 'endereco';
+
+            enderecoEmpresa.disabled = true;
+            enderecoEmpresa.name = 'endereco_ignore';
         } else {
-            value = value.replace(/^(\d{2})(\d)/, '($1) $2');
-            value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            pessoaFields.style.display = 'none';
+            empresaFields.style.display = 'block';
+            enderecoPessoaDiv.style.display = 'none';
+
+            // Settings for Empresa
+            document.getElementById('idadeSelect').required = false;
+            document.getElementById('generoSelect').required = false;
+
+            // Important: Only fields with name 'cpf_cnpj' and 'endereco' that are NOT disabled are sent
+            cpfInput.disabled = true;
+            cpfInput.name = 'cpf_cnpj_ignore';
+
+            cnpjInput.disabled = false;
+            cnpjInput.name = 'cpf_cnpj';
+            cnpjInput.required = true;
+
+            enderecoPessoa.disabled = true;
+            enderecoPessoa.name = 'endereco_ignore';
+
+            enderecoEmpresa.disabled = false;
+            enderecoEmpresa.name = 'endereco';
+            enderecoEmpresa.required = true;
         }
-        e.target.value = value;
     }
-});
 
-// Form submission handling - CORRIGIDO
-document.getElementById('clientForm').addEventListener('submit', function(e) {
-    const isPessoa = document.getElementById('tipoPessoa').checked;
+    // Event listeners for type change
+    document.getElementById('tipoPessoa').addEventListener('change', toggleFields);
+    document.getElementById('tipoEmpresa').addEventListener('change', toggleFields);
 
-    if (!isPessoa) {
-        // Para empresa: copia os valores dos campos específicos para os nomes esperados pelo backend
-        const cnpjValue = document.getElementById('cnpjInput').value.trim();
-        const enderecoValue = document.getElementById('enderecoEmpresa').value.trim();
+    // CPF Mask
+    document.getElementById('cpfInput').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 11) {
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            e.target.value = value;
+        }
+    });
 
-        // Remove campos antigos se existirem
-        const oldCpf = document.querySelector('input[name="cpf_cnpj"]');
-        if (oldCpf) oldCpf.remove();
-        const oldEnd = document.querySelector('input[name="endereco"]');
-        if (oldEnd) oldEnd.remove();
+    // CNPJ Mask
+    document.getElementById('cnpjInput').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 14) {
+            value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+            value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+            value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            e.target.value = value;
+        }
+    });
 
-        // Adiciona os corretos
-        const inputCnpj = document.createElement('input');
-        inputCnpj.type = 'hidden';
-        inputCnpj.name = 'cpf_cnpj';
-        inputCnpj.value = cnpjValue;
-        this.appendChild(inputCnpj);
+    // Phone Mask
+    document.getElementById('telefoneInput').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 11) {
+            if (value.length <= 10) {
+                value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            } else {
+                value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            }
+            e.target.value = value;
+        }
+    });
 
-        const inputEndereco = document.createElement('input');
-        inputEndereco.type = 'hidden';
-        inputEndereco.name = 'endereco';
-        inputEndereco.value = enderecoValue;
-        this.appendChild(inputEndereco);
-    }
-    // Para pessoa física, os campos já têm os nomes corretos
-});
+    // Form submission handling - simplified
+    document.getElementById('clientForm').addEventListener('submit', function (e) {
+        // No special handling needed now that toggleFields handles everything correctly
+        return true;
+    });
 
-// Initialize on page load
-toggleFields();
+    // Initialize on page load
+    toggleFields();
 </script>
 {% endblock %}

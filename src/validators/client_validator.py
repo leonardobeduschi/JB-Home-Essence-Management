@@ -1,3 +1,5 @@
+# client validator:
+
 """
 Client validation utilities.
 
@@ -61,47 +63,47 @@ class ClientValidator:
     @staticmethod
     def validate_cnpj(cnpj: str) -> bool:
         """
-        Validate CNPJ format (Brazilian company tax ID).
-        
-        Accepts formats: 00.000.000/0000-00 or 00000000000000
+        Validate CNPJ format and check digits (Brazilian company tax ID).
         
         Args:
             cnpj: CNPJ string to validate
             
         Returns:
-            True if format is valid
+            True if CNPJ is valid
         """
         if not cnpj:
             return False
         
-        # Remove non-numeric characters
-        cnpj_clean = re.sub(r'[^0-9]', '', cnpj)
+        # Ensure it's a string and remove all non-digits
+        cnpj_clean = re.sub(r'\D', '', str(cnpj))
         
         # CNPJ must have exactly 14 digits
         if len(cnpj_clean) != 14:
             return False
         
-        # Check if all digits are the same (invalid CNPJ)
-        if cnpj_clean == cnpj_clean[0] * 14:
+        # Check for all-same-digits (invalid CNPJs like 00...0 or 11...1)
+        if cnpj_clean in (str(i) * 14 for i in range(10)):
             return False
         
-        # CNPJ validation algorithm
-        def calculate_digit(cnpj_partial: str, weights: list) -> int:
-            """Calculate verification digit."""
-            total = sum(int(cnpj_partial[i]) * weights[i] for i in range(len(cnpj_partial)))
-            remainder = total % 11
+        # CNPJ verification digit algorithm
+        def calculate_v_digit(digits, weights):
+            weighted_sum = sum(int(digit) * weight for digit, weight in zip(digits, weights))
+            remainder = weighted_sum % 11
             return 0 if remainder < 2 else 11 - remainder
-        
-        # Weights for first digit
-        weights_first = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
-        first_digit = calculate_digit(cnpj_clean[:12], weights_first)
-        if first_digit != int(cnpj_clean[12]):
+
+        # Weights for the 1st digit (13th position)
+        weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        # Weights for the 2nd digit (14th position)
+        weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+
+        # Verify 1st digit
+        d1 = calculate_v_digit(cnpj_clean[:12], weights1)
+        if d1 != int(cnpj_clean[12]):
             return False
-        
-        # Weights for second digit
-        weights_second = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
-        second_digit = calculate_digit(cnpj_clean[:13], weights_second)
-        if second_digit != int(cnpj_clean[13]):
+            
+        # Verify 2nd digit
+        d2 = calculate_v_digit(cnpj_clean[:13], weights2)
+        if d2 != int(cnpj_clean[13]):
             return False
         
         return True
@@ -124,7 +126,10 @@ class ClientValidator:
         # Remove formatting
         clean_value = re.sub(r'[^0-9]', '', value)
         
-        if tipo == 'pessoa':
+        # Normalize tipo for comparison
+        tipo_clean = tipo.lower().strip()
+        
+        if tipo_clean == 'pessoa':
             # For pessoa, accept CPF (11 digits)
             if len(clean_value) == 11:
                 if ClientValidator.validate_cpf(value):
@@ -134,15 +139,16 @@ class ClientValidator:
             else:
                 return False, "CPF deve ter 11 dígitos"
         
-        elif tipo == 'empresa':
+        elif tipo_clean == 'empresa':
             # For empresa, accept CNPJ (14 digits)
             if len(clean_value) == 14:
-                if ClientValidator.validate_cnpj(value):
+                # Use the already cleaned value to avoid any issues with str() conversion or hidden chars
+                if ClientValidator.validate_cnpj(clean_value):
                     return True, ""
                 else:
-                    return False, "CNPJ inválido"
+                    return False, f"CNPJ inválido: '{value}'"
             else:
-                return False, "CNPJ deve ter 14 dígitos"
+                return False, f"CNPJ deve ter 14 dígitos (recebi {len(clean_value)}: '{value}')"
         
         return False, "Tipo de cliente inválido"
     
