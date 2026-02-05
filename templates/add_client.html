@@ -178,56 +178,30 @@
         const empresaFields = document.getElementById('empresaFields');
         const enderecoPessoaDiv = document.getElementById('enderecoPessoaDiv');
 
-        // Inputs
-        const cpfInput = document.getElementById('cpfInput');
-        const cnpjInput = document.getElementById('cnpjInput');
-        const enderecoPessoa = document.getElementById('enderecoPessoa');
-        const enderecoEmpresa = document.getElementById('enderecoEmpresa');
-
         if (isPessoa) {
             pessoaFields.style.display = 'block';
             empresaFields.style.display = 'none';
             enderecoPessoaDiv.style.display = 'block';
 
-            // Settings for Pessoa
+            // Make pessoa fields required
             document.getElementById('idadeSelect').required = true;
             document.getElementById('generoSelect').required = true;
 
-            // Important: Only fields with name 'cpf_cnpj' and 'endereco' that are NOT disabled are sent
-            cpfInput.disabled = false;
-            cpfInput.name = 'cpf_cnpj';
-
-            cnpjInput.disabled = true;
-            cnpjInput.name = 'cpf_cnpj_ignore';
-
-            enderecoPessoa.disabled = false;
-            enderecoPessoa.name = 'endereco';
-
-            enderecoEmpresa.disabled = true;
-            enderecoEmpresa.name = 'endereco_ignore';
+            // Make empresa fields not required
+            document.getElementById('cnpjInput').required = false;
+            document.getElementById('enderecoEmpresa').required = false;
         } else {
             pessoaFields.style.display = 'none';
             empresaFields.style.display = 'block';
             enderecoPessoaDiv.style.display = 'none';
 
-            // Settings for Empresa
+            // Make pessoa fields not required
             document.getElementById('idadeSelect').required = false;
             document.getElementById('generoSelect').required = false;
 
-            // Important: Only fields with name 'cpf_cnpj' and 'endereco' that are NOT disabled are sent
-            cpfInput.disabled = true;
-            cpfInput.name = 'cpf_cnpj_ignore';
-
-            cnpjInput.disabled = false;
-            cnpjInput.name = 'cpf_cnpj';
-            cnpjInput.required = true;
-
-            enderecoPessoa.disabled = true;
-            enderecoPessoa.name = 'endereco_ignore';
-
-            enderecoEmpresa.disabled = false;
-            enderecoEmpresa.name = 'endereco';
-            enderecoEmpresa.required = true;
+            // Make empresa fields required
+            document.getElementById('cnpjInput').required = true;
+            document.getElementById('enderecoEmpresa').required = true;
         }
     }
 
@@ -273,10 +247,35 @@
         }
     });
 
-    // Form submission handling - simplified
+    // Form submission handling - CORRIGIDO
     document.getElementById('clientForm').addEventListener('submit', function (e) {
-        // No special handling needed now that toggleFields handles everything correctly
-        return true;
+        const isPessoa = document.getElementById('tipoPessoa').checked;
+
+        if (!isPessoa) {
+            // Para empresa: copia os valores dos campos específicos para os nomes esperados pelo backend
+            const cnpjValue = document.getElementById('cnpjInput').value.trim();
+            const enderecoValue = document.getElementById('enderecoEmpresa').value.trim();
+
+            // Remove campos antigos se existirem
+            const oldCpf = document.querySelector('input[name="cpf_cnpj"]');
+            if (oldCpf) oldCpf.remove();
+            const oldEnd = document.querySelector('input[name="endereco"]');
+            if (oldEnd) oldEnd.remove();
+
+            // Adiciona os corretos
+            const inputCnpj = document.createElement('input');
+            inputCnpj.type = 'hidden';
+            inputCnpj.name = 'cpf_cnpj';
+            inputCnpj.value = cnpjValue;
+            this.appendChild(inputCnpj);
+
+            const inputEndereco = document.createElement('input');
+            inputEndereco.type = 'hidden';
+            inputEndereco.name = 'endereco';
+            inputEndereco.value = enderecoValue;
+            this.appendChild(inputEndereco);
+        }
+        // Para pessoa física, os campos já têm os nomes corretos
     });
 
     // Initialize on page load
