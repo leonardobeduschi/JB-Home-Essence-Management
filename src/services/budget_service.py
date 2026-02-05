@@ -68,27 +68,27 @@ class BudgetService:
             fontSize=36,
             textColor=self.primary_green,
             alignment=TA_RIGHT,
-            leading=42,
-            spaceAfter=6
+            leading=36,
+            spaceAfter=2
         )
         
         subtitle_style = ParagraphStyle(
             'SubtitleStyle',
             fontName=self.font_regular,
-            fontSize=11,
+            fontSize=10,
             textColor=self.text_gray,
             alignment=TA_RIGHT,
-            leading=14
+            leading=11
         )
         
         company_style = ParagraphStyle(
             'CompanyStyle',
             fontName=self.font_bold,
-            fontSize=13,
+            fontSize=12,
             textColor=self.dark_green,
             alignment=TA_RIGHT,
-            leading=16,
-            spaceAfter=3
+            leading=14,
+            spaceAfter=1
         )
         
         title_cell = [
@@ -98,6 +98,8 @@ class BudgetService:
             Paragraph("(47) 99715-2830", subtitle_style),
             Paragraph("R. 3130, 112 - Sala 04", subtitle_style),
             Paragraph("@jbhomessence", subtitle_style),
+            Paragraph("CNPJ: 57.495.867/0001-82", subtitle_style),
+            Paragraph("Balneario Camboriu - SC", subtitle_style),
         ]
         
         header_table = Table([[logo_cell, title_cell]], colWidths=[5*cm, 12*cm])
@@ -110,13 +112,13 @@ class BudgetService:
         ]))
         
         story.append(header_table)
-        story.append(Spacer(1, 8*mm))
+        story.append(Spacer(1, 4*mm))
         
         # Elegant separator line
         line = Drawing(17*cm, 3*mm)
         line.add(Rect(0, 1*mm, 17*cm, 2*mm, fillColor=self.primary_green, strokeColor=None))
         story.append(line)
-        story.append(Spacer(1, 8*mm))
+        story.append(Spacer(1, 4*mm))
     
     def _add_client_info(self, story, client_data, date):
         """Add client information in elegant box."""
@@ -146,12 +148,12 @@ class BudgetService:
         ], colWidths=[17*cm])
         date_box.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.dark_green),
-            ('TOPPADDING', (0, 0), (-1, -1), 3*mm),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3*mm),
+            ('TOPPADDING', (0, 0), (-1, -1), 1.5*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5*mm),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
         ]))
         story.append(date_box)
-        story.append(Spacer(1, 6*mm))
+        story.append(Spacer(1, 3*mm))
         
         # Client info box
         client_header = Table([
@@ -159,8 +161,8 @@ class BudgetService:
         ], colWidths=[17*cm])
         client_header.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.primary_green),
-            ('TOPPADDING', (0, 0), (-1, -1), 3*mm),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3*mm),
+            ('TOPPADDING', (0, 0), (-1, -1), 1.5*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5*mm),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
         ]))
         story.append(client_header)
@@ -178,13 +180,13 @@ class BudgetService:
         client_table = Table(client_details, colWidths=[17*cm])
         client_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.light_green),
-            ('TOPPADDING', (0, 0), (-1, -1), 2*mm),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
+            ('TOPPADDING', (0, 0), (-1, -1), 1.5*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5*mm),
             ('LEFTPADDING', (0, 0), (-1, -1), 4*mm),
             ('RIGHTPADDING', (0, 0), (-1, -1), 4*mm),
         ]))
         story.append(client_table)
-        story.append(Spacer(1, 10*mm))
+        story.append(Spacer(1, 5*mm))
     
     def _add_items_table(self, story, items_data):
         """Add elegant product table."""
@@ -223,8 +225,9 @@ class BudgetService:
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), self.font_bold),
             ('FONTSIZE', (0, 0), (-1, 0), 9),
-            ('TOPPADDING', (0, 0), (-1, 0), 6*mm),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 6*mm),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('TOPPADDING', (0, 0), (-1, 0), 3*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 3*mm),
             
             # Body style
             ('FONTNAME', (0, 1), (-1, -1), self.font_regular),
@@ -238,8 +241,8 @@ class BudgetService:
             ('ALIGN', (4, 1), (5, -1), 'RIGHT'),   # Values
             
             # Padding
-            ('TOPPADDING', (0, 1), (-1, -1), 4*mm),
-            ('BOTTOMPADDING', (0, 1), (-1, -1), 4*mm),
+            ('TOPPADDING', (0, 1), (-1, -1), 2*mm),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 2*mm),
             ('LEFTPADDING', (0, 1), (-1, -1), 2*mm),
             ('RIGHTPADDING', (0, 1), (-1, -1), 2*mm),
             
@@ -255,7 +258,7 @@ class BudgetService:
         
         table.setStyle(table_style)
         story.append(table)
-        story.append(Spacer(1, 10*mm))
+        story.append(Spacer(1, 4*mm))
     
     def _add_total_section(self, story, total, discount=0.0):
         """Add total with elegant styling, including discount."""
@@ -313,8 +316,8 @@ class BudgetService:
         total_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.light_green),
             ('BOX', (0, 0), (-1, -1), 1.5, self.primary_green),
-            ('TOPPADDING', (0, 0), (-1, -1), 3*mm),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3*mm),
+            ('TOPPADDING', (0, 0), (-1, -1), 2*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ]))
@@ -326,7 +329,7 @@ class BudgetService:
         if not notes:
             return
             
-        story.append(Spacer(1, 5*mm))
+        story.append(Spacer(1, 3*mm))
         
         header_style = ParagraphStyle(
             'NotesHeader',
@@ -351,14 +354,14 @@ class BudgetService:
     
     def _add_footer(self, story):
         """Add professional footer."""
-        story.append(Spacer(1, 15*mm))
+        story.append(Spacer(1, 8*mm))
         
         
         # Separator line
         line = Drawing(17*cm, 1*mm)
         line.add(Rect(0, 0, 17*cm, 1*mm, fillColor=self.primary_green, strokeColor=None))
         story.append(line)
-        story.append(Spacer(1, 4*mm))
+        story.append(Spacer(1, 2*mm))
         
         # Contact footer
         footer_style = ParagraphStyle(
