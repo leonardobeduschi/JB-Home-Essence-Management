@@ -205,8 +205,7 @@ class ProductService:
         Returns:
             List of all products
         """
-        df = self.repository.get_all()
-        return df.to_dict('records')
+        return self.repository.find_all()
     
     def list_by_category(self, categoria: str) -> List[Dict]:
         """
@@ -292,11 +291,11 @@ class ProductService:
         Returns:
             Dictionary with inventory statistics
         """
-        all_products = self.repository.get_all()
+        all_products = self.repository.find_all()
         values = self.repository.get_inventory_value()
         
         total_products = len(all_products)
-        total_items = all_products['ESTOQUE'].astype(int).sum() if not all_products.empty else 0
+        total_items = sum(int(p.get('ESTOQUE', 0)) for p in all_products)
         
         summary = {
             'total_products': total_products,

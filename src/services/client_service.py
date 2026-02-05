@@ -66,11 +66,14 @@ class ClientService:
         """
         try:
             # Generate unique ID
-            existing_ids = [c['ID_CLIENTE'] for c in self.repository.get_all().to_dict('records')]
+            existing_ids = [c['ID_CLIENTE'] for c in self.repository.find_all()]
             id_cliente = IDGenerator.generate_client_id(existing_ids)
             
+            # Normalize tipo
+            tipo = str(tipo).lower().strip()
+            
             # Validate and format CPF/CNPJ if provided
-            if cpf_cnpj and cpf_cnpj.strip():
+            if cpf_cnpj and str(cpf_cnpj).strip():
                 is_valid, error_msg = self.validator.validate_cpf_cnpj(cpf_cnpj, tipo)
                 if not is_valid:
                     raise ValueError(error_msg)
@@ -243,8 +246,7 @@ class ClientService:
         Returns:
             List of all clients
         """
-        df = self.repository.get_all()
-        return df.to_dict('records')
+        return self.repository.find_all()
     
     def list_by_vendedor(self, vendedor: str) -> List[Dict]:
         """

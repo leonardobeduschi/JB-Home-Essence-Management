@@ -71,7 +71,7 @@ Substitua o método register_sale_multi_item no seu sale_service.py por este:
                 raise ValueError(f"Cliente '{id_cliente}' não encontrado")
             
             # === STEP 2: Generate single ID_VENDA for all items ===
-            existing_ids = [s['ID_VENDA'] for s in self.sale_repository.get_all().to_dict('records')]
+            existing_ids = [s['ID_VENDA'] for s in self.sale_repository.find_all()]
             id_venda = IDGenerator.generate_sale_id(existing_ids)
             
             # Use provided date or today's date

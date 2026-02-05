@@ -116,8 +116,8 @@ class Client:
         if tipo_lower not in ['pessoa', 'empresa']:
             raise ValueError("TIPO deve ser 'pessoa' ou 'empresa'")
         
-        # Normalize tipo para minúscula
-        self.tipo = tipo_lower.capitalize()  # "Pessoa" ou "Empresa" para exibição
+        # Normalize tipo para exibição (Pessoa/Empresa)
+        self.tipo = tipo_lower.capitalize()
         
         # Apply tipo-specific validation rules (apenas para novos registros)
         # Para leitura de CSV existente, permite dados inconsistentes
@@ -127,19 +127,11 @@ class Client:
         Validate empresa-specific business rules.
         
         Rules:
-        - CPF_CNPJ is MANDATORY
-        - ENDERECO is MANDATORY
+        - CPF_CNPJ is OPTIONAL
+        - ENDERECO is OPTIONAL
         - IDADE must be EMPTY
         - GENERO must be EMPTY
         """
-        # CPF_CNPJ is mandatory for empresa
-        if not self.cpf_cnpj or not self.cpf_cnpj.strip():
-            raise ValueError("CPF/CNPJ é obrigatório para empresas")
-        
-        # ENDERECO is mandatory for empresa
-        if not self.endereco or not self.endereco.strip():
-            raise ValueError("ENDEREÇO é obrigatório para empresas")
-        
         # IDADE and GENERO must be empty for empresa
         # Force them to empty string
         self.idade = ""

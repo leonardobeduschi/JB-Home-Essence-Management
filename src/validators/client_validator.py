@@ -124,7 +124,9 @@ class ClientValidator:
         # Remove formatting
         clean_value = re.sub(r'[^0-9]', '', value)
         
-        if tipo == 'pessoa':
+        tipo_lower = tipo.lower().strip()
+        
+        if tipo_lower == 'pessoa':
             # For pessoa, accept CPF (11 digits)
             if len(clean_value) == 11:
                 if ClientValidator.validate_cpf(value):
@@ -134,7 +136,7 @@ class ClientValidator:
             else:
                 return False, "CPF deve ter 11 dígitos"
         
-        elif tipo == 'empresa':
+        elif tipo_lower == 'empresa':
             # For empresa, accept CNPJ (14 digits)
             if len(clean_value) == 14:
                 if ClientValidator.validate_cnpj(value):
@@ -144,7 +146,7 @@ class ClientValidator:
             else:
                 return False, "CNPJ deve ter 14 dígitos"
         
-        return False, "Tipo de cliente inválido"
+        return False, f"Tipo de cliente inválido: {tipo}"
     
     @staticmethod
     def format_cpf(cpf: str) -> str:
