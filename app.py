@@ -275,6 +275,55 @@ def test_db():
         return f"❌ Database Error: {str(e)}<br><pre>{traceback.format_exc()}</pre>"
 
 
+@app.route('/api/debug/db-check')
+@login_required
+def api_db_check():
+    """Comprehensive database health check."""
+    try:
+        from src.repositories.client_repository import ClientRepository
+        from src.repositories.product_repository import ProductRepository
+        
+        client_repo = ClientRepository()
+        product_repo = ProductRepository()
+        
+        results = {
+            'db_type': os.getenv('DB_TYPE', 'sqlite'),
+            'tables': {},
+            'connection': 'OK'
+        }
+        
+        # Check clients
+        try:
+            results['tables']['clients'] = {
+                'exists': client_repo._table_exists(),
+                'count': client_repo.count() if client_repo._table_exists() else 0
+            }
+        except Exception as e:
+            results['tables']['clients'] = {'error': str(e)}
+            
+        # Check products
+        try:
+            results['tables']['products'] = {
+                'exists': product_repo._table_exists(),
+                'count': product_repo.count() if product_repo._table_exists() else 0
+            }
+        except Exception as e:
+            results['tables']['products'] = {'error': str(e)}
+            
+        # List all tables in public schema for PG
+        if os.getenv('DB_TYPE') == 'postgresql':
+            with client_repo.get_conn() as conn:
+                cur = client_repo._get_cursor(conn)
+                cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+                results['all_public_tables'] = [r['table_name'] if isinstance(r, dict) else r[0] for r in cur.fetchall()]
+        
+        return jsonify({'success': True, 'data': results})
+        
+    except Exception as e:
+        import traceback
+        return jsonify({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}), 500
+
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -2470,9 +2519,17 @@ def budgets():
 @app.route('/api/budgets/generate', methods=['POST'])
 @login_required
 def api_generate_budget():
-    """Generate budget PDF."""
+    """
+    Generate budget PDF with support for custom clients and products.
+    Custom data is passed directly in the request, not saved to database.
+    """
     try:
         data = request.get_json()
+        
+        # The data structure already contains all necessary info:
+        # - For custom clients: data['client_data'] contains the info
+        # - For custom products: data['items'] contains produto, categoria, valor_unit
+        # The budget_service will handle both cases automatically
         
         # Generate PDF as bytes
         pdf_buffer = budget_service.generate_budget_pdf(data, return_bytes=True)
@@ -2495,31 +2552,61 @@ def api_generate_budget():
 @app.route('/api/budgets/preview', methods=['POST'])
 @login_required
 def api_preview_budget():
-    """Preview budget data."""
+    """Preview budget data with support for custom clients and products."""
     try:
         data = request.get_json()
         
-        # Validate data
-        client = budget_service.get_client_data(data['id_cliente'])
-        if not client:
-            return jsonify({'success': False, 'error': 'Cliente não encontrado'}), 404
+        # Validate client data
+        id_cliente = str(data.get('id_cliente', '')).strip().lower()
+        
+        if id_cliente == 'custom' or 'client_data' in data:
+            client_data = data.get('client_data', {})
+            client = {
+                'CLIENTE': client_data.get('name') or client_data.get('CLIENTE') or 'Cliente Personalizado',
+                'TELEFONE': client_data.get('phone') or client_data.get('TELEFONE') or '',
+                'ENDERECO': client_data.get('address') or client_data.get('ENDERECO') or ''
+            }
+        else:
+            client = budget_service.get_client_data(data['id_cliente'])
+            if not client:
+                client = {
+                    'CLIENTE': 'Cliente Não Encontrado',
+                    'TELEFONE': '',
+                    'ENDERECO': ''
+                }
         
         items = []
         total = 0.0
         
         for item in data['items']:
-            product = budget_service.get_product_data(item['codigo'])
-            if not product:
-                return jsonify({'success': False, 'error': f"Produto não encontrado: {item['codigo']}"}), 404
+            codigo = str(item.get('codigo', '')).strip()
+            
+            # Check if it's a custom product
+            if codigo.upper().startswith('CUSTOM') or ('produto' in item and 'categoria' in item):
+                produto_nome = item.get('produto') or item.get('PRODUTO') or 'Produto Personalizado'
+                categoria = item.get('categoria') or item.get('CATEGORIA') or 'Diversos'
+                try:
+                    valor_unit = float(item.get('valor_unit') or item.get('VALOR') or 0)
+                except (ValueError, TypeError):
+                    valor_unit = 0.0
+            else:
+                product = budget_service.get_product_data(item['codigo'])
+                if not product:
+                    produto_nome = f"Produto Não Encontrado ({item['codigo']})"
+                    categoria = "-"
+                    valor_unit = 0.0
+                else:
+                    produto_nome = product.get('PRODUTO', 'Produto')
+                    categoria = product.get('CATEGORIA', '-')
+                    valor_unit = float(product.get('VALOR', 0))
             
             quantidade = int(item['quantidade'])
-            valor_unit = float(product['VALOR'])
             valor_total = quantidade * valor_unit
             total += valor_total
             
             items.append({
-                'produto': product['PRODUTO'],
-                'categoria': product['CATEGORIA'],
+                'produto': produto_nome,
+                'categoria': categoria,
                 'quantidade': quantidade,
                 'valor_unit': valor_unit,
                 'valor_total': valor_total
@@ -2541,6 +2628,7 @@ def api_preview_budget():
     except Exception as e:
         print(f"Error previewing budget: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
     
 
 @app.route('/notifications')

@@ -85,18 +85,22 @@ class BaseRepository:
             cur = self._get_cursor(conn)
             
             if self.db_type == 'postgresql':
+                # OTIMIZADO: Consulta mais robusta e explícita para PostgreSQL
                 cur.execute(
-                    "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)",
+                    "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = %s) AS exists",
                     (self.table_name,)
                 )
                 result = cur.fetchone()
-                return bool(result['exists'] if hasattr(result, 'get') else result[0])
+                exists = bool(result['exists'] if isinstance(result, dict) else result[0])
+                print(f"[DB DEBUG] Tabela '{self.table_name}' existe: {exists}")
+                return exists
             else:
                 cur.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
                     (self.table_name,)
                 )
-                return cur.fetchone() is not None
+                exists = cur.fetchone() is not None
+                return exists
 
     def find_all(self, columns: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """
@@ -106,6 +110,7 @@ class BaseRepository:
             columns: Lista de colunas para projeção. Se None, usa SELECT *.
         """
         if not self._table_exists():
+            print(f"[DB DEBUG] find_all abortado: tabela '{self.table_name}' não encontrada")
             return []
         
         # Projeção de colunas para reduzir tráfego de rede
@@ -116,8 +121,10 @@ class BaseRepository:
         
         with self.get_conn() as conn:
             cur = self._get_cursor(conn)
-            cur.execute(f'SELECT {cols} FROM {self._quote_identifier(self.table_name)}')
+            query = f'SELECT {cols} FROM {self._quote_identifier(self.table_name)}'
+            cur.execute(query)
             rows = cur.fetchall()
+            print(f"[DB DEBUG] find_all('{self.table_name}') retornou {len(rows)} linhas")
             return [dict(r) for r in rows]
 
     def find_by_id(self, pk_value: Any) -> Optional[Dict[str, Any]]:

@@ -12,64 +12,77 @@
         margin-bottom: 10px;
         border-left: 3px solid var(--primary-color);
     }
-    
+
     .preview-section {
         background-color: white;
         padding: 20px;
         border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-    
+
     .preview-header {
         text-align: center;
         border-bottom: 2px solid var(--primary-color);
         padding-bottom: 15px;
         margin-bottom: 20px;
     }
-    
+
     .preview-logo {
         float: right;
         width: 80px;
         height: 80px;
     }
-    
+
     .preview-title {
         color: var(--primary-color);
         font-size: 28px;
         font-weight: bold;
         margin-bottom: 10px;
     }
-    
+
     .preview-label {
         color: var(--primary-color);
         font-weight: bold;
         margin-top: 15px;
         margin-bottom: 5px;
     }
-    
+
     .preview-table {
         width: 100%;
         margin-top: 20px;
     }
-    
+
     .preview-table th {
         background-color: var(--primary-color);
         color: white;
         padding: 10px;
         text-align: left;
     }
-    
+
     .preview-table td {
         padding: 8px;
         border-bottom: 1px solid #dee2e6;
     }
-    
+
     .preview-total {
         text-align: right;
         font-size: 18px;
         font-weight: bold;
         color: var(--primary-color);
         margin-top: 20px;
+    }
+
+    .custom-input-group {
+        display: none;
+        margin-top: 10px;
+        padding: 15px;
+        background: #fff3cd;
+        border-radius: 8px;
+        border-left: 3px solid #ffc107;
+    }
+
+    .custom-input-group.show {
+        display: block;
     }
 </style>
 {% endblock %}
@@ -84,30 +97,55 @@
                     <h5 class="card-title">
                         <i class="bi bi-file-earmark-text"></i> Novo Orçamento
                     </h5>
-                    
+
                     <form id="budgetForm">
                         <!-- Date -->
                         <div class="mb-3">
                             <label for="date" class="form-label">Data</label>
                             <input type="date" class="form-control" id="date" required>
                         </div>
-                        
+
                         <!-- Client -->
                         <div class="mb-3">
-                            <label for="client" class="form-label">Cliente</label>
+                            <label for="clientSearch" class="form-label">Pesquisar Cliente</label>
+                            <input type="text" class="form-control mb-2" id="clientSearch" list="clientsDataList"
+                                placeholder="Digite o nome do cliente...">
+                            <datalist id="clientsDataList">
+                                {% for client in clients %}
+                                <option value="{{ client.CLIENTE }}" data-id="{{ client.ID_CLIENTE }}">
+                                    {% endfor %}
+                            </datalist>
+
+                            <label for="client" class="form-label">Cliente (Selecionado)</label>
                             <select class="form-select" id="client" required>
                                 <option value="">Selecione um cliente</option>
                                 {% for client in clients %}
-                                <option value="{{ client.ID_CLIENTE }}" 
-                                        data-name="{{ client.CLIENTE }}"
-                                        data-phone="{{ client.TELEFONE or '' }}"
-                                        data-address="{{ client.ENDERECO or '' }}">
+                                <option value="{{ client.ID_CLIENTE }}" data-name="{{ client.CLIENTE }}"
+                                    data-phone="{{ client.TELEFONE or '' }}" data-address="{{ client.ENDERECO or '' }}">
                                     {{ client.CLIENTE }}
                                 </option>
                                 {% endfor %}
+                                <option value="custom">➕ Outro (novo cliente)</option>
                             </select>
+
+                            <!-- Custom Client Inputs -->
+                            <div id="customClientInputs" class="custom-input-group">
+                                <h6><i class="bi bi-person-plus"></i> Novo Cliente</h6>
+                                <div class="mb-2">
+                                    <label class="form-label">Nome *</label>
+                                    <input type="text" class="form-control" id="customClientName">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Telefone</label>
+                                    <input type="text" class="form-control" id="customClientPhone">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Endereço</label>
+                                    <input type="text" class="form-control" id="customClientAddress">
+                                </div>
+                            </div>
                         </div>
-                        
+
                         <!-- Items Section -->
                         <div class="mb-3">
                             <label class="form-label">Produtos</label>
@@ -118,7 +156,7 @@
                                 <i class="bi bi-plus-circle"></i> Adicionar Produto
                             </button>
                         </div>
-                        
+
                         <!-- Actions -->
                         <div class="d-grid gap-2">
                             <button type="button" class="btn btn-primary" id="previewBtn">
@@ -132,7 +170,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Preview Section -->
         <div class="col-md-6">
             <div class="card">
@@ -140,11 +178,11 @@
                     <h5 class="card-title">
                         <i class="bi bi-eye"></i> Pré-visualização
                     </h5>
-                    
+
                     <div id="previewContent" class="preview-section" style="display: none;">
                         <!-- Preview will be rendered here -->
                     </div>
-                    
+
                     <div id="previewPlaceholder" class="text-center text-muted py-5">
                         <i class="bi bi-file-earmark-text" style="font-size: 48px;"></i>
                         <p class="mt-3">Preencha o formulário e clique em "Pré-visualizar"</p>
@@ -155,35 +193,62 @@
     </div>
 </div>
 
+<!-- Global Datalist for Products -->
+<datalist id="productsDataList">
+    {% for product in products %}
+    <option value="{{ product.PRODUTO }} - {{ product.CATEGORIA }}" data-code="{{ product.CODIGO }}">
+        {% endfor %}
+</datalist>
+
 <!-- Item Template (hidden) -->
 <template id="itemTemplate">
     <div class="item-row">
         <div class="row">
-            <div class="col-md-6">
-                <label class="form-label">Produto</label>
+            <div class="col-md-5">
+                <label class="form-label">Pesquisar Produto</label>
+                <input type="text" class="form-control mb-2 product-search" list="productsDataList"
+                    placeholder="Digite o nome do produto...">
+
+                <label class="form-label">Produto (Selecionado)</label>
                 <select class="form-select product-select" required>
                     <option value="">Selecione um produto</option>
                     {% for product in products %}
-                    <option value="{{ product.CODIGO }}" 
-                            data-name="{{ product.PRODUTO }}"
-                            data-category="{{ product.CATEGORIA }}"
-                            data-price="{{ product.VALOR }}">
+                    <option value="{{ product.CODIGO }}" data-name="{{ product.PRODUTO }}"
+                        data-category="{{ product.CATEGORIA }}" data-price="{{ product.VALOR }}">
                         {{ product.PRODUTO }} - {{ product.CATEGORIA }}
                     </option>
                     {% endfor %}
+                    <option value="custom">➕ Outro (produto personalizado)</option>
                 </select>
+
+                <!-- Custom Product Inputs -->
+                <div class="custom-input-group custom-product-inputs">
+                    <h6><i class="bi bi-box-seam"></i> Produto Personalizado</h6>
+                    <div class="mb-2">
+                        <label class="form-label">Nome do Produto *</label>
+                        <input type="text" class="form-control custom-product-name">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Categoria *</label>
+                        <input type="text" class="form-control custom-product-category">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Preço Unitário *</label>
+                        <input type="number" step="0.01" class="form-control custom-product-price">
+                    </div>
+                </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">Quantidade</label>
                 <input type="number" class="form-control quantity-input" min="1" value="1" required>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label">Valor</label>
                 <input type="text" class="form-control price-display" readonly>
             </div>
-            <div class="col-md-1">
+            <div class="col-md-2">
                 <label class="form-label">&nbsp;</label>
-                <button type="button" class="btn btn-danger btn-sm remove-item">
+                <button type="button" class="btn btn-danger btn-sm w-100 remove-item">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
@@ -194,176 +259,308 @@
 
 {% block extra_js %}
 <script>
-let itemCount = 0;
-let previewData = null;
+    let itemCount = 0;
+    let previewData = null;
 
-// Set today's date
-document.getElementById('date').valueAsDate = new Date();
+    // Set today's date
+    document.getElementById('date').valueAsDate = new Date();
 
-// Add first item on page load
-document.addEventListener('DOMContentLoaded', function() {
-    addItem();
-});
-
-// Add item button
-document.getElementById('addItemBtn').addEventListener('click', addItem);
-
-function addItem() {
-    const template = document.getElementById('itemTemplate');
-    const clone = template.content.cloneNode(true);
-    
-    // Add change listeners
-    const productSelect = clone.querySelector('.product-select');
-    const quantityInput = clone.querySelector('.quantity-input');
-    const priceDisplay = clone.querySelector('.price-display');
-    const removeBtn = clone.querySelector('.remove-item');
-    
-    productSelect.addEventListener('change', function() {
-        const option = this.options[this.selectedIndex];
-        const price = option.dataset.price;
-        priceDisplay.value = price ? formatCurrencyBR(parseFloat(price)) : '';
-        updatePreview();
+    // Add first item on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        addItem();
     });
-    
-    quantityInput.addEventListener('input', updatePreview);
-    
-    removeBtn.addEventListener('click', function() {
-        this.closest('.item-row').remove();
-        updatePreview();
-    });
-    
-    document.getElementById('itemsContainer').appendChild(clone);
-    itemCount++;
-}
 
-// Preview button
-document.getElementById('previewBtn').addEventListener('click', function() {
-    if (!validateForm()) return;
-    
-    generatePreview();
-    document.getElementById('downloadBtn').disabled = false;
-});
+    // Client search sync
+    document.getElementById('clientSearch').addEventListener('input', function () {
+        const val = this.value;
+        const opts = document.getElementById('clientsDataList').childNodes;
+        const clientSelect = document.getElementById('client');
 
-// Download button
-document.getElementById('budgetForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    if (!previewData) {
-        alert('Por favor, visualize o orçamento antes de baixar');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/budgets/generate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(previewData)
-        });
-        
-        if (!response.ok) {
-            throw new Error('Erro ao gerar PDF');
+        for (let i = 0; i < opts.length; i++) {
+            if (opts[i].value === val) {
+                const clientId = opts[i].dataset.id;
+                clientSelect.value = clientId;
+                // Trigger change event to update preview and show/hide custom inputs
+                clientSelect.dispatchEvent(new Event('change'));
+                break;
+            }
         }
-        
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `orcamento_${new Date().toISOString().slice(0,10)}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        alert('PDF baixado com sucesso!');
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Erro ao gerar PDF: ' + error.message);
-    }
-});
+    });
 
-function validateForm() {
-    const date = document.getElementById('date').value;
-    const client = document.getElementById('client').value;
-    const items = document.querySelectorAll('.item-row');
-    
-    if (!date) {
-        alert('Por favor, selecione uma data');
-        return false;
+    // Client selection handler
+    document.getElementById('client').addEventListener('change', function () {
+        const customInputs = document.getElementById('customClientInputs');
+        const clientSearch = document.getElementById('clientSearch');
+
+        if (this.value === 'custom') {
+            customInputs.classList.add('show');
+            clientSearch.value = ''; // Clear search when custom is selected
+        } else {
+            customInputs.classList.remove('show');
+            // Sync search bar if selected via dropdown
+            if (this.value) {
+                const option = this.options[this.selectedIndex];
+                clientSearch.value = option.dataset.name;
+            } else {
+                clientSearch.value = '';
+            }
+        }
+        updatePreview();
+    });
+
+    // Add item button
+    document.getElementById('addItemBtn').addEventListener('click', addItem);
+
+    function addItem() {
+        const template = document.getElementById('itemTemplate');
+        const clone = template.content.cloneNode(true);
+
+        const productSearch = clone.querySelector('.product-search');
+        const productSelect = clone.querySelector('.product-select');
+        const quantityInput = clone.querySelector('.quantity-input');
+        const priceDisplay = clone.querySelector('.price-display');
+        const removeBtn = clone.querySelector('.remove-item');
+        const customInputs = clone.querySelector('.custom-product-inputs');
+        const customPrice = clone.querySelector('.custom-product-price');
+
+        // Product search sync
+        productSearch.addEventListener('input', function () {
+            const val = this.value;
+            const opts = document.getElementById('productsDataList').childNodes;
+
+            for (let i = 0; i < opts.length; i++) {
+                if (opts[i].value === val) {
+                    const productCode = opts[i].dataset.code;
+                    productSelect.value = productCode;
+                    // Trigger change event
+                    productSelect.dispatchEvent(new Event('change'));
+                    break;
+                }
+            }
+        });
+
+        productSelect.addEventListener('change', function () {
+            if (this.value === 'custom') {
+                customInputs.classList.add('show');
+                priceDisplay.value = '';
+                productSearch.value = ''; // Clear search
+            } else {
+                customInputs.classList.remove('show');
+                const option = this.options[this.selectedIndex];
+                const price = option.dataset.price;
+                priceDisplay.value = price ? formatCurrencyBR(parseFloat(price)) : '';
+
+                // Sync search bar if selected via dropdown
+                if (this.value) {
+                    productSearch.value = option.text;
+                } else {
+                    productSearch.value = '';
+                }
+            }
+            updatePreview();
+        });
+
+        // Update price when custom product price changes
+        customPrice.addEventListener('input', function () {
+            if (productSelect.value === 'custom' && this.value) {
+                priceDisplay.value = formatCurrencyBR(parseFloat(this.value));
+            }
+            updatePreview();
+        });
+
+        quantityInput.addEventListener('input', updatePreview);
+
+        removeBtn.addEventListener('click', function () {
+            this.closest('.item-row').remove();
+            updatePreview();
+        });
+
+        document.getElementById('itemsContainer').appendChild(clone);
+        itemCount++;
     }
-    
-    if (!client) {
-        alert('Por favor, selecione um cliente');
-        return false;
-    }
-    
-    if (items.length === 0) {
-        alert('Por favor, adicione pelo menos um produto');
-        return false;
-    }
-    
-    for (let item of items) {
-        const product = item.querySelector('.product-select').value;
-        const quantity = item.querySelector('.quantity-input').value;
-        
-        if (!product || !quantity || quantity < 1) {
-            alert('Por favor, preencha todos os produtos corretamente');
+
+    // Preview button
+    document.getElementById('previewBtn').addEventListener('click', function () {
+        if (!validateForm()) return;
+
+        generatePreview();
+        document.getElementById('downloadBtn').disabled = false;
+    });
+
+    // Download button
+    document.getElementById('budgetForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        if (!previewData) {
+            alert('Por favor, visualize o orçamento antes de baixar');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/budgets/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(previewData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao gerar PDF');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `orcamento_${new Date().toISOString().slice(0, 10)}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            alert('PDF baixado com sucesso!');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Erro ao gerar PDF: ' + error.message);
+        }
+    });
+
+    function validateForm() {
+        const date = document.getElementById('date').value;
+        const clientSelect = document.getElementById('client');
+        const items = document.querySelectorAll('.item-row');
+
+        if (!date) {
+            alert('Por favor, selecione uma data');
             return false;
         }
-    }
-    
-    return true;
-}
 
-function generatePreview() {
-    const date = document.getElementById('date').value;
-    const clientSelect = document.getElementById('client');
-    const clientOption = clientSelect.options[clientSelect.selectedIndex];
-    
-    const clientData = {
-        id: clientSelect.value,
-        name: clientOption.dataset.name,
-        phone: clientOption.dataset.phone,
-        address: clientOption.dataset.address
-    };
-    
-    // Get items data
-    const items = [];
-    let total = 0;
-    
-    document.querySelectorAll('.item-row').forEach((row, idx) => {
-        const productSelect = row.querySelector('.product-select');
-        const option = productSelect.options[productSelect.selectedIndex];
-        const quantity = parseInt(row.querySelector('.quantity-input').value);
-        const price = parseFloat(option.dataset.price);
-        const itemTotal = quantity * price;
-        
-        items.push({
-            codigo: productSelect.value,
-            produto: option.dataset.name,
-            categoria: option.dataset.category,
-            quantidade: quantity,
-            valor_unit: price,
-            valor_total: itemTotal
+        if (!clientSelect.value) {
+            alert('Por favor, selecione um cliente');
+            return false;
+        }
+
+        // Validate custom client
+        if (clientSelect.value === 'custom') {
+            const name = document.getElementById('customClientName').value.trim();
+            if (!name) {
+                alert('Por favor, preencha o nome do cliente');
+                return false;
+            }
+        }
+
+        if (items.length === 0) {
+            alert('Por favor, adicione pelo menos um produto');
+            return false;
+        }
+
+        // Validate items
+        for (let item of items) {
+            const productSelect = item.querySelector('.product-select');
+            const quantity = item.querySelector('.quantity-input').value;
+
+            if (!productSelect.value || !quantity || quantity < 1) {
+                alert('Por favor, preencha todos os produtos corretamente');
+                return false;
+            }
+
+            // Validate custom product
+            if (productSelect.value === 'custom') {
+                const name = item.querySelector('.custom-product-name').value.trim();
+                const category = item.querySelector('.custom-product-category').value.trim();
+                const price = item.querySelector('.custom-product-price').value;
+
+                if (!name || !category || !price || price <= 0) {
+                    alert('Por favor, preencha todos os dados do produto personalizado');
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function generatePreview() {
+        const date = document.getElementById('date').value;
+        const clientSelect = document.getElementById('client');
+
+        // Prepare client data
+        let clientData;
+        let clientId;
+
+        if (clientSelect.value === 'custom') {
+            clientId = 'custom';
+            clientData = {
+                name: document.getElementById('customClientName').value,
+                phone: document.getElementById('customClientPhone').value,
+                address: document.getElementById('customClientAddress').value
+            };
+        } else {
+            const option = clientSelect.options[clientSelect.selectedIndex];
+            clientId = clientSelect.value;
+            clientData = {
+                name: option.dataset.name,
+                phone: option.dataset.phone,
+                address: option.dataset.address
+            };
+        }
+
+        // Get items data
+        const items = [];
+        let total = 0;
+
+        document.querySelectorAll('.item-row').forEach((row, idx) => {
+            const productSelect = row.querySelector('.product-select');
+            const quantity = parseInt(row.querySelector('.quantity-input').value);
+
+            let itemData;
+
+            if (productSelect.value === 'custom') {
+                const name = row.querySelector('.custom-product-name').value;
+                const category = row.querySelector('.custom-product-category').value;
+                const price = parseFloat(row.querySelector('.custom-product-price').value);
+
+                itemData = {
+                    codigo: `CUSTOM_${idx}`,
+                    produto: name,
+                    categoria: category,
+                    quantidade: quantity,
+                    valor_unit: price
+                };
+            } else {
+                const option = productSelect.options[productSelect.selectedIndex];
+
+                itemData = {
+                    codigo: productSelect.value,
+                    quantidade: quantity
+                };
+            }
+
+            items.push(itemData);
         });
-        
-        total += itemTotal;
-    });
-    
-    // Store data for PDF generation
-    previewData = {
-        date: formatDateBR(date),
-        id_cliente: clientData.id,
-        items: items.map(i => ({
-            codigo: i.codigo,
-            quantidade: i.quantidade
-        }))
-    };
-    
-    // Generate preview HTML
-    let html = `
-        <div class="preview-title">Orçamento</div>
+
+        // Store data for PDF generation
+        previewData = {
+            date: formatDateBR(date),
+            id_cliente: clientId,
+            items: items
+        };
+
+        // Add client_data only if custom
+        if (clientId === 'custom') {
+            previewData.client_data = clientData;
+        }
+
+        // Generate preview HTML
+        renderPreview(clientData, items, date);
+    }
+
+    function renderPreview(clientData, items, date) {
+        let total = 0;
+
+        let html = `
+        <div class="preview-title">ORÇAMENTO</div>
         <p><strong>Data:</strong> ${formatDateBR(date)}</p>
         
         <div class="preview-label">JB Home Essence</div>
@@ -383,7 +580,7 @@ function generatePreview() {
         <table class="table preview-table">
             <thead>
                 <tr>
-                    <th>Item</th>
+                    <th>#</th>
                     <th>Produto</th>
                     <th>Categoria</th>
                     <th>Qtd.</th>
@@ -393,21 +590,40 @@ function generatePreview() {
             </thead>
             <tbody>
     `;
-    
-    items.forEach((item, idx) => {
-        html += `
+
+        items.forEach((item, idx) => {
+            let produto, categoria, valor_unit;
+
+            if (item.produto) {
+                // Custom product
+                produto = item.produto;
+                categoria = item.categoria;
+                valor_unit = item.valor_unit;
+            } else {
+                // Regular product - find in products list
+                const productSelect = document.querySelectorAll('.product-select')[idx];
+                const option = productSelect.options[productSelect.selectedIndex];
+                produto = option.dataset.name;
+                categoria = option.dataset.category;
+                valor_unit = parseFloat(option.dataset.price);
+            }
+
+            const valor_total = item.quantidade * valor_unit;
+            total += valor_total;
+
+            html += `
             <tr>
                 <td>${idx + 1}</td>
-                <td>${item.produto}</td>
-                <td>${item.categoria}</td>
+                <td>${produto}</td>
+                <td>${categoria}</td>
                 <td>${item.quantidade}</td>
-                <td>R$ ${formatCurrencyBR(item.valor_unit)}</td>
-                <td>R$ ${formatCurrencyBR(item.valor_total)}</td>
+                <td>R$ ${formatCurrencyBR(valor_unit)}</td>
+                <td>R$ ${formatCurrencyBR(valor_total)}</td>
             </tr>
         `;
-    });
-    
-    html += `
+        });
+
+        html += `
             </tbody>
         </table>
         
@@ -415,25 +631,25 @@ function generatePreview() {
             Valor Total: R$ ${formatCurrencyBR(total)}
         </div>
     `;
-    
-    document.getElementById('previewContent').innerHTML = html;
-    document.getElementById('previewContent').style.display = 'block';
-    document.getElementById('previewPlaceholder').style.display = 'none';
-}
 
-function updatePreview() {
-    // Reset download button when form changes
-    document.getElementById('downloadBtn').disabled = true;
-    previewData = null;
-}
+        document.getElementById('previewContent').innerHTML = html;
+        document.getElementById('previewContent').style.display = 'block';
+        document.getElementById('previewPlaceholder').style.display = 'none';
+    }
 
-function formatDateBR(dateStr) {
-    const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
-}
+    function updatePreview() {
+        // Reset download button when form changes
+        document.getElementById('downloadBtn').disabled = true;
+        previewData = null;
+    }
 
-function formatCurrencyBR(value) {
-    return value.toFixed(2).replace('.', ',');
-}
+    function formatDateBR(dateStr) {
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+    }
+
+    function formatCurrencyBR(value) {
+        return value.toFixed(2).replace('.', ',');
+    }
 </script>
 {% endblock %}
