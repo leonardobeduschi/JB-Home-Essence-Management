@@ -257,35 +257,97 @@ class BudgetService:
         story.append(table)
         story.append(Spacer(1, 10*mm))
     
-    def _add_total_section(self, story, total):
-        """Add total with elegant styling."""
-        # Total box
+    def _add_total_section(self, story, total, discount=0.0):
+        """Add total with elegant styling, including discount."""
+        
+        # Calculate final total
+        final_total = max(0, total - discount)
+        
+        # Styles
+        subtotal_style = ParagraphStyle(
+            'SubtotalStyle',
+            fontName=self.font_regular,
+            fontSize=10,
+            textColor=self.text_gray,
+            alignment=TA_RIGHT,
+            rightIndent=4*mm,
+            leading=14
+        )
+        
+        discount_style = ParagraphStyle(
+            'DiscountStyle',
+            fontName=self.font_regular,
+            fontSize=10,
+            textColor=colors.red,
+            alignment=TA_RIGHT,
+            rightIndent=4*mm,
+            leading=14
+        )
+        
         total_style = ParagraphStyle(
             'TotalStyle',
             fontName=self.font_bold,
-            fontSize=18,
+            fontSize=16,
             textColor=self.dark_green,
             alignment=TA_RIGHT,
             rightIndent=4*mm,
-            leading=24
+            leading=20
         )
         
-        total_formatted = f"VALOR TOTAL: R$ {total:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        rows = []
         
-        total_table = Table([
-            [Paragraph(total_formatted, total_style)]
-        ], colWidths=[17*cm])
+        # Subtotal (only if there is a discount)
+        if discount > 0:
+            subtotal_fmt = f"Subtotal: R$ {total:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+            rows.append([Paragraph(subtotal_fmt, subtotal_style)])
+            
+            discount_fmt = f"Desconto: - R$ {discount:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+            rows.append([Paragraph(discount_fmt, discount_style)])
+            
+        # Final Total
+        total_fmt = f"VALOR TOTAL: R$ {final_total:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        rows.append([Paragraph(total_fmt, total_style)])
+        
+        total_table = Table(rows, colWidths=[17*cm])
         
         total_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.light_green),
-            ('BOX', (0, 0), (-1, -1), 2, self.primary_green),
-            ('TOPPADDING', (0, 0), (-1, -1), 5*mm),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 5*mm),
+            ('BOX', (0, 0), (-1, -1), 1.5, self.primary_green),
+            ('TOPPADDING', (0, 0), (-1, -1), 3*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3*mm),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ]))
         
         story.append(total_table)
+
+    def _add_notes_section(self, story, notes):
+        """Add notes section if present."""
+        if not notes:
+            return
+            
+        story.append(Spacer(1, 5*mm))
+        
+        header_style = ParagraphStyle(
+            'NotesHeader',
+            fontName=self.font_bold,
+            fontSize=10,
+            textColor=self.dark_green,
+            alignment=TA_LEFT,
+            leading=12
+        )
+        
+        text_style = ParagraphStyle(
+            'NotesText',
+            fontName=self.font_regular,
+            fontSize=9,
+            textColor=self.text_gray,
+            alignment=TA_LEFT,
+            leading=11
+        )
+        
+        story.append(Paragraph("Observações:", header_style))
+        story.append(Paragraph(notes.replace('\n', '<br/>'), text_style))
     
     def _add_footer(self, story):
         """Add professional footer."""
@@ -456,8 +518,16 @@ class BudgetService:
         # Add all sections
         self._add_header(story, data)
         self._add_client_info(story, client, data['date'])
+        # Get additional data
+        notes = data.get('notes', '')
+        try:
+            discount = float(data.get('discount', 0))
+        except (ValueError, TypeError):
+            discount = 0.0
+
         self._add_items_table(story, items_data)
-        self._add_total_section(story, total)
+        self._add_total_section(story, total, discount)
+        self._add_notes_section(story, notes)
         self._add_footer(story)
         
         # Build PDF

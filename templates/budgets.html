@@ -157,6 +157,19 @@
                             </button>
                         </div>
 
+                        <!-- Notes and Discount -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="notes" rows="3"
+                                placeholder="Observações adicionais para o orçamento..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="discount" class="form-label">Desconto (R$)</label>
+                            <input type="number" class="form-control" id="discount" step="0.01" min="0"
+                                placeholder="0,00">
+                        </div>
+
                         <!-- Actions -->
                         <div class="d-grid gap-2">
                             <button type="button" class="btn btn-primary" id="previewBtn">
@@ -370,6 +383,10 @@
 
         quantityInput.addEventListener('input', updatePreview);
 
+        // Listen for discount changes to update preview automatically
+        document.getElementById('discount').addEventListener('input', updatePreview);
+        document.getElementById('notes').addEventListener('input', updatePreview);
+
         removeBtn.addEventListener('click', function () {
             this.closest('.item-row').remove();
             updatePreview();
@@ -544,7 +561,9 @@
         previewData = {
             date: formatDateBR(date),
             id_cliente: clientId,
-            items: items
+            items: items,
+            notes: document.getElementById('notes').value,
+            discount: parseFloat(document.getElementById('discount').value) || 0
         };
 
         // Add client_data only if custom
@@ -553,10 +572,10 @@
         }
 
         // Generate preview HTML
-        renderPreview(clientData, items, date);
+        renderPreview(clientData, items, date, previewData.notes, previewData.discount);
     }
 
-    function renderPreview(clientData, items, date) {
+    function renderPreview(clientData, items, date, notes, discount) {
         let total = 0;
 
         let html = `
@@ -628,8 +647,23 @@
         </table>
         
         <div class="preview-total">
-            Valor Total: R$ ${formatCurrencyBR(total)}
+            Subtotal: R$ ${formatCurrencyBR(total)}
         </div>
+        ${discount > 0 ? `
+        <div class="preview-total text-danger" style="font-size: 16px;">
+            Desconto: - R$ ${formatCurrencyBR(discount)}
+        </div>
+        <div class="preview-total">
+            Valor Final: R$ ${formatCurrencyBR(Math.max(0, total - discount))}
+        </div>
+        ` : ''}
+        
+        ${notes ? `
+        <div class="mt-4">
+            <strong>Observações:</strong><br>
+            <p class="text-muted small" style="white-space: pre-wrap;">${notes}</p>
+        </div>
+        ` : ''}
     `;
 
         document.getElementById('previewContent').innerHTML = html;
