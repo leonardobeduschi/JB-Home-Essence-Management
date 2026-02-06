@@ -9,29 +9,36 @@
         cursor: pointer;
         transition: all 0.3s;
     }
+
     .analytics-tab:hover {
         background-color: #f0f0f0;
     }
+
     .analytics-tab.active {
         background-color: var(--primary-color) !important;
         color: white !important;
     }
+
     .analytics-section {
         display: none;
     }
+
     .analytics-section.active {
         display: block;
     }
+
     .chart-card {
         height: 100%;
         min-height: 400px;
     }
+
     .metric-card {
         text-align: center;
         padding: 20px;
         border-radius: 8px;
         color: white;
     }
+
     .info-icon {
         display: inline-block;
         width: 20px;
@@ -48,10 +55,12 @@
         margin-left: 8px;
         position: relative;
     }
+
     .info-icon:hover {
         background: rgba(59, 130, 246, 0.2);
         border-color: #3b82f6;
     }
+
     .info-icon .tooltip-text {
         visibility: hidden;
         width: 280px;
@@ -69,8 +78,9 @@
         transition: opacity 0.3s;
         font-size: 13px;
         line-height: 1.5;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
+
     .info-icon .tooltip-text::after {
         content: "";
         position: absolute;
@@ -81,6 +91,7 @@
         border-style: solid;
         border-color: #1f2937 transparent transparent transparent;
     }
+
     .info-icon:hover .tooltip-text {
         visibility: visible;
         opacity: 1;
@@ -158,7 +169,8 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Receita Mensal</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Mostra a evolução da receita total nos últimos 12 meses. Use para identificar tendências de crescimento ou queda nas vendas.</span>
+                        <span class="tooltip-text">Mostra a evolução da receita total nos últimos 12 meses. Use para
+                            identificar tendências de crescimento ou queda nas vendas.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -171,7 +183,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-cart3"></i> Quantidade de Vendas (12 meses)</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Mostra a quantidade de vendas realizadas por mês nos últimos 12 meses. Ajuda a identificar sazonalidades, períodos de pico e tendências no volume de pedidos.</span>
+                        <span class="tooltip-text">Mostra a quantidade de vendas realizadas por mês nos últimos 12
+                            meses. Ajuda a identificar sazonalidades, períodos de pico e tendências no volume de
+                            pedidos.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -187,7 +201,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-ticket"></i> Ticket Médio Mensal</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Mostra a evolução do ticket médio mensal nos últimos 12 meses. Permite identificar tendências de aumento ou redução no valor médio das compras.</span>
+                        <span class="tooltip-text">Mostra a evolução do ticket médio mensal nos últimos 12 meses.
+                            Permite identificar tendências de aumento ou redução no valor médio das compras.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -200,7 +215,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Vendas por Meio de Pagamento</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Mostra a distribuição da receita total por meio de pagamento (ex: Pix, Cartão, Boleto, etc.). Ajuda a entender quais formas de pagamento são mais utilizadas pelos clientes e otimizar parcerias ou taxas.</span>
+                        <span class="tooltip-text">Mostra a distribuição da receita total por meio de pagamento (ex:
+                            Pix, Cartão, Boleto, etc.). Ajuda a entender quais formas de pagamento são mais utilizadas
+                            pelos clientes e otimizar parcerias ou taxas.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -217,7 +234,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-trophy"></i> Top 10 Produtos por Receita</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Os 10 produtos que mais geraram receita total, incluindo nome e categoria.</span>
+                        <span class="tooltip-text">Os 10 produtos que mais geraram receita total, incluindo nome e
+                            categoria.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -277,6 +295,7 @@
         </div>
     </div>
 
+    <!-- 
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card">
@@ -293,6 +312,7 @@
             </div>
         </div>
     </div>
+    -->
 
     <div class="row mb-4">
         <div class="col-md-6">
@@ -300,7 +320,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-percent"></i> Margem Bruta vs Contribuição</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Compara lado a lado a margem bruta e a margem de contribuição de cada produto. Permite visualizar o impacto dos custos variáveis na rentabilidade real e tomar decisões mais precisas sobre precificação e estoque.</span>
+                        <span class="tooltip-text">Compara lado a lado a margem bruta e a margem de contribuição de cada
+                            produto. Permite visualizar o impacto dos custos variáveis na rentabilidade real e tomar
+                            decisões mais precisas sobre precificação e estoque.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -313,7 +335,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-pie-chart-fill"></i> Composição de Custos</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Apresenta a divisão dos custos totais do mês atual entre COGS (custo dos produtos), custos variáveis (taxas de pagamento, embalagens, etc.) e despesas fixas. Ajuda a entender onde o dinheiro está sendo gasto.</span>
+                        <span class="tooltip-text">Apresenta a divisão dos custos totais do mês atual entre COGS (custo
+                            dos produtos), custos variáveis (taxas de pagamento, embalagens, etc.) e despesas fixas.
+                            Ajuda a entender onde o dinheiro está sendo gasto.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -329,7 +353,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-receipt"></i> Despesas Fixas - Breakdown</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Apresenta a divisão detalhada das despesas fixas mensais por categoria (ex: impostos, marketing, aluguel, etc.) e o valor total. Essencial para entender os custos obrigatórios e monitorar o controle de gastos operacionais.</span>
+                        <span class="tooltip-text">Apresenta a divisão detalhada das despesas fixas mensais por
+                            categoria (ex: impostos, marketing, aluguel, etc.) e o valor total. Essencial para entender
+                            os custos obrigatórios e monitorar o controle de gastos operacionais.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -342,7 +368,10 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-speedometer"></i> Break-even Progress</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Indica o progresso rumo ao ponto de equilíbrio (break-even) no mês atual: quantas vendas já foram feitas, quantas ainda são necessárias para cobrir todas as despesas fixas e o percentual de avanço. Ideal para monitorar se o mês fechará no positivo.</span>
+                        <span class="tooltip-text">Indica o progresso rumo ao ponto de equilíbrio (break-even) no mês
+                            atual: quantas vendas já foram feitas, quantas ainda são necessárias para cobrir todas as
+                            despesas fixas e o percentual de avanço. Ideal para monitorar se o mês fechará no
+                            positivo.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -361,7 +390,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-star"></i> Top 20 Produtos - Receita</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Exibe o desempenho dos 20 produtos mais vendidos, com quantidade vendida, receita gerada, lucro líquido e margem de lucro. Ideal para identificar quais itens são mais rentáveis e merecem mais foco.</span>
+                        <span class="tooltip-text">Exibe o desempenho dos 20 produtos mais vendidos, com quantidade
+                            vendida, receita gerada, lucro líquido e margem de lucro. Ideal para identificar quais itens
+                            são mais rentáveis e merecem mais foco.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -377,7 +408,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-percent"></i> Top 15 - Margem Bruta (%)</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Exibe os 15 produtos com maior margem bruta (lucro após custo do produto dividido pela receita). Ajuda a identificar rapidamente quais itens têm a melhor rentabilidade bruta, sem considerar custos variáveis.</span>
+                        <span class="tooltip-text">Exibe os 15 produtos com maior margem bruta (lucro após custo do
+                            produto dividido pela receita). Ajuda a identificar rapidamente quais itens têm a melhor
+                            rentabilidade bruta, sem considerar custos variáveis.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -390,7 +423,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-percent"></i> Top 15 - Margem de Contribuição</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Mostra os 15 produtos com maior margem de contribuição (lucro após custo do produto e custos variáveis como taxas e embalagens). Útil para priorizar produtos que realmente contribuem mais para cobrir despesas fixas e gerar lucro.</span>
+                        <span class="tooltip-text">Mostra os 15 produtos com maior margem de contribuição (lucro após
+                            custo do produto e custos variáveis como taxas e embalagens). Útil para priorizar produtos
+                            que realmente contribuem mais para cobrir despesas fixas e gerar lucro.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -406,7 +441,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-tags"></i> Receita por Categoria</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Destaca a categoria de produtos com maior receita total. Serve como indicador rápido do segmento que mais contribui para as vendas.</span>
+                        <span class="tooltip-text">Destaca a categoria de produtos com maior receita total. Serve como
+                            indicador rápido do segmento que mais contribui para as vendas.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -419,7 +455,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-graph-up"></i> Margem Bruta por Categoria</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Apresenta a margem bruta de cada categoria de produtos, baseada na receita e custo total. Ideal para decidir em quais categorias investir mais ou otimizar custos.</span>
+                        <span class="tooltip-text">Apresenta a margem bruta de cada categoria de produtos, baseada na
+                            receita e custo total. Ideal para decidir em quais categorias investir mais ou otimizar
+                            custos.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -478,7 +516,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-award"></i> Top 20 Clientes - Total Gasto</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Mostra os 20 clientes que mais gastaram, incluindo valor total comprado, número de compras e ticket médio. Útil para segmentar clientes fiéis e planejar ações de fidelização.</span>
+                        <span class="tooltip-text">Mostra os 20 clientes que mais gastaram, incluindo valor total
+                            comprado, número de compras e ticket médio. Útil para segmentar clientes fiéis e planejar
+                            ações de fidelização.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -494,7 +534,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-gender-ambiguous"></i> Distribuição por Gênero</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Apresenta a distribuição de gênero dos clientes pessoas físicas. Útil para análises demográficas e ações de marketing segmentadas.</span>
+                        <span class="tooltip-text">Apresenta a distribuição de gênero dos clientes pessoas físicas. Útil
+                            para análises demográficas e ações de marketing segmentadas.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -507,7 +548,9 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-graph-up"></i> Ticket Médio por Cliente</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Exibe o ticket médio individual de cada cliente importante, geralmente ordenado do maior para o menor. Útil para identificar clientes de alto valor, segmentar ações de marketing e priorizar atendimento personalizado.</span>
+                        <span class="tooltip-text">Exibe o ticket médio individual de cada cliente importante,
+                            geralmente ordenado do maior para o menor. Útil para identificar clientes de alto valor,
+                            segmentar ações de marketing e priorizar atendimento personalizado.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -524,7 +567,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-calendar-range"></i> Clientes por Faixa Etária</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Mostra a distribuição dos clientes por faixa etária. Ajuda a entender o perfil demográfico e adaptar estratégias de marketing.</span>
+                        <span class="tooltip-text">Mostra a distribuição dos clientes por faixa etária. Ajuda a entender
+                            o perfil demográfico e adaptar estratégias de marketing.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -537,7 +581,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-briefcase"></i> Top 10 Profissões</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">As 10 profissões mais comuns entre seus clientes. Útil para segmentação e campanhas direcionadas.</span>
+                        <span class="tooltip-text">As 10 profissões mais comuns entre seus clientes. Útil para
+                            segmentação e campanhas direcionadas.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -553,7 +598,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-person-badge"></i> Vendas por Vendedor</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Receita total gerada por cada vendedor. Ajuda a avaliar performance individual e definir comissões.</span>
+                        <span class="tooltip-text">Receita total gerada por cada vendedor. Ajuda a avaliar performance
+                            individual e definir comissões.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -566,7 +612,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-building"></i> Pessoa vs Empresa</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Distribuição da base de clientes entre pessoas físicas e empresas.</span>
+                        <span class="tooltip-text">Distribuição da base de clientes entre pessoas físicas e
+                            empresas.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -582,7 +629,8 @@
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="bi bi-trophy"></i> Top 10 Clientes por Receita</h5>
                     <span class="info-icon">i
-                        <span class="tooltip-text">Os 10 clientes que mais geraram receita, ordenados do maior para o menor.</span>
+                        <span class="tooltip-text">Os 10 clientes que mais geraram receita, ordenados do maior para o
+                            menor.</span>
                     </span>
                 </div>
                 <div class="card-body">
@@ -596,571 +644,575 @@
 
 {% block extra_js %}
 <script>
-let charts = {};
+    let charts = {};
 
-function showSection(section) {
-    document.querySelectorAll('.analytics-tab').forEach(tab => tab.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    document.querySelectorAll('.analytics-section').forEach(sec => sec.classList.remove('active'));
-    document.getElementById('section-' + section).classList.add('active');
-    
-    if (section === 'vendas') loadVendasData();
-    if (section === 'financeiro') loadFinanceiroData();
-    if (section === 'produtos') loadProdutosData();
-    if (section === 'clientes') loadClientesData();
-}
+    function showSection(section) {
+        document.querySelectorAll('.analytics-tab').forEach(tab => tab.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.querySelectorAll('.analytics-section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById('section-' + section).classList.add('active');
 
-function loadVendasData() {
-    fetch('/api/analytics/sales-overview')
-        .then(r => r.json())
-        .then(result => {
+        if (section === 'vendas') loadVendasData();
+        if (section === 'financeiro') loadFinanceiroData();
+        if (section === 'produtos') loadProdutosData();
+        if (section === 'clientes') loadClientesData();
+    }
+
+    function loadVendasData() {
+        fetch('/api/analytics/sales-overview')
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('kpiTotalVendas').textContent = data.total_vendas;
+                    document.getElementById('kpiReceita').textContent = 'R$ ' + formatCurrencyBR(data.total_receita);
+                    document.getElementById('kpiItens').textContent = data.total_itens;
+                    document.getElementById('kpiTicket').textContent = 'R$ ' + formatCurrencyBR(data.ticket_medio);
+
+                    const labels = Object.keys(data.by_payment);
+                    const values = Object.values(data.by_payment);
+                    if (charts.paymentChart) charts.paymentChart.destroy();
+                    const ctx = document.getElementById('paymentChart').getContext('2d');
+                    charts.paymentChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)']
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
+            });
+
+        fetch('/api/analytics/monthly-revenue').then(r => r.json()).then(result => {
             if (result.success) {
-                const data = result.data;
-                document.getElementById('kpiTotalVendas').textContent = data.total_vendas;
-                document.getElementById('kpiReceita').textContent = 'R$ ' + formatCurrencyBR(data.total_receita);
-                document.getElementById('kpiItens').textContent = data.total_itens;
-                document.getElementById('kpiTicket').textContent = 'R$ ' + formatCurrencyBR(data.ticket_medio);
-                
-                const labels = Object.keys(data.by_payment);
-                const values = Object.values(data.by_payment);
-                if (charts.paymentChart) charts.paymentChart.destroy();
-                const ctx = document.getElementById('paymentChart').getContext('2d');
-                charts.paymentChart = new Chart(ctx, {
+                if (charts.monthlyRevenue) charts.monthlyRevenue.destroy();
+                const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
+                charts.monthlyRevenue = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: result.data.months,
+                        datasets: [{ label: 'Receita', data: result.data.revenues, borderColor: 'rgba(16, 185, 129, 1)', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4, fill: true }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        });
+
+        fetch('/api/analytics/monthly-sales-count').then(r => r.json()).then(result => {
+            if (result.success) {
+                if (charts.monthlySalesCount) charts.monthlySalesCount.destroy();
+                const ctx = document.getElementById('monthlySalesCountChart').getContext('2d');
+                charts.monthlySalesCount = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: result.data.months,
+                        datasets: [{ label: 'Vendas', data: result.data.counts, backgroundColor: 'rgba(59, 130, 246, 0.8)' }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        });
+
+        fetch('/api/analytics/avg-ticket-trend').then(r => r.json()).then(result => {
+            if (result.success) {
+                if (charts.avgTicket) charts.avgTicket.destroy();
+                const ctx = document.getElementById('avgTicketChart').getContext('2d');
+                charts.avgTicket = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: result.data.months,
+                        datasets: [{ label: 'Ticket Médio', data: result.data.tickets, borderColor: 'rgba(139, 92, 246, 1)', backgroundColor: 'rgba(139, 92, 246, 0.1)', tension: 0.4, fill: true }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        });
+
+        // NOVO: Top 10 Produtos
+        fetch('/api/analytics/top-products-full?limit=10').then(r => r.json()).then(result => {
+            if (result.success) {
+                if (charts.topProducts) charts.topProducts.destroy();
+                const ctx = document.getElementById('topProductsChart').getContext('2d');
+                charts.topProducts = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: result.data.map(p => p.label.substring(0, 30)),
+                        datasets: [{
+                            label: 'Receita (R$)',
+                            data: result.data.map(p => p.revenue),
+                            backgroundColor: 'rgba(139, 92, 246, 0.8)'
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        });
+
+        // NOVO: Categoria Top
+        fetch('/api/analytics/top-category').then(r => r.json()).then(result => {
+            if (result.success) {
+                document.getElementById('topCategoryName').textContent = result.data.category;
+            }
+        });
+    }
+
+    function loadFinanceiroData() {
+        Promise.all([
+            fetch('/api/analytics/monthly-financial-summary').then(r => r.json()),
+            fetch('/api/analytics/monthly-profit').then(r => r.json()),
+            fetch('/api/analytics/cost-breakdown').then(r => r.json()),
+            fetch('/api/expenses').then(r => r.json())
+        ]).then(([summaryResult, profitResult, costsResult, expensesResult]) => {
+            if (summaryResult.success) {
+                const d = summaryResult.data;
+                document.getElementById('kpiGrossMargin').textContent = `${d.gross_margin_pct.toFixed(1)}%`;
+                document.getElementById('kpiContributionMargin').textContent = `${d.contribution_margin_pct.toFixed(1)}%`;
+                document.getElementById('kpiFixedExpenses').textContent = 'R$ ' + formatCurrencyBR(d.fixed_expenses);
+                document.getElementById('kpiNetProfit').textContent = 'R$ ' + formatCurrencyBR(d.net_profit);
+            }
+
+            if (profitResult.success) {
+                if (charts.monthlyProfit) charts.monthlyProfit.destroy();
+                const canvas = document.getElementById('monthlyProfitChart');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    charts.monthlyProfit = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: profitResult.data.months,
+                            datasets: [{
+                                label: 'Lucro Líquido',
+                                data: profitResult.data.net_profits,
+                                backgroundColor: profitResult.data.net_profits.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)')
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+
+                if (charts.marginComparison) charts.marginComparison.destroy();
+                const ctx2 = document.getElementById('marginComparisonChart').getContext('2d');
+                charts.marginComparison = new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: profitResult.data.months,
+                        datasets: [
+                            { label: 'Margem Bruta', data: profitResult.data.gross_margins, borderColor: 'rgba(16, 185, 129, 1)', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4 },
+                            { label: 'Margem Contribuição', data: profitResult.data.contribution_margins, borderColor: 'rgba(59, 130, 246, 1)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+
+            if (costsResult.success) {
+                if (charts.costBreakdown) charts.costBreakdown.destroy();
+                const ctx = document.getElementById('costBreakdownChart').getContext('2d');
+                charts.costBreakdown = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: labels,
-                        datasets: [{
-                            data: values,
-                            backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)']
-                        }]
+                        labels: ['COGS', 'Custos Variáveis', 'Despesas Fixas'],
+                        datasets: [{ data: [costsResult.data.total_cogs, costsResult.data.total_variable_costs, costsResult.data.total_fixed_expenses], backgroundColor: ['rgba(239, 68, 68, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(59, 130, 246, 0.8)'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+
+            if (expensesResult.success) {
+                if (charts.fixedExpenses) charts.fixedExpenses.destroy();
+                const ctx = document.getElementById('fixedExpensesChart').getContext('2d');
+                charts.fixedExpenses = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: expensesResult.data.expenses.map(e => e.name),
+                        datasets: [{ label: 'Valor', data: expensesResult.data.expenses.map(e => e.value), backgroundColor: 'rgba(59, 130, 246, 0.8)' }]
+                    },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+
+            fetch('/api/analytics/breakeven-progress').then(r => r.json()).then(result => {
+                if (result.success) {
+                    if (charts.breakEven) charts.breakEven.destroy();
+                    const d = result.data;
+                    const ctx = document.getElementById('breakEvenChart').getContext('2d');
+                    charts.breakEven = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Vendas Realizadas', 'Vendas Restantes'],
+                            datasets: [{ data: [d.current_sales, d.remaining_sales], backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(229, 231, 235, 0.8)'] }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' },
+                                title: { display: true, text: [`Break-even: ${d.breakeven_sales} vendas`, `Progresso: ${d.progress_pct}%`] }
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    function loadProdutosData() {
+        fetch('/api/analytics/products-with-margin').then(r => r.json()).then(result => {
+            if (result.success) {
+                const products = result.data;
+                if (charts.productsChart) charts.productsChart.destroy();
+                const ctx1 = document.getElementById('productsPerformanceChart').getContext('2d');
+                charts.productsChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: products.map(p => p.label.substring(0, 30)),
+                        datasets: [{ label: 'Receita', data: products.map(p => p.revenue), backgroundColor: 'rgba(16, 185, 129, 0.8)' }]
+                    },
+                    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+                });
+
+                const top15 = products.slice(0, 15);
+                if (charts.grossMarginChart) charts.grossMarginChart.destroy();
+                const ctx2 = document.getElementById('productGrossMarginChart').getContext('2d');
+                charts.grossMarginChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: top15.map(p => p.label.substring(0, 25)),
+                        datasets: [{ label: 'Margem Bruta', data: top15.map(p => p.gross_margin), backgroundColor: 'rgba(16, 185, 129, 0.8)' }]
+                    },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+                if (charts.netMarginChart) charts.netMarginChart.destroy();
+                const ctx3 = document.getElementById('productNetMarginChart').getContext('2d');
+                charts.netMarginChart = new Chart(ctx3, {
+                    type: 'bar',
+                    data: {
+                        labels: top15.map(p => p.label.substring(0, 25)),
+                        datasets: [{ label: 'Margem Contribuição', data: top15.map(p => p.contribution_margin || p.net_margin), backgroundColor: 'rgba(59, 130, 246, 0.8)' }]
+                    },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+        });
+
+        fetch('/api/analytics/categories').then(r => r.json()).then(result => {
+            if (result.success) {
+                if (charts.categoriesChart) charts.categoriesChart.destroy();
+                const ctx = document.getElementById('categoriesChart').getContext('2d');
+                charts.categoriesChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: result.data.categories.map(c => c.category),
+                        datasets: [{ data: result.data.categories.map(c => c.revenue), backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(139, 92, 246, 0.8)'] }]
                     },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
                 });
             }
         });
-    
-    fetch('/api/analytics/monthly-revenue').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.monthlyRevenue) charts.monthlyRevenue.destroy();
-            const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
-            charts.monthlyRevenue = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: result.data.months,
-                    datasets: [{ label: 'Receita', data: result.data.revenues, borderColor: 'rgba(16, 185, 129, 1)', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4, fill: true }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-    });
-    
-    fetch('/api/analytics/monthly-sales-count').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.monthlySalesCount) charts.monthlySalesCount.destroy();
-            const ctx = document.getElementById('monthlySalesCountChart').getContext('2d');
-            charts.monthlySalesCount = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: result.data.months,
-                    datasets: [{ label: 'Vendas', data: result.data.counts, backgroundColor: 'rgba(59, 130, 246, 0.8)' }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-    });
-    
-    fetch('/api/analytics/avg-ticket-trend').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.avgTicket) charts.avgTicket.destroy();
-            const ctx = document.getElementById('avgTicketChart').getContext('2d');
-            charts.avgTicket = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: result.data.months,
-                    datasets: [{ label: 'Ticket Médio', data: result.data.tickets, borderColor: 'rgba(139, 92, 246, 1)', backgroundColor: 'rgba(139, 92, 246, 0.1)', tension: 0.4, fill: true }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-    });
 
-    // NOVO: Top 10 Produtos
-    fetch('/api/analytics/top-products-full?limit=10').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.topProducts) charts.topProducts.destroy();
-            const ctx = document.getElementById('topProductsChart').getContext('2d');
-            charts.topProducts = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: result.data.map(p => p.label.substring(0, 30)),
-                    datasets: [{
-                        label: 'Receita (R$)',
-                        data: result.data.map(p => p.revenue),
-                        backgroundColor: 'rgba(139, 92, 246, 0.8)'
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-    });
-
-    // NOVO: Categoria Top
-    fetch('/api/analytics/top-category').then(r => r.json()).then(result => {
-        if (result.success) {
-            document.getElementById('topCategoryName').textContent = result.data.category;
-        }
-    });
-}
-
-function loadFinanceiroData() {
-    Promise.all([
-        fetch('/api/analytics/monthly-financial-summary').then(r => r.json()),
-        fetch('/api/analytics/monthly-profit').then(r => r.json()),
-        fetch('/api/analytics/cost-breakdown').then(r => r.json()),
-        fetch('/api/expenses').then(r => r.json())
-    ]).then(([summaryResult, profitResult, costsResult, expensesResult]) => {
-        if (summaryResult.success) {
-            const d = summaryResult.data;
-            document.getElementById('kpiGrossMargin').textContent = `${d.gross_margin_pct.toFixed(1)}%`;
-            document.getElementById('kpiContributionMargin').textContent = `${d.contribution_margin_pct.toFixed(1)}%`;
-            document.getElementById('kpiFixedExpenses').textContent = 'R$ ' + formatCurrencyBR(d.fixed_expenses);
-            document.getElementById('kpiNetProfit').textContent = 'R$ ' + formatCurrencyBR(d.net_profit);
-        }
-        
-        if (profitResult.success) {
-            if (charts.monthlyProfit) charts.monthlyProfit.destroy();
-            const ctx = document.getElementById('monthlyProfitChart').getContext('2d');
-            charts.monthlyProfit = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: profitResult.data.months,
-                    datasets: [{
-                        label: 'Lucro Líquido',
-                        data: profitResult.data.net_profits,
-                        backgroundColor: profitResult.data.net_profits.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)')
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-            
-            if (charts.marginComparison) charts.marginComparison.destroy();
-            const ctx2 = document.getElementById('marginComparisonChart').getContext('2d');
-            charts.marginComparison = new Chart(ctx2, {
-                type: 'line',
-                data: {
-                    labels: profitResult.data.months,
-                    datasets: [
-                        { label: 'Margem Bruta', data: profitResult.data.gross_margins, borderColor: 'rgba(16, 185, 129, 1)', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4 },
-                        { label: 'Margem Contribuição', data: profitResult.data.contribution_margins, borderColor: 'rgba(59, 130, 246, 1)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-        }
-        
-        if (costsResult.success) {
-            if (charts.costBreakdown) charts.costBreakdown.destroy();
-            const ctx = document.getElementById('costBreakdownChart').getContext('2d');
-            charts.costBreakdown = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['COGS', 'Custos Variáveis', 'Despesas Fixas'],
-                    datasets: [{ data: [costsResult.data.total_cogs, costsResult.data.total_variable_costs, costsResult.data.total_fixed_expenses], backgroundColor: ['rgba(239, 68, 68, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(59, 130, 246, 0.8)'] }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-        }
-        
-        if (expensesResult.success) {
-            if (charts.fixedExpenses) charts.fixedExpenses.destroy();
-            const ctx = document.getElementById('fixedExpensesChart').getContext('2d');
-            charts.fixedExpenses = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: expensesResult.data.expenses.map(e => e.name),
-                    datasets: [{ label: 'Valor', data: expensesResult.data.expenses.map(e => e.value), backgroundColor: 'rgba(59, 130, 246, 0.8)' }]
-                },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
-        
-        fetch('/api/analytics/breakeven-progress').then(r => r.json()).then(result => {
+        fetch('/api/analytics/category-margin').then(r => r.json()).then(result => {
             if (result.success) {
-                if (charts.breakEven) charts.breakEven.destroy();
-                const d = result.data;
-                const ctx = document.getElementById('breakEvenChart').getContext('2d');
-                charts.breakEven = new Chart(ctx, {
-                    type: 'doughnut',
+                if (charts.categoryMarginChart) charts.categoryMarginChart.destroy();
+                const ctx = document.getElementById('categoryMarginChart').getContext('2d');
+                charts.categoryMarginChart = new Chart(ctx, {
+                    type: 'bar',
                     data: {
-                        labels: ['Vendas Realizadas', 'Vendas Restantes'],
-                        datasets: [{ data: [d.current_sales, d.remaining_sales], backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(229, 231, 235, 0.8)'] }]
+                        labels: result.data.map(c => c.category),
+                        datasets: [{ label: 'Margem Bruta', data: result.data.map(c => c.gross_margin), backgroundColor: 'rgba(99, 102, 241, 0.8)' }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom' },
-                            title: { display: true, text: [`Break-even: ${d.breakeven_sales} vendas`, `Progresso: ${d.progress_pct}%`] }
-                        }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+        });
+    }
+
+    // === CLIENTES - COMPLETO ===
+    function loadClientesData() {
+        // KPIs
+        Promise.all([
+            fetch('/api/analytics/new-customers?days=30').then(r => r.json()),
+            fetch('/api/analytics/return-rate').then(r => r.json()),
+            fetch('/api/clients').then(r => r.json())
+        ]).then(([newCustomers, returnRate, clients]) => {
+            if (newCustomers.success) {
+                document.getElementById('kpiNewCustomers').textContent = newCustomers.data.new_customers;
+            }
+            if (returnRate.success) {
+                document.getElementById('kpiReturnRate').textContent = `${returnRate.data.return_rate}%`;
+            }
+            if (clients.success) {
+                document.getElementById('kpiTotalClients').textContent = clients.data.length;
+
+                // Calcular ticket médio geral
+                fetch('/api/analytics/clients-performance').then(r => r.json()).then(result => {
+                    if (result.success && result.data.length > 0) {
+                        const avgTicket = result.data.reduce((sum, c) => sum + c.ticket_medio, 0) / result.data.length;
+                        document.getElementById('kpiAvgClientTicket').textContent = 'R$ ' + formatCurrencyBR(avgTicket);
                     }
                 });
             }
         });
-    });
-}
 
-function loadProdutosData() {
-    fetch('/api/analytics/products-with-margin').then(r => r.json()).then(result => {
-        if (result.success) {
-            const products = result.data;
-            if (charts.productsChart) charts.productsChart.destroy();
-            const ctx1 = document.getElementById('productsPerformanceChart').getContext('2d');
-            charts.productsChart = new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: products.map(p => p.label.substring(0, 30)),
-                    datasets: [{ label: 'Receita', data: products.map(p => p.revenue), backgroundColor: 'rgba(16, 185, 129, 0.8)' }]
-                },
-                options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
-            });
-            
-            const top15 = products.slice(0, 15);
-            if (charts.grossMarginChart) charts.grossMarginChart.destroy();
-            const ctx2 = document.getElementById('productGrossMarginChart').getContext('2d');
-            charts.grossMarginChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: top15.map(p => p.label.substring(0, 25)),
-                    datasets: [{ label: 'Margem Bruta', data: top15.map(p => p.gross_margin), backgroundColor: 'rgba(16, 185, 129, 0.8)' }]
-                },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-            
-            if (charts.netMarginChart) charts.netMarginChart.destroy();
-            const ctx3 = document.getElementById('productNetMarginChart').getContext('2d');
-            charts.netMarginChart = new Chart(ctx3, {
-                type: 'bar',
-                data: {
-                    labels: top15.map(p => p.label.substring(0, 25)),
-                    datasets: [{ label: 'Margem Contribuição', data: top15.map(p => p.contribution_margin || p.net_margin), backgroundColor: 'rgba(59, 130, 246, 0.8)' }]
-                },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
-    });
-    
-    fetch('/api/analytics/categories').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.categoriesChart) charts.categoriesChart.destroy();
-            const ctx = document.getElementById('categoriesChart').getContext('2d');
-            charts.categoriesChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: result.data.categories.map(c => c.category),
-                    datasets: [{ data: result.data.categories.map(c => c.revenue), backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(139, 92, 246, 0.8)'] }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-        }
-    });
-    
-    fetch('/api/analytics/category-margin').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.categoryMarginChart) charts.categoryMarginChart.destroy();
-            const ctx = document.getElementById('categoryMarginChart').getContext('2d');
-            charts.categoryMarginChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: result.data.map(c => c.category),
-                    datasets: [{ label: 'Margem Bruta', data: result.data.map(c => c.gross_margin), backgroundColor: 'rgba(99, 102, 241, 0.8)' }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
-    });
-}
+        // Top 20 Clientes
+        fetch('/api/analytics/clients-performance').then(r => r.json()).then(result => {
+            if (result.success) {
+                const clients = result.data;
+                const labels = clients.map(c => c.cliente.substring(0, 20));
+                const revenues = clients.map(c => c.total_gasto);
+                const tickets = clients.map(c => c.ticket_medio);
 
-// === CLIENTES - COMPLETO ===
-function loadClientesData() {
-    // KPIs
-    Promise.all([
-        fetch('/api/analytics/new-customers?days=30').then(r => r.json()),
-        fetch('/api/analytics/return-rate').then(r => r.json()),
-        fetch('/api/clients').then(r => r.json())
-    ]).then(([newCustomers, returnRate, clients]) => {
-        if (newCustomers.success) {
-            document.getElementById('kpiNewCustomers').textContent = newCustomers.data.new_customers;
-        }
-        if (returnRate.success) {
-            document.getElementById('kpiReturnRate').textContent = `${returnRate.data.return_rate}%`;
-        }
-        if (clients.success) {
-            document.getElementById('kpiTotalClients').textContent = clients.data.length;
-            
-            // Calcular ticket médio geral
-            fetch('/api/analytics/clients-performance').then(r => r.json()).then(result => {
-                if (result.success && result.data.length > 0) {
-                    const avgTicket = result.data.reduce((sum, c) => sum + c.ticket_medio, 0) / result.data.length;
-                    document.getElementById('kpiAvgClientTicket').textContent = 'R$ ' + formatCurrencyBR(avgTicket);
-                }
-            });
-        }
-    });
-
-    // Top 20 Clientes
-    fetch('/api/analytics/clients-performance').then(r => r.json()).then(result => {
-        if (result.success) {
-            const clients = result.data;
-            const labels = clients.map(c => c.cliente.substring(0, 20));
-            const revenues = clients.map(c => c.total_gasto);
-            const tickets = clients.map(c => c.ticket_medio);
-            
-            if (charts.clientsChart) charts.clientsChart.destroy();
-            const ctx = document.getElementById('clientsPerformanceChart').getContext('2d');
-            charts.clientsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Total Gasto (R$)',
-                        data: revenues,
-                        backgroundColor: 'rgba(99, 102, 241, 0.8)'
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: { callback: v => `R$ ${v.toLocaleString('pt-BR')}` }
+                if (charts.clientsChart) charts.clientsChart.destroy();
+                const ctx = document.getElementById('clientsPerformanceChart').getContext('2d');
+                charts.clientsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total Gasto (R$)',
+                            data: revenues,
+                            backgroundColor: 'rgba(99, 102, 241, 0.8)'
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { callback: v => `R$ ${v.toLocaleString('pt-BR')}` }
+                            }
                         }
                     }
-                }
-            });
-            
-            // Ticket Médio por Cliente
-            if (charts.ticketChart) charts.ticketChart.destroy();
-            const ctx2 = document.getElementById('clientTicketChart').getContext('2d');
-            charts.ticketChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: labels.slice(0, 10),
-                    datasets: [{
-                        label: 'Ticket Médio (R$)',
-                        data: tickets.slice(0, 10),
-                        backgroundColor: 'rgba(245, 158, 11, 0.8)'
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-    });
-    
-    // Gênero
-    fetch('/api/analytics/gender-distribution').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.genderChart) charts.genderChart.destroy();
-            const ctx = document.getElementById('genderChartAnalytics').getContext('2d');
-            charts.genderChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: result.data.labels,
-                    datasets: [{
-                        data: result.data.values,
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(236, 72, 153, 0.8)',
-                            'rgba(139, 92, 246, 0.8)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
-        }
-    });
+                });
 
-    // NOVO: Faixa Etária
-    fetch('/api/clients').then(r => r.json()).then(result => {
-        if (result.success) {
-            const ageGroups = {};
-            result.data.forEach(client => {
-                const age = client.IDADE || 'Não informado';
-                ageGroups[age] = (ageGroups[age] || 0) + 1;
-            });
+                // Ticket Médio por Cliente
+                if (charts.ticketChart) charts.ticketChart.destroy();
+                const ctx2 = document.getElementById('clientTicketChart').getContext('2d');
+                charts.ticketChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: labels.slice(0, 10),
+                        datasets: [{
+                            label: 'Ticket Médio (R$)',
+                            data: tickets.slice(0, 10),
+                            backgroundColor: 'rgba(245, 158, 11, 0.8)'
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        });
 
-            if (charts.ageChart) charts.ageChart.destroy();
-            const ctx = document.getElementById('ageDistributionChart').getContext('2d');
-            charts.ageChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(ageGroups),
-                    datasets: [{
-                        label: 'Quantidade',
-                        data: Object.values(ageGroups),
-                        backgroundColor: 'rgba(139, 92, 246, 0.8)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-    });
+        // Gênero
+        fetch('/api/analytics/gender-distribution').then(r => r.json()).then(result => {
+            if (result.success) {
+                if (charts.genderChart) charts.genderChart.destroy();
+                const ctx = document.getElementById('genderChartAnalytics').getContext('2d');
+                charts.genderChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: result.data.labels,
+                        datasets: [{
+                            data: result.data.values,
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(236, 72, 153, 0.8)',
+                                'rgba(139, 92, 246, 0.8)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+        });
 
-    // NOVO: Profissões
-    fetch('/api/clients').then(r => r.json()).then(result => {
-        if (result.success) {
-            const professions = {};
-            result.data.forEach(client => {
-                const prof = client.PROFISSAO || 'Não informado';
-                if (prof && prof.trim()) {
-                    professions[prof] = (professions[prof] || 0) + 1;
-                }
-            });
+        // NOVO: Faixa Etária
+        fetch('/api/clients').then(r => r.json()).then(result => {
+            if (result.success) {
+                const ageGroups = {};
+                result.data.forEach(client => {
+                    const age = client.IDADE || 'Não informado';
+                    ageGroups[age] = (ageGroups[age] || 0) + 1;
+                });
 
-            const sorted = Object.entries(professions)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10);
+                if (charts.ageChart) charts.ageChart.destroy();
+                const ctx = document.getElementById('ageDistributionChart').getContext('2d');
+                charts.ageChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(ageGroups),
+                        datasets: [{
+                            label: 'Quantidade',
+                            data: Object.values(ageGroups),
+                            backgroundColor: 'rgba(139, 92, 246, 0.8)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        });
 
-            if (charts.professionChart) charts.professionChart.destroy();
-            const ctx = document.getElementById('professionChart').getContext('2d');
-            charts.professionChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sorted.map(p => p[0]),
-                    datasets: [{
-                        label: 'Quantidade',
-                        data: sorted.map(p => p[1]),
-                        backgroundColor: 'rgba(16, 185, 129, 0.8)'
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-    });
+        // NOVO: Profissões
+        fetch('/api/clients').then(r => r.json()).then(result => {
+            if (result.success) {
+                const professions = {};
+                result.data.forEach(client => {
+                    const prof = client.PROFISSAO || 'Não informado';
+                    if (prof && prof.trim()) {
+                        professions[prof] = (professions[prof] || 0) + 1;
+                    }
+                });
 
-    // NOVO: Distribuição por Vendedor
-    fetch('/api/analytics/seller-distribution').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.sellerChart) charts.sellerChart.destroy();
-            const ctx = document.getElementById('sellerDistributionChart').getContext('2d');
-            charts.sellerChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: result.data.labels,
-                    datasets: [{
-                        data: result.data.values,
-                        backgroundColor: [
-                            'rgba(99, 102, 241, 0.8)',
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(245, 158, 11, 0.8)',
-                            'rgba(236, 72, 153, 0.8)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
-        }
-    });
+                const sorted = Object.entries(professions)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10);
 
-    // NOVO: Pessoa vs Empresa
-    fetch('/api/clients').then(r => r.json()).then(result => {
-        if (result.success) {
-            const types = { 'Pessoa': 0, 'Empresa': 0 };
-            result.data.forEach(client => {
-                const tipo = (client.TIPO || 'Pessoa').toLowerCase() === 'empresa' ? 'Empresa' : 'Pessoa';
-                types[tipo]++;
-            });
+                if (charts.professionChart) charts.professionChart.destroy();
+                const ctx = document.getElementById('professionChart').getContext('2d');
+                charts.professionChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: sorted.map(p => p[0]),
+                        datasets: [{
+                            label: 'Quantidade',
+                            data: sorted.map(p => p[1]),
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)'
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        });
 
-            if (charts.clientTypeChart) charts.clientTypeChart.destroy();
-            const ctx = document.getElementById('clientTypeChart').getContext('2d');
-            charts.clientTypeChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(types),
-                    datasets: [{
-                        data: Object.values(types),
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(245, 158, 11, 0.8)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
-        }
-    });
+        // NOVO: Distribuição por Vendedor
+        fetch('/api/analytics/seller-distribution').then(r => r.json()).then(result => {
+            if (result.success) {
+                if (charts.sellerChart) charts.sellerChart.destroy();
+                const ctx = document.getElementById('sellerDistributionChart').getContext('2d');
+                charts.sellerChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: result.data.labels,
+                        datasets: [{
+                            data: result.data.values,
+                            backgroundColor: [
+                                'rgba(99, 102, 241, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(236, 72, 153, 0.8)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+        });
 
-    // NOVO: Top 10 Clientes Full
-    fetch('/api/analytics/top-clients-full?limit=10').then(r => r.json()).then(result => {
-        if (result.success) {
-            if (charts.topClientsFullChart) charts.topClientsFullChart.destroy();
-            const ctx = document.getElementById('topClientsFullChart').getContext('2d');
-            charts.topClientsFullChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: result.data.map(c => c.name.substring(0, 25)),
-                    datasets: [{
-                        label: 'Receita Total (R$)',
-                        data: result.data.map(c => c.revenue),
-                        backgroundColor: 'rgba(139, 92, 246, 0.8)'
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-    });
-}
+        // NOVO: Pessoa vs Empresa
+        fetch('/api/clients').then(r => r.json()).then(result => {
+            if (result.success) {
+                const types = { 'Pessoa': 0, 'Empresa': 0 };
+                result.data.forEach(client => {
+                    const tipo = (client.TIPO || 'Pessoa').toLowerCase() === 'empresa' ? 'Empresa' : 'Pessoa';
+                    types[tipo]++;
+                });
 
-// Initial load
-document.addEventListener('DOMContentLoaded', () => loadVendasData());
+                if (charts.clientTypeChart) charts.clientTypeChart.destroy();
+                const ctx = document.getElementById('clientTypeChart').getContext('2d');
+                charts.clientTypeChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(types),
+                        datasets: [{
+                            data: Object.values(types),
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(245, 158, 11, 0.8)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+        });
+
+        // NOVO: Top 10 Clientes Full
+        fetch('/api/analytics/top-clients-full?limit=10').then(r => r.json()).then(result => {
+            if (result.success) {
+                if (charts.topClientsFullChart) charts.topClientsFullChart.destroy();
+                const ctx = document.getElementById('topClientsFullChart').getContext('2d');
+                charts.topClientsFullChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: result.data.map(c => c.name.substring(0, 25)),
+                        datasets: [{
+                            label: 'Receita Total (R$)',
+                            data: result.data.map(c => c.revenue),
+                            backgroundColor: 'rgba(139, 92, 246, 0.8)'
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        });
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => loadVendasData());
 </script>
 {% endblock %}
-                        <span class="tooltip-text">Receita total gerada por cada vendedor. Ajuda a avaliar performance individual e definir comissões.</span>
-                    </span>
-                </div>
-                <div class="card-body">
-                    <canvas id="sellerDistributionChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card chart-card">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="bi bi-building"></i> Pessoa vs Empresa</h5>
-                    <span class="info-icon">i
+<span class="tooltip-text">Receita total gerada por cada vendedor. Ajuda a avaliar performance individual e definir
+    comissões.</span>
+</span>
+</div>
+<div class="card-body">
+    <canvas id="sellerDistributionChart"></canvas>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+    <div class="card chart-card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-building"></i> Pessoa vs Empresa</h5>
+            <span class="info-icon">i

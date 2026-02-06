@@ -1107,12 +1107,29 @@ def api_sales_paginated():
                 'total': 0
             })
         
-        # Sort by ID_VENDA descending (most recent first)
-        items_df = items_df.sort_values('ID_VENDA', ascending=False)
+        # Join with sales_df to get DATA
+        merged_df = items_df.merge(sales_df[['ID_VENDA', 'DATA']], on='ID_VENDA', how='left')
+        
+        # Parse dates for accurate sorting
+        def safe_parse_date(d):
+            try:
+                # Try DD/MM/YYYY
+                return datetime.strptime(str(d), '%d/%m/%Y')
+            except ValueError:
+                try:
+                    # Try YYYY-MM-DD
+                    return datetime.strptime(str(d).split(' ')[0], '%Y-%m-%d')
+                except ValueError:
+                    return datetime.min
+
+        merged_df['_sort_date'] = merged_df['DATA'].apply(safe_parse_date)
+        
+        # Sort by date descending (most recent first) and ID_VENDA as tie-breaker
+        merged_df = merged_df.sort_values(by=['_sort_date', 'ID_VENDA'], ascending=[False, False])
         
         # Get paginated slice
-        total = len(items_df)
-        paginated_items = items_df.iloc[offset:offset + limit]
+        total = len(merged_df)
+        paginated_items = merged_df.iloc[offset:offset + limit]
         
         # Build result
         results = []

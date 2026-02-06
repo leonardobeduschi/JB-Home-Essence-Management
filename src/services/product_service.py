@@ -205,7 +205,9 @@ class ProductService:
         Returns:
             List of all products
         """
-        return self.repository.find_all()
+        products = self.repository.find_all()
+        # Sort by category (alpha) then by product name (alpha)
+        return sorted(products, key=lambda p: (str(p.get('CATEGORIA', '')).lower(), str(p.get('PRODUTO', '')).lower()))
     
     def list_by_category(self, categoria: str) -> List[Dict]:
         """

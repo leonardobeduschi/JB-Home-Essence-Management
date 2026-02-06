@@ -320,7 +320,26 @@ Substitua o método register_sale (legacy - single item) no seu sale_service.py:
                 print(f"Error processing sale item: {e}")
                 continue
         
-        return converted_sales
+        # Sort by date descending (most recent first)
+        def parse_date(date_str):
+            if not date_str:
+                return datetime.min
+            
+            # Try DD/MM/YYYY
+            try:
+                return datetime.strptime(str(date_str), '%d/%m/%Y')
+            except ValueError:
+                pass
+                
+            # Try YYYY-MM-DD (ISO)
+            try:
+                return datetime.strptime(str(date_str).split(' ')[0], '%Y-%m-%d')
+            except ValueError:
+                pass
+                
+            return datetime.min
+
+        return sorted(converted_sales, key=lambda s: parse_date(s.DATA), reverse=True)
     
     def list_sales_by_client(self, id_cliente: str) -> List[dict]:
         return self.sale_repository.get_by_client(id_cliente)
